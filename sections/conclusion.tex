@@ -1,13 +1,16 @@
 \section{Conclusion}
 WarpVox converts an external trajectory revision into a native Voxblox TSDF by
-re-expressing bounded sensor-frame support, propagating the resulting targets
-through one event-level surface deformation, and transferring source-volume
-support to the corrected zero set. Its correction cost follows active geometry
-rather than accumulated frame history. Across RGB-D and LiDAR benchmarks,
-WarpVox remains close to full reintegration with mean core-time speedups of
-$43.46\times$ and $3.23\times$, respectively. A separate ten-bag comparison
-shows competitive final-state accuracy against continuous Kimera-PGMO mesh
-optimization with a $9.27\times$ reduction in cumulative core time, while the
-Gaussian-center extension indicates that the target construction is not tied
-to voxel grids. The returned TSDF preserves the representation required for
-continued robotic mapping.
+re-associating cached keyframe range images with the current surface,
+re-expressing the matched samples with corrected poses, propagating the
+resulting targets through one event-level deformation, and transferring
+source-volume support to the corrected zero set. It avoids re-fusing the
+accumulated dense range stream: association follows the eligible keyframes and
+active surface, while deformation and reconstruction follow active geometry.
+Across RGB-D and LiDAR benchmarks, WarpVox remains close to full reintegration
+with mean core-time speedups of $43.46\times$ and $3.23\times$, respectively. A
+separate ten-bag final-state surface comparison shows that one mesh-only
+WarpVox update is competitive with continuous Kimera-PGMO mesh optimization
+while PGMO accumulates $9.27\times$ more core time over its callbacks. The
+single-sequence Gaussian-center extension indicates that the target
+construction is not tied to voxel grids. The returned TSDF preserves the
+representation required for continued robotic mapping.
