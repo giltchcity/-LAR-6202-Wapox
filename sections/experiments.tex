@@ -6,11 +6,17 @@
 We evaluate 39 RGB-D loop-closure cases from 18 Kimera-Multi
 sequences~\cite{tian23arxiv_kimeramultiexperiments} and 12 LiDAR cases from
 six KITTI sequences~\cite{Geiger2013IJRR}. Every method reconstructs the same
-temporal interval and uses the same GT: a 5 m tube around the official
-Kimera-Multi trajectory or GT-registered KITTI points within the mapper's 25 m
-ray range. Predictions outside the GT frame are aligned by a RANSAC--Umeyama
-$\mathrm{Sim}(3)$ fitted only to timestamp-matched trajectory positions; no
-mesh-to-GT registration is used.
+temporal interval. For Kimera-Multi, the reference geometry is the official
+registered ground-truth point cloud, cropped to a 5 m tube around the
+corresponding official trajectory to match Voxblox's maximum integration range.
+For KITTI, the reference is the GT-registered point cloud within the mapper's
+25 m ray range. Predictions outside the GT frame are aligned by a
+RANSAC--Umeyama $\mathrm{Sim}(3)$ fitted only to timestamp-matched trajectory
+positions; no mesh-to-GT registration is used. Reconstructions built from the
+same corrected trajectory share one transform per case. Voxgraph is registered
+from its own reported trajectory because it maintains an independently
+optimized submap frame; this gives that baseline an alignment fitted to its own
+output, which cannot favour WarpVox.
 
 For WarpVox, each bag is streamed once in chronological order and is never
 rewound at a loop event. Each SLAM keyframe is processed once and its
@@ -28,10 +34,12 @@ range stream, whereas WarpVox retains only the SLAM keyframes.
 Uncorrected TSDF uses the pre-correction trajectory. Open3D~\cite{zhou2018open3dmodernlibrary3d}
 and Wavemap~\cite{reijgwart2023wavemap} replay corrected poses into an
 independent TSDF and a wavelet occupancy map, respectively; Voxgraph
-~\cite{reijgwart2020voxgraph} optimizes rigid TSDF submaps. Voxblox
-reintegration~\cite{Oleynikova_2017} is the representation-matched reference.
-WarpVox instead uses the active uncorrected TSDF, cached keyframe range images,
-and the pre/post-correction trajectories.
+~\cite{reijgwart2020voxgraph} optimizes rigid TSDF submaps. Open3D is an
+independent corrected-pose TSDF rebuild at the same nominal resolution, but its
+fusion and meshing implementation differs from Voxblox; Voxblox
+reintegration~\cite{Oleynikova_2017} is therefore the representation-matched
+reference. WarpVox instead uses the active uncorrected TSDF, cached keyframe
+range images, and the pre/post-correction trajectories.
 
 We compute precision and recall by bidirectional nearest-neighbour tests and
 report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop,
@@ -46,6 +54,9 @@ are outside their respective correction timers. The main-table Voxgraph timer
 covers the evaluated update rather than cumulative earlier online
 optimizations, whereas the PGMO timer accumulates backend callbacks. Each
 reported timer was collected in the evaluation run that produced its output.
+An anonymized code archive, evaluation scripts, and the modality-specific YAML
+configurations used for all reported results accompany the supplementary
+material.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -70,15 +81,15 @@ Data & Method & F@10 & F@25 & F@50 & Core (s) \\
  & Open3D & 8.13 & 22.94 & 41.30 & -- \\
  & Voxgraph & 8.27 & 22.78 & 39.49 & 5.54 \\
  & Wavemap & 1.73 & 11.54 & 30.91 & 8.32 \\
- & Voxblox reint. & 10.93 & 28.71 & \textbf{48.67} & 109.25 \\
- & \textbf{WarpVox} & \textbf{11.13} & \textbf{28.76} & 48.39 & 2.51 \\
+ & Voxblox reint. & 10.93 & 28.71 & 48.67 & 109.25 \\
+ & \textbf{WarpVox} & 11.13 & 28.76 & 48.39 & 2.51 \\
 \midrule
 \multirow{6}{*}{KITTI (12)}
  & Uncorrected & 7.13 & 27.91 & 49.22 & -- \\
- & Open3D & \textbf{13.50} & 38.58 & 61.02 & -- \\
+ & Open3D & 13.50 & 38.58 & 61.02 & -- \\
  & Voxgraph & 9.38 & 31.89 & 52.49 & 4.53 \\
  & Wavemap & 5.23 & 33.10 & 62.55 & 2.68 \\
- & Voxblox reint. & 13.21 & \textbf{44.29} & \textbf{67.45} & 15.73 \\
+ & Voxblox reint. & 13.21 & 44.29 & 67.45 & 15.73 \\
  & \textbf{WarpVox} & 13.00 & 43.97 & 67.07 & 4.87 \\
 \bottomrule
 \end{tabular}
@@ -88,6 +99,8 @@ Data & Method & F@10 & F@25 & F@50 & Core (s) \\
 map-update timer with the exclusions above; Open3D was not timed.}
 \end{table}
 
+On Kimera-Multi, the $+0.20/+0.05$ pp mean differences at F@10/F@25 are
+interpreted as parity with reintegration rather than evidence of superiority.
 WarpVox is $43.46\times$ faster than reintegration on Kimera-Multi and
 $3.23\times$ on KITTI. The smaller KITTI gain follows from cheap sparse-LiDAR
 replay versus WarpVox's larger active surface and output volume. Paired F@50
@@ -129,10 +142,13 @@ while reducing core time from 192.548 to 12.803 s ($15.04\times$).
 Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
 
 \noindent\textbf{Source-volume semantics.}
-We additionally compare the reconstructed TSDF with corrected-pose Voxblox
-reintegration on ten 0.25 m checkpoints. Over jointly supported voxels within
-the reference truncation band, WarpVox obtains a normalized TSDF MAE of 0.384
-and $95.17\%$ sign agreement. Its observed-support precision, recall, and IoU
+For the output fields in
+\eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}, let
+$(\Phi_{\rm reint},w_{\rm reint})$ denote corrected-pose Voxblox
+reintegration. Over voxels satisfying $w^+>0$, $w_{\rm reint}>0$, and
+$|\Phi_{\rm reint}|<\tau$, WarpVox obtains the truncation-normalized TSDF MAE
+$\mathbb E[|\Phi^+-\Phi_{\rm reint}|]/\tau=0.384$ and $95.17\%$ sign
+agreement. Treating $w>0$ as observed, its support precision, recall, and IoU
 are $95.53\%$, $68.38\%$, and $66.33\%$, respectively. Thus, WarpVox
 conservatively preserves observed-space semantics, introducing little
 unsupported space but retaining less support than full reintegration.
@@ -232,8 +248,10 @@ temporal mesh associations.
 \subsection{Ablation Study}
 
 Table~\ref{tab:ablation} evaluates every variant on the same ten 0.25 m
-Kimera-Multi checkpoints and separates deformation scale from the Stage~3 and
-Stage~4 design choices.
+Kimera-Multi checkpoints. The Stage~3 rows alter the proxy and control
+construction used by the constrained ARAP solve in \eqref{eq:arap}; the
+Stage~4 rows compare mesh-only conversion with the source-supported fields in
+\eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}.
 
 \begin{table}[t]
 \centering
