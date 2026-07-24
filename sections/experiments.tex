@@ -249,10 +249,12 @@ temporal mesh associations.
 \subsection{Ablation Study}
 
 Table~\ref{tab:ablation} evaluates every variant on the same ten 0.25 m
-Kimera-Multi checkpoints. The Stage~3 rows alter the proxy and control
-construction used by the constrained ARAP solve in \eqref{eq:arap}; the
-Stage~4 rows compare mesh-only conversion with the source-supported fields in
-\eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}.
+Kimera-Multi checkpoints. Stage~1 is held fixed because it defines the common
+observation interface used by all variants. The Scale rows compare full-mesh
+and 60K-proxy realizations of the constrained ARAP objective in
+\eqref{eq:arap}; the Stage~3 rows compare proxy and control construction, and
+the Stage~4 rows compare mesh-only conversion with the source-supported fields
+in \eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}.
 
 \begin{table}[t]
 \centering
