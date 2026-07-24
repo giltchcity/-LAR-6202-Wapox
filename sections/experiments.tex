@@ -33,7 +33,7 @@ report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop,
 spatial region, two-million-point sample, random seed, and thresholds. Main
 TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched
 0.25 m finest level. Core times are measured on an AMD Ryzen 7 9700X with 64 GB
-RAM from in-memory inputs. Loading, saving, and mesh extraction are excluded.
+RAM from in-memory inputs. Loading, saving, and mesh MC-extraction are excluded.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -73,8 +73,7 @@ Data & Method & F@10 & F@25 & F@50 & Core (s) \\
 \vspace{1pt}
 
 \parbox{\columnwidth}{\scriptsize Core time uses each method's algorithmic
-map-update timer with the exclusions above; frozen baseline measurements are
-retained, and Open3D was not timed.}
+map-update timer with the exclusions above; Open3D was not timed.}
 \end{table}
 
 WarpVox is $43.46\times$ faster than reintegration on Kimera-Multi and
