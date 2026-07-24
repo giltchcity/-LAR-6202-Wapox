@@ -282,16 +282,26 @@ Stage & Variant & $n$ & F@10 & F@25 & F@50 & Core \\
 \end{tabular}
 \vspace{1pt}
 
-\parbox{\columnwidth}{\scriptsize $^\dagger$The same final Stage-3 configuration
-appears in both pairwise comparisons. Core time is in seconds and measures only
-the ablated component.}
+\parbox{\columnwidth}{\scriptsize $^\dagger$The daggered rows are the same
+final Stage-3 output, repeated as the reference in the Scale and Stage-3
+comparisons. Scale and Stage-3 rows score deformed surfaces before TSDF
+reconstruction; Stage-4 rows score meshes re-extracted from the corresponding
+output TSDFs. Core time is in seconds and measures only the ablated component.}
 \end{table}
 
 The 60K QEM proxy is $2.36\times$ faster than full-mesh ARAP while changing
 F@25/F@50 by only $-0.032/-0.054$ pp. Relative to the grid proxy, robust QEM is
 slightly faster and improves F@10/F@25/F@50 by $0.023/0.253/0.559$ pp. All
-three Stage-3 variants use identical source meshes and target files.
-Source-supported reconstruction adds 0.062 s while improving F@10/F@25/F@50 by
+three distinct Stage-3 variants use identical source meshes and target files.
+The Stage-4 block evaluates a different output object: a mesh re-extracted from
+the corrected TSDF rather than the Stage-3 deformed surface. Using the unrounded
+values, passing the final robust-QEM surface through source-supported Stage~4
+reduces F@10/F@25/F@50 by $0.122/0.100/0.044$ pp. The larger loss at tighter
+thresholds is consistent with greater sensitivity to the 0.25 m voxel grid and
+MC re-extraction. Thus, on this ten-case subset, returning a fusible TSDF rather
+than the Stage-3 surface incurs at most 0.122 pp mean surface F-score loss
+across the reported thresholds. Within the TSDF-output block, source-supported
+reconstruction adds 0.062 s while improving F@10/F@25/F@50 by
 $0.173/0.216/0.324$ pp and suppressing unsupported surfaces at open boundaries.
 
 \subsection{Extension to Gaussian Primitives}
