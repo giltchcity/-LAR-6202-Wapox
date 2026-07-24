@@ -4,7 +4,7 @@
 WarpVox assumes a static scene, valid calibration, and a locally coherent
 pre-correction TSDF. It cannot create geometry absent from the source map or
 repair incorrectly fused topology, and repeated or nearly overlapping surfaces
-may still yield a consistent but incorrect association. The bounded-distortion
+may still yield a consistent but less correct association. The bounded-distortion
 guard can leave holes where no valid deformation is found, while the attainable
 accuracy remains limited by residual error in the corrected trajectory. Such
 failures require reintegration from the original measurements.

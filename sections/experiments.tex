@@ -5,57 +5,41 @@
 
 We evaluate 39 RGB-D loop-closure cases from 18 Kimera-Multi
 sequences~\cite{tian23arxiv_kimeramultiexperiments} and 12 LiDAR cases from
-six KITTI sequences~\cite{Geiger2013IJRR}. Every method reconstructs the same
-temporal interval. For Kimera-Multi, the reference geometry is the official
-registered ground-truth point cloud, cropped to a 5 m tube around the
+six KITTI sequences~\cite{Geiger2013IJRR}, each bag is ran by Orbslam3 once and record the loop closure it creates. Every method reconstructs the same
+temporal interval. For Kimera-Multi, the reference geometry is the official ground-truth point cloud, cropped to a 5 m tube around the
 corresponding official trajectory to match Voxblox's maximum integration
 range. For KITTI, the reference is the GT-registered point cloud within the
-mapper's 25 m ray range. Predictions expressed outside the GT frame are aligned
-by a RANSAC--Umeyama $\mathrm{Sim}(3)$ fitted only to timestamp-matched
-trajectory positions; no mesh-to-GT registration is used. Reconstructions
+mapper's 25 m ray range. Estimated-trajectory use RANSAC--Umeyama $\mathrm{Sim}(3)$ only to best align GT-trajectory positions; no mesh-to-GT registration is used. Reconstructions
 built from the same corrected trajectory share one transform per case.
 Voxgraph is aligned from its own reported trajectory because it maintains an
 independently optimized submap frame; this baseline-specific trajectory fit
 cannot improve WarpVox relative to Voxgraph.
 
-For WarpVox, each bag is streamed once in chronological order and is never
-rewound at a loop event. Each SLAM keyframe is processed once and its
-modality-native range image is cached. At every loop event, WarpVox
+WarpVox runs alongside the standard Voxblox fusion pipeline, automatically extracting and caching the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. At every loop event, WarpVox
 re-associates the current source surface against the eligible cached keyframes,
 executes Stages~2--4, replaces the active Voxblox TSDF, discards the derived
 event state, and resumes fusion from the next frame. For the eighteen RGB-D
 sequences, the cache holds one uncompressed 16-bit depth image per keyframe at
 $0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707
-keyframes (mean $2.1\,\mathrm{GiB}$). It is linear in keyframe count and
-independent of voxel size. The reference reintegration uses the full historical
-range stream, whereas WarpVox retains only the SLAM keyframes.
+keyframes (mean $2.1\,\mathrm{GiB}$). Voxblox reintegration interpolates the same SLAM keyframes to replay all frames, whereas WarpVox uses only the keyframe.
 
 \noindent\textbf{Baselines.}
-Uncorrected TSDF uses the pre-correction trajectory.
+Uncorrected voxblox TSDF uses the pre-correction trajectory.
 Open3D~\cite{zhou2018open3dmodernlibrary3d} is an independent corrected-pose
-TSDF rebuild whose fusion and meshing conventions differ from Voxblox;
+TSDF rebuild;
 Wavemap~\cite{reijgwart2023wavemap} rebuilds a wavelet occupancy map, and
 Voxgraph~\cite{reijgwart2020voxgraph} optimizes rigid TSDF submaps. Voxblox
 reintegration~\cite{Oleynikova_2017} is therefore the representation-matched
-reference. WarpVox instead uses the active uncorrected TSDF, cached keyframe
-range images, and the pre/post-correction trajectories.
+reference. WarpVox instead uses the active uncorrected TSDF.
 
 We compute precision and recall by bidirectional nearest-neighbour tests and
 report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop,
 spatial region, two-million-point sample, random seed, and thresholds. Main
 TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched
-0.25 m finest level. Core times are measured on an AMD Ryzen 7 9700X with 64 GB
-RAM from persistent in-memory map state. Bag decoding, disk I/O, serialization,
-visualization, evaluation, and evaluation-only mesh extraction are excluded.
-WarpVox uses the current mesh layer maintained incrementally by Voxblox. Online
-keyframe caching and, in the separate PGMO comparison, MeshFrontend construction
-are outside their respective correction timers. The main-table Voxgraph timer
-covers the evaluated update rather than cumulative earlier online
-optimizations, whereas the PGMO timer accumulates backend callbacks. Each
-reported timer was collected in the evaluation run that produced its output.
-The anonymized supplementary code archive contains the WarpVox implementation,
-evaluation scripts, and YAML configurations used for all reported WarpVox
-results.
+0.25 m finest level. Core algorithm runtimes are measured from in-memory map state on an AMD Ryzen 7 9700X with 64 GB RAM, excluding I/O, serialization, and evaluation-only mesh extraction for all methods.
+WarpVox uses Voxblox’s online mesh, excluding keyframe caching. PGMO excludes MeshFrontend construction, while both PGMO and Voxgraph report backend time between consecutive loop events.
+Supplementary code contains all implementation,
+evaluation, and cases configurations scripts.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -144,7 +128,7 @@ Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
 \noindent\textbf{Source-volume semantics.}
 For the fields defined in
 \eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}, we compare WarpVox with
-corrected-pose Voxblox reintegration on ten 0.25 m checkpoints. Over voxels
+corrected-pose Voxblox reintegration on 10 0.25 m cases. Over voxels
 with positive weight in both maps and within the reference truncation band,
 the truncation-normalized TSDF MAE
 $\mathbb E[|\Phi^+-\Phi_{\rm reint}|]/\tau$ is 0.384, where
@@ -204,7 +188,7 @@ cases in the bottom two rows; each row uses the same view across methods.}
 Kimera-PGMO continuously updates a joint pose--mesh deformation graph, whereas
 WarpVox is triggered by a global trajectory revision.
 Table~\ref{tab:pgmo_full10} compares final states on ten complete Kimera-Multi
-bags using the same 5 cm Voxblox pre-mesh and final VIO-to-PGMO correction.
+bags using the same 5 cm Kimera uncorrected-mesh and final VIO-to-PGMO correction.
 PGMO additionally exploits timestamped pose--mesh and mesh--mesh associations;
 WarpVox constructs observation controls from cached keyframe range images and
 VIO poses. When asynchronous replays vary, we select the complete
@@ -231,8 +215,7 @@ Kimera-PGMO & 1.96 & 6.42 & 17.48 & 31.54 & 435.97 \\
 \end{tabular}
 \vspace{1pt}
 
-\parbox{\columnwidth}{\scriptsize Kimera-PGMO time accumulates graph
-optimization and mesh deformation over all callbacks; WarpVox time covers one
+\parbox{\columnwidth}{\scriptsize Kimera-PGMO time accumulates mesh deformation over all callbacks; WarpVox time covers one
 association, target estimation, deformation, and mesh-only TSDF update.}
 \end{table}
 
