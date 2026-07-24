@@ -15,7 +15,8 @@ Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world
 frame before and after trajectory correction. The map built with $T^-$ consists
 of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation
 distance $\tau$. Marching Cubes (MC)~\cite{10.1145/37402.37422} extracts the
-source surface $\mathcal M^-=(V^-,F)$.
+source surface $\mathcal M^-=(V^-,F)$. Let $\mathcal A$ denote the active TSDF
+cells intersected by this zero set.
 
 During fusion, WarpVox caches the timestamped, modality-native range images of
 SLAM keyframes,
@@ -23,13 +24,14 @@ SLAM keyframes,
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
 \label{eq:keyframe_cache}
 \end{equation}
-where $D_i$ is an RGB-D depth image or a spherical LiDAR range image. The cache
-persists across correction events and is augmented by subsequent keyframes. At
-every event, Stage~1 uses $T^-$ to rebuild associations between the current
-source surface and the cached observations. Thus observations acquired before
-an earlier correction remain available to later events. Only the derived
-associations, targets, and deformation state are discarded after the corrected
-volume is committed.
+where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D
+depth image or a spherical LiDAR range image. The cache persists across
+correction events and is augmented by subsequent keyframes. At every event,
+Stage~1 uses $T^-$ to rebuild associations between the current source surface
+and the cached observations. Thus observations acquired before an earlier
+correction remain available to later events. Only the derived associations,
+targets, and deformation state are discarded after the corrected volume is
+committed.
 
 Fig.~\ref{fig:pipeline} summarizes the four stages.
 \begin{figure}[t]
@@ -182,9 +184,9 @@ fits~\cite{schoenemann1966procrustes,yao2020welsch} estimate local motion; a
 measured target is replaced only when its compatibility residual lies outside
 the local median--MAD envelope and more than half of its same-component support
 agrees with the fitted motion. Components without accepted controls inherit
-robust nearby motion through three spatially separated synthetic anchors. The
-resulting accepted or synthesized targets are
-$\{p_a^*:a\in\mathcal C_P\}$.
+robust nearby motion through three spatially separated synthetic anchors. Let
+$\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted
+measured or synthesized targets $p_a^*$.
 
 WarpVox performs a single event-level proxy ARAP
 optimization~\cite{ARAP_modeling:2007,
@@ -274,20 +276,35 @@ $x$ to the source volume:
 \end{equation}
 This preserves tangential and normal offsets relative to the corresponding
 triangles. With trilinear source samples $\widetilde\Phi^-$ and
-$\widetilde w^-$, define
+$\widetilde w^-$, define the provisional transferred support
 \begin{equation}
 \begin{aligned}
 d^+(x)&=\min\!\left(\tau,\|x-q^+\|\right),\\
-\Omega_{\rm tr}&=
+\widehat\Omega_{\rm tr}&=
 \left\{x\in\mathcal X^+:\widetilde w^-(\Psi_f(x))>0\right\}.
 \end{aligned}
 \label{eq:transferred_support}
 \end{equation}
+Let $\Omega_{\rm nb}=\{x\in\widehat\Omega_{\rm tr}:
+|\widetilde\Phi^-(\Psi_f(x))|<\tau\}$ be the unsaturated transferred narrow
+band. A 6-connected component of
+$\widehat\Omega_{\rm tr}\setminus\Omega_{\rm nb}$ is retained only if it
+touches $\Omega_{\rm nb}$, and any transferred voxel whose insertion would
+introduce a sign change across an adjacent active-voxel pair is removed. Let
+$\Omega_{\rm tr}\subseteq\widehat\Omega_{\rm tr}$ denote the surviving set.
 
-Let $\Omega_{\rm fb}$ contain voxel-connected components of
-$\{x\notin\Omega_{\rm tr}:d^+(x)\le1.5s\}$ that touch transferred support but
-whose closest feature is not a boundary edge of $\bar F$. Their finite fallback
-weight is
+Let $\partial_{\mathrm{open}}\mathcal M^+$ denote the union of open boundary edges
+and their incident vertices on the retained warped surface. Fallback support is
+restricted to unsupported voxels with strictly positive finite-band weight:
+\begin{equation}
+\begin{aligned}
+\Omega_{\rm fb}=\{x\in\mathcal X^+\setminus\Omega_{\rm tr}:&
+\ \|x-q^+\|<1.5s,\\[-1mm]
+& q^+\notin\partial_{\mathrm{open}}\mathcal M^+\}.
+\end{aligned}
+\label{eq:fallback_support}
+\end{equation}
+Its finite weight is
 \begin{equation}
 w_{\rm fb}(x)=\operatorname{clamp}_{[0,1]}\!\left(
 1.5-\frac{\|x-q^+\|}{s}\right).
@@ -317,11 +334,11 @@ w_{\rm fb}(x), & x\in\Omega_{\rm fb},\\
 \end{cases}
 \label{eq:hybrid_weight}
 \end{equation}
-A fallback voxel is rejected if its insertion would create a sign change across
-an adjacent active-voxel pair. Outside $\Omega^+$ the zero weight makes the
-stored distance immaterial. The resulting
-$(\Phi^+,w^+)$ is serialized in the native Voxblox TSDF format; its MC mesh is
-used for surface evaluation and visualization.
+By construction,
+$\Omega^+=\{x\in\mathcal X^+:w^+(x)>0\}$. Outside $\Omega^+$ the zero weight
+makes the stored distance immaterial. The resulting $(\Phi^+,w^+)$ is
+serialized in the native Voxblox TSDF format; its MC mesh is used for surface
+evaluation and visualization.
 
 \subsection{Complexity and Scope}
 
@@ -330,9 +347,10 @@ $X^+=|\mathcal X^+|$ be the numbers of active source cells, cached keyframes,
 proxy vertices, and allocated output voxels. At fixed resolution, MC produces
 only a constant number of surface elements per active cell, so $|V^-|=O(A)$.
 The cache and resolved correction state require
-$O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage, respectively. If each
-source vertex is tested against at most $\kappa$ cached keyframes whose valid
-views cover it, the complete correction cost is
+$O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage, respectively. Let
+$\kappa\le K_{\rm KF}$ be the maximum number of eligible cached keyframes tested
+for any source vertex. Under the block-local allocation in
+\eqref{eq:allocation}, the complete correction cost is
 \begin{equation}
 \begin{aligned}
 C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
@@ -343,8 +361,8 @@ C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
 where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost.
 The reported implementation uses $n_v=15$ and a 60K-vertex proxy cap; all
 remaining thresholds and discrete predicates are fixed within each sensor
-modality and are not tuned per case. The dense-frame reintegration term
-$O(N|\Omega|)$ is replaced by keyframe reassociation $O(\kappa A)$; Stages~3--4
-then follow the active surface, proxy, and output volume. Cache storage grows
-linearly with $K_{\rm KF}$ rather than being bounded independently of session
-length.
+modality, are not tuned per case, and are provided in the accompanying YAML
+configurations. The dense-frame reintegration term $O(N|\Omega|)$ is replaced
+by keyframe reassociation $O(\kappa A)$; Stages~3--4 then follow the active
+surface, proxy, and output volume. Cache storage grows linearly with
+$K_{\rm KF}$ rather than being bounded independently of session length.
