@@ -28,17 +28,18 @@
 \pagestyle{empty}
 
 \begin{abstract}
-Loop closure retroactively changes sensor poses after their range observations have been fused, leaving a TSDF inconsistent with the corrected trajectory. Full reintegration restores consistency but revisits the entire frame history. WarpVox instead retains bounded, timestamped sensor-frame support during fusion. When a trajectory revision arrives, WarpVox re-expresses these samples with corrected poses to form surface targets, propagates the targets through a single event-level proxy deformation, and reconstructs a Voxblox-compatible TSDF whose zero set follows the warped surface while observed support is inherited from the source volume. The correction stage therefore requires no historical range-frame replay and scales with active geometry. Across 39 Kimera-Multi and 12 KITTI checkpoints at 0.25 m, WarpVox remains within 0.05 and 0.32 percentage points of reintegration at F@25 while reducing mean core time from 109.25 to 2.51 s and from 15.73 to 4.87 s. In a ten-bag final-state comparison, WarpVox improves mean F@50 by 3.03 points over Kimera-PGMO with a $9.27\times$ reduction in cumulative core time. A geometry-only SplaTAM extension reaches 40.59 F@50 versus 41.01 for a corrected-pose rebuild in approximately 21 s rather than 2 h. WarpVox cannot recover geometry or topology absent from the source map.
+Loop closure retroactively changes sensor poses after their range observations have been fused, leaving a TSDF inconsistent with the corrected trajectory. Full reintegration restores consistency but revisits the entire frame history. WarpVox instead caches the range images of SLAM keyframes and rebuilds their associations to the current surface at each trajectory revision. It re-expresses the matched sensor-frame samples with corrected poses to form surface targets, propagates the targets through a single event-level proxy deformation, and reconstructs a Voxblox-compatible TSDF whose zero set follows the warped surface while observed support is inherited from the source volume. The correction stage never re-fuses the accumulated dense range stream: it re-queries only cached keyframes, while deformation and reconstruction scale with active geometry. Across 39 Kimera-Multi and 12 KITTI checkpoints at 0.25 m, WarpVox remains within 0.05 and 0.32 percentage points of reintegration at F@25 while reducing mean core time from 109.25 to 2.51 s and from 15.73 to 4.87 s. In a ten-bag final-state surface comparison, a single mesh-only WarpVox update improves mean F@50 by 3.03 percentage points (median 0.20) over Kimera-PGMO, while PGMO accumulates $9.27\times$ more core time over its callbacks. In a single-sequence case study, a geometry-only SplaTAM extension reaches 40.59 F@50 versus 41.01 for a corrected-pose rebuild in approximately 21 s rather than 2 h. WarpVox cannot recover geometry or topology absent from the source map.
 \end{abstract}
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.92\textwidth]{Figures/teaser_v1.jpg}
 \caption{\textbf{WarpVox corrects a TSDF after loop closure without
-reintegrating historical measurements.} The pre-correction map remains locally
+re-fusing the historical range stream.} The pre-correction map remains locally
 coherent but is globally inconsistent with the revised trajectory. WarpVox
-re-expresses retained observation support, propagates the resulting surface
-targets through one event-level deformation, and reconstructs a corrected TSDF.}
+re-associates cached keyframe measurements with the current surface, propagates
+the resulting targets through one event-level deformation, and reconstructs a
+corrected TSDF.}
 \label{fig:teaser}
 \end{figure*}
 
