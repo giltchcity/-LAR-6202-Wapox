@@ -33,8 +33,7 @@ report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop,
 spatial region, two-million-point sample, random seed, and thresholds. Main
 TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched
 0.25 m finest level. Core times are measured on an AMD Ryzen 7 9700X with 64 GB
-RAM from in-memory inputs. Loading, saving, normal and mesh extraction,
-diagnostics, visualization, and evaluation are excluded.
+RAM from in-memory inputs. Loading, saving, and mesh extraction are excluded.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -112,6 +111,10 @@ At 0.10 m on the same 11 Kimera-Multi cases, WarpVox obtains
 17.13/39.77/57.83 at F@10/25/50 versus 17.21/39.68/57.12 for reintegration,
 while reducing core time from 192.548 to 12.803 s ($15.04\times$).
 Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
+
+\noindent\textbf{Source-volume semantics.}
+We additionally compare the reconstructed TSDF with corrected-pose Voxblox reintegration on ten 0.25,m checkpoints. Over jointly supported voxels within the reference truncation band, WarpVox obtains a normalized TSDF MAE of 0.384 and 95.17 sign agreement. Its observed-support precision, recall, and IoU are 95.53, 68.38, and 66.33, respectively. Thus, WarpVox conservatively preserves observed-space semantics, introducing little unsupported space but retaining less support than full reintegration.
+
 
 \begin{figure*}[!t]
 \centering
