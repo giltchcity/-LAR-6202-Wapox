@@ -19,7 +19,7 @@ independently optimized submap frame; this baseline-specific trajectory fit
 cannot improve WarpVox relative to Voxgraph.
 
 WarpVox runs alongside the standard Voxblox fusion pipeline, automatically extracting and caching the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. At every loop event, WarpVox
-re-associates the current source surface against the eligible cached keyframes,
+re-associates the current source surface with the cached keyframes,
 executes Stages~2--4, replaces the active Voxblox TSDF, discards the derived
 event state, and resumes fusion from the next frame. For the eighteen RGB-D
 sequences, the cache holds one uncompressed 16-bit depth image per keyframe at
