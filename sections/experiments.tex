@@ -108,8 +108,13 @@ intra-submap drift. Wavemap's profile---low F@10 but competitive KITTI
 F@50---is consistent with a hierarchical occupancy representation whose
 0.25 m setting is its finest rather than a uniform resolution.
 
+At 0.10 m on 11 Kimera-Multi cases, WarpVox obtains
+17.13/39.77/57.83 at F@10/25/50 versus 17.21/39.68/57.12 for reintegration,
+while reducing core time from 192.548 to 12.803 s ($15.04\times$).
 Table~\ref{tab:runtime_breakdown} separates association, target estimation,
-deformation, topology processing, and TSDF reconstruction.
+deformation, topology processing, and TSDF reconstruction at both resolutions.
+Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
+
 
 \begin{table}[t]
 \centering
@@ -130,23 +135,7 @@ Kimera, 10 cm (11) & 6.219 & 0.244 & 5.298 & 0.004 & 1.038 & 12.803 \\
 
 \end{table}
 
-At 0.10 m on the same 11 Kimera-Multi cases, WarpVox obtains
-17.13/39.77/57.83 at F@10/25/50 versus 17.21/39.68/57.12 for reintegration,
-while reducing core time from 192.548 to 12.803 s ($15.04\times$).
-Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
 
-\noindent\textbf{Source-volume semantics.}
-For the fields defined in
-\eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}, we compare WarpVox with
-corrected-pose Voxblox reintegration on ten 0.25 m cases. Over voxels
-with positive weight in both maps and within the reference truncation band,
-the truncation-normalized TSDF MAE
-$\mathbb E[|\Phi^+-\Phi_{\rm reint}|]/\tau$ is 0.384, where
-$\Phi_{\rm reint}$ denotes the reintegrated reference field; sign agreement is
-$95.17\%$. Treating $w>0$ as observed, support precision, recall, and IoU are
-$95.53\%$, $68.38\%$, and $66.33\%$, respectively. We
-conservatively preserves observed-space semantics, introducing little
-unsupported space but retaining less support than full reintegration.
 
 \begin{figure*}[!t]
 \centering
@@ -199,11 +188,7 @@ cases in the bottom two rows; each row uses the same view across methods.}
 \subsection{Event-Triggered Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Starting from un-optimized Kimera-VIO trajectory and frontend mesh. Both methods receive the
-same final trajectory correction: the PGMO mesh is scored directly, while
-WarpVox applies that correction to the corresponding VIO pre-mesh. That pre-mesh
-carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment
-compares surface correction alone.
+Both methods take the unoptimized trajectory and frontend mesh produced by the same Kimera-VIO run. Each bag is evaluated under the same final VIO-to-PGMO trajectory correction: the PGMO mesh is scored directly, whereas WarpVox applies this correction to the corresponding VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares surface correction alone.
 
 \begin{table}[t]
 \centering
@@ -222,23 +207,20 @@ Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
 \bottomrule
 \end{tabular}
 \vspace{1pt}
-\parbox{\columnwidth}{\scriptsize Kimera-PGMO reports the optimization and mesh-deformation cost of producing
+\parbox{\columnwidth}{\scriptsize Kimera-PGMO reports the deformation cost of producing
 its final mesh; WarpVox reports one correction of the corresponding VIO
 pre-mesh.}
 \end{table}
 
-One WarpVox correction improves mean F@25/F@50 by 1.24/3.03 pp
-(median F@50 difference 0.20 pp), using 47.02 s versus 435.97 s for
-Kimera-PGMO to produce its final mesh incrementally. Per-bag F@50 differences form two groups: four gains of
-5.5--11.7 pp and six cases within $\pm0.5$ pp; 
+One WarpVox correction improves mean F@25/F@50 by 1.24/3.03 pp, using 47.02 s versus 435.97 s for
+Kimera-PGMO to produce its final mesh incrementally. Per-bag F@50 differences comprise four gains of 5.5--11.7 pp and six cases within $\pm0.5$ pp. Thus WarpVox offers a lower-cost final-state operating point, while PGMO provides intermediate updates and temporal mesh associations.
 
 
 % two of the latter are marginally
 % negative. The two negative cases exhibit opposite precision--recall tradeoffs:
 % one gains 6.51 pp recall while losing 3.26 pp precision, whereas the other gains 1.41 pp precision while losing 0.92 pp recall. 
 
-Thus WarpVox offers a lower-cost final-state operating point, while PGMO provides intermediate updates and
-temporal mesh associations.
+
 
 
 
@@ -289,27 +271,17 @@ costs at most 0.122 pp mean surface F-score. Within Stage~4, source-supported
 reconstruction adds 0.062 s over mesh-only while improving F@10/F@25/F@50 by
 $0.173/0.216/0.324$ pp and suppressing unsupported surfaces at open boundaries.
 
-\noindent\textbf{Sensitivity to $n_v$.}
-$n_v$ caps observations retained per vertex. On the ablation set,
-sweeping $n_v\in\{1,4,8,15\}$ shifts mean F@25 by only $0.019$\,pp
-(largest per-checkpoint range $0.085$\,pp). At $n_v=15$, vertices
-retain $2.91$ observations on average and only $1.90\%$ reach the cap, so we
-adopt it as a safe upper bound.
 
+\noindent\textbf{Stage-4 source-volume semantics.}
+For the fields defined in \eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}, we compare WarpVox with corrected-pose Voxblox reintegration on same ten cases. Over voxels with positive weight in both maps and within the reintegrated truncation band, the truncation-normalized absolute field difference $\mathbb E[|\Phi^+-\Phi_{\rm reint}|]/\tau$ is 0.384, with $95.17\%$ sign agreement. The field difference is not purely a geometric error: WarpVox uses Euclidean distance to the warped surface, whereas Voxblox integrates projective ray distances, which need not coincide away from the same zero set~\cite{han2018flashfusion}. We therefore assess zero-set consistency using the surface F-scores above and sidedness using sign agreement. Treating $w>0$ as observed, support precision, recall, and IoU are $95.53\%$, $68.38\%$, and $66.33\%$, respectively. WarpVox thus introduces little unsupported space, although it retains less observed support than full reintegration.
+
+
+
+Varying the per-vertex association cap $n_v \in \{1,4,8,15\}$ on the same ten cases changes mean F@25 by only $0.019$ pp, with a maximum per-checkpoint range of $0.085$ pp. At $n_v=15$, vertices retain only $2.91$ records on average and $1.90\%$ reach the cap; we therefore use $n_v=15$ to avoid truncating valid support while keeping per-vertex storage bounded.
 
 
 
 
 \noindent\textbf{Cross-representation 3DGS case study.}
-To test whether the observation-derived target mechanism transfers beyond
-TSDFs, we apply the same corrected surface targets to the Gaussian centres of
-one SplaTAM~\cite{keetha2024splatam} reconstruction on a Kimera-Multi sequence,
-while leaving all other Gaussian attributes unchanged. F@25/F@50 improves from 17.23/35.25 to 23.12/40.59, and
-depth L1 decreases from 173.93 to 142.54 cm in approximately 21 s. A
-corrected-pose rebuild obtains 23.25/41.01 and 141.37 cm in approximately 2 h.
-This single-sequence result suggests that the target construction can transfer
-beyond voxel grids. It is reported only as a representation-transfer case
-study: Gaussian splats~\cite{kerbl2023gaussians} do not provide the
-signed-distance and observed-free-space semantics target by WarpVox's
-primary TSDF/ESDF mapping setting.
+To test whether the observation-derived target mechanism transfers beyond TSDFs, we apply the same corrected surface targets to the Gaussian centres of one SplaTAM~\cite{keetha2024splatam} reconstructed Kimera-Multi sequence, while leaving all other Gaussian attributes unchanged. F@25/F@50 improves from 17.23/35.25 to 23.12/40.59, and depth L1 decreases from 173.93 to 142.54 cm in 21 s. A corrected-pose rebuild obtains 23.25/41.01 and 141.37 cm in approximately 2 h. This single-sequence result suggests that the target construction can transfer beyond voxel grids. It is reported only as a representation-transfer case study: Gaussian splats~\cite{kerbl2023gaussians} do not provide the signed-distance and observed-free-space semantics targeted by WarpVox's primary TSDF mapping setting.
 
