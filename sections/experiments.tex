@@ -182,7 +182,7 @@ cases in the bottom one rows; each row uses the same view across methods.}
 \subsection{Event-Triggered Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-This experiment isolates the target mechanism: PGMO displaces from spatio-temporal proximity, WarpVox from its Stage-1--2 observation targets. Both methods take the unoptimized trajectory and frontend mesh produced by the same Kimera-VIO run. Each bag is evaluated under the same final VIO-to-PGMO trajectory correction: the PGMO mesh is scored directly, whereas WarpVox applies this correction to the corresponding VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares correction without source-volume support transfer.
+Both methods take the unoptimized trajectory and frontend mesh produced by the same Kimera-VIO run. Each bag is evaluated under the same final VIO-to-PGMO trajectory correction: the PGMO mesh is scored directly, whereas WarpVox applies this correction to the corresponding VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares correction without source-volume support transfer.
 
 \begin{table}[t]
 \centering
@@ -195,7 +195,7 @@ bags.}}
 \toprule
 Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 \midrule
-VIO pre-mesh & 4.26 & 12.67 & 23.93 & -- \\
+Kimera-VIO pre-mesh & 4.26 & 12.67 & 23.93 & -- \\
 Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
 \textbf{WarpVox} & \textbf{6.53} &
 \textbf{18.72} & \textbf{34.57} & \textbf{47.02} \\
