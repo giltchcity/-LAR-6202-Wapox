@@ -245,7 +245,7 @@ Full-mesh ARAP
   & 10.278 & 26.749 & 45.490 & 3.323 & -- \\
 60K grid proxy
   & 10.254 & 26.464 & 44.877 & 1.471 & -- \\
-60K robust QEM
+Final robust proxy
   & 10.277 & 26.717 & 45.436 & 1.408 & -- \\
 Mesh-only TSDF
   &  9.982 & 26.400 & 45.068 & 1.408 & 0.098 \\
@@ -255,17 +255,17 @@ Final source-supported TSDF
 \end{tabular}
 \vspace{1pt}
 \parbox{\columnwidth}{\scriptsize
-The surface rows compare how the source mesh is coarsened before ARAP: no
-coarsening (full mesh), uniform grid quantization (grid proxy), and our
-error-minimizing QEM representative per cell. The two TSDF rows both use the
-robust-QEM surface above and score the mesh re-extracted from the Stage-4
-volume.}
+The first three rows compare Stage-3 designs: full-mesh ARAP, a 60K grid proxy,
+and the complete final 60K component-aware robust proxy pipeline, including
+QEM representatives, robust rigid-field control propagation, synthetic anchors,
+barycentric transfer, and topology repair. Both TSDF rows use its output surface
+and score meshes re-extracted from their Stage-4 volumes.}
 \end{table}
-The final 60K robust-QEM deformation is $2.36\times$ faster than full-mesh
+The final 60K proxy is $2.36\times$ faster than full-mesh
 ARAP while changing F@10/F@25/F@50 by only
-$-0.001/-0.032/-0.054$ pp. Relative to the 60K grid proxy, it improves the
+$-0.001/-0.032/-0.054$ pp. Relative to the 60K grid proxy, the final Stage-3 design improves the
 same scores by $0.023/0.253/0.559$ pp while slightly reducing Stage-3 time.
-Using the unrounded values, Stage~4 changes the robust-QEM surface by
+Using the unrounded values, Stage~4 changes the final Stage-3 surface by
 $-0.122/-0.100/-0.044$ pp; thus, on this subset, returning the fusible TSDF
 costs at most 0.122 pp mean surface F-score. Within Stage~4, source-supported
 reconstruction adds 0.062 s over mesh-only while improving F@10/F@25/F@50 by
@@ -284,4 +284,3 @@ Varying the per-vertex association cap $n_v \in \{1,4,8,15\}$ on the same ten ca
 
 \noindent\textbf{Cross-representation 3DGS case study.}
 To test whether the observation-derived target mechanism transfers beyond TSDFs, we apply the same corrected surface targets to the Gaussian centres of one SplaTAM~\cite{keetha2024splatam} reconstructed Kimera-Multi sequence, while leaving all other Gaussian attributes unchanged. F@25/F@50 improves from 17.23/35.25 to 23.12/40.59, and depth L1 decreases from 173.93 to 142.54 cm in 21 s. A corrected-pose rebuild obtains 23.25/41.01 and 141.37 cm in approximately 2 h. This single-sequence result suggests that the target construction can transfer beyond voxel grids. It is reported only as a representation-transfer case study: Gaussian splats~\cite{kerbl2023gaussians} do not provide the signed-distance and observed-free-space semantics targeted by WarpVox's primary TSDF mapping setting.
-
