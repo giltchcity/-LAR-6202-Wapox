@@ -6,9 +6,7 @@ Dense 3D maps support navigation, manipulation, and scene understanding in robot
 These systems accept poses from an external SLAM front-end. Loop closure and pose-graph optimization~\cite{Campos_2021,5979949} retroactively correct the trajectory, leaving the TSDF in the old world geometry and therefore inconsistent with the revised poses (Fig.~\ref{fig:teaser}).
 
 \vspace{1mm}\noindent\textit{The map-rebuild bottleneck.}
-The standard remedy is to discard the map and reintegrate all $N$ range frames with corrected poses~\cite{Cramariuc_2023,rosinol2021kimeraslamspatialperception}. Its $O(N|\Omega|)$ cost, for $|\Omega|$ measurements per frame, is paid again after every global correction and can reach minutes on long sessions. De-integration and re-integration~\cite{han2018flashfusion} avoids a full
-rebuild by removing and re-adding, but costs integration
-twice per affected frame.
+The standard remedy is to discard the map and reintegrate all $N$ range frames with corrected poses~\cite{Cramariuc_2023,rosinol2021kimeraslamspatialperception}. Its $O(N|\Omega|)$ cost, for $|\Omega|$ measurements per frame, is paid again after every global correction and can reach minutes on long sessions. A de-integration/reintegration cycle~\cite{han2018flashfusion} avoids a full rebuild but performs integration twice for each affected frame.
 
 \vspace{1mm}\noindent\textit{Why existing solutions fall short.}
 Submap methods such as Voxgraph~\cite{reijgwart2020voxgraph} apply rigid per-submap transforms but leave intra-submap drift unresolved. Non-rigid surfel SLAM~\cite{whelan2016elasticfusion} is embedded in its own tracking system rather than exposing an external TSDF-correction interface, while neural implicit maps~\cite{sucar2021imap,zhu2022niceslam,liso2024loopyslam,bruns2024neuralgraphmap} require representation-specific re-optimization.
@@ -40,5 +38,5 @@ accumulated dense stream.
 \begin{itemize}
     \item We formulate loop-closure map correction from persistent keyframe range images with event-wise surface reassociation, avoiding volumetric replay of accumulated dense frames.
     \item We combine observation-derived targets, one event-level proxy deformation, and source-supported TSDF reconstruction to return a native Voxblox TSDF suitable for continued fusion.
-    \item We evaluate RGB-D and LiDAR correction against reintegration and mapping baselines over 51 checkpoints, compare final-state correction with Kimera-PGMO on ten complete bags.
+    \item We evaluate RGB-D and LiDAR correction against reintegration and mapping baselines over 51 checkpoints and compare final-state correction with Kimera-PGMO on ten complete bags.
 \end{itemize}
