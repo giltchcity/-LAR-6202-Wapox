@@ -182,7 +182,7 @@ cases in the bottom two rows; each row uses the same view across methods.}
 \subsection{Event-Triggered Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Both methods take the unoptimized trajectory and frontend mesh produced by the same Kimera-VIO run. Each bag is evaluated under the same final VIO-to-PGMO trajectory correction: the PGMO mesh is scored directly, whereas WarpVox applies this correction to the corresponding VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares surface correction alone.
+Both methods use the unoptimized trajectory and frontend mesh produced by the same Kimera-VIO run. For each bag, the evaluated PGMO output is the final trajectory--mesh pair whose optimized trajectory has the lowest ATE. The PGMO mesh is scored directly, while WarpVox applies the corresponding final VIO-to-PGMO correction to the matching VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares surface correction alone.
 
 \begin{table}[t]
 \centering
@@ -211,15 +211,6 @@ to produce its final mesh.
 Per-bag F@50 differences comprise four gains of 5.5--11.7 pp and six cases
 within $\pm0.5$ pp. Thus WarpVox offers a lower-cost final-state operating
 point, while PGMO provides intermediate updates and temporal mesh associations.
-
-
-% two of the latter are marginally
-% negative. The two negative cases exhibit opposite precision--recall tradeoffs:
-% one gains 6.51 pp recall while losing 3.26 pp precision, whereas the other gains 1.41 pp precision while losing 0.92 pp recall. 
-
-
-
-
 
 
 \subsection{Ablation Study}
