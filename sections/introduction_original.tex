@@ -6,12 +6,14 @@ Dense 3D maps support navigation, manipulation, and scene understanding in robot
 These systems accept poses from an external SLAM front-end. Loop closure and pose-graph optimization~\cite{Campos_2021,5979949} retroactively correct the trajectory, leaving the TSDF in the old world geometry and therefore inconsistent with the revised poses (Fig.~\ref{fig:teaser}).
 
 \vspace{1mm}\noindent\textit{The map-rebuild bottleneck.}
-The standard remedy is to discard the map and reintegrate all $N$ range frames with corrected poses~\cite{Cramariuc_2023,rosinol2021kimeraslamspatialperception}. Its $O(N|\Omega|)$ cost, for $|\Omega|$ measurements per frame, is paid again after every global correction and can reach minutes on long sessions.
+The standard remedy is to discard the map and reintegrate all $N$ range frames with corrected poses~\cite{Cramariuc_2023,rosinol2021kimeraslamspatialperception}. Its $O(N|\Omega|)$ cost, for $|\Omega|$ measurements per frame, is paid again after every global correction and can reach minutes on long sessions. De-integration and re-integration~\cite{han2018flashfusion} avoids a full
+rebuild by removing and re-adding, but costs integration
+twice per affected frame.
 
 \vspace{1mm}\noindent\textit{Why existing solutions fall short.}
-Submap methods such as Voxgraph~\cite{reijgwart2020voxgraph} and FlashFusion~\cite{han2018flashfusion} apply rigid per-submap transforms but leave intra-submap drift unresolved. Non-rigid surfel SLAM~\cite{whelan2016elasticfusion} is embedded in its own tracking system rather than exposing an external TSDF-correction interface, while neural implicit maps~\cite{sucar2021imap,zhu2022niceslam,liso2024loopyslam,bruns2024neuralgraphmap} require representation-specific re-optimization.
+Submap methods such as Voxgraph~\cite{reijgwart2020voxgraph} apply rigid per-submap transforms but leave intra-submap drift unresolved. Non-rigid surfel SLAM~\cite{whelan2016elasticfusion} is embedded in its own tracking system rather than exposing an external TSDF-correction interface, while neural implicit maps~\cite{sucar2021imap,zhu2022niceslam,liso2024loopyslam,bruns2024neuralgraphmap} require representation-specific re-optimization.
 
-\vspace{1mm}\noindent\textit{Observation invariance: the key insight.}
+\vspace{1mm}\noindent\textit{Observation invariance:}
 A calibrated range sample expressed in its sensor frame is unchanged by a later
 world-frame pose correction, but its association to an evolving map surface is
 not. WarpVox therefore caches timestamped keyframe range images and rebuilds

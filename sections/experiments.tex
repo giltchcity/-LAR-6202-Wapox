@@ -45,8 +45,11 @@ TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched
 0.25 m finest level.
 
 \noindent\textbf{Timing protocol.}
-For all methods, we report the core algorithm runtime from in-memory state
-(e.g., TSDF/occupancy integration or submap optimization) on an AMD 9700X with 64,GB RAM. Disk I/O, evaluation-only mesh extraction, and processing outside the correction (PGMO MeshFrontend construction) are excluded.
+For all methods, we report core map-update time from in-memory state on an AMD
+Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh
+optimization, or WarpVox source-mesh-to-TSDF correction, as applicable. Disk
+I/O, evaluation-only mesh extraction, and processing outside correction,
+including PGMO MeshFrontend construction, are excluded.
 
 
 Supplementary contains all implementation/cases code.
@@ -196,10 +199,7 @@ cases in the bottom two rows; each row uses the same view across methods.}
 \subsection{Event-Triggered Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Kimera-PGMO deforms each mesh vertex as a weighted blend of corrections from
-its timestamp-associated pose/deformation-graph nodes, jointly optimized with
-the trajectory; WarpVox instead builds observation controls from cached
-keyframe range images and the corrected VIO poses. Both methods receive the
+Starting from un-optimized Kimera-VIO trajectory and frontend mesh. Both methods receive the
 same final trajectory correction: the PGMO mesh is scored directly, while
 WarpVox applies that correction to the corresponding VIO pre-mesh. That pre-mesh
 carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment
