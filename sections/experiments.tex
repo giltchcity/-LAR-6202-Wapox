@@ -10,11 +10,7 @@ are recorded. Every method reconstructs the same
 temporal interval. For Kimera-Multi, the reference geometry is the official ground-truth point cloud, cropped to a 5 m tube around the
 corresponding official trajectory to match Voxblox's maximum integration
 range. For KITTI, the reference is the GT-registered point cloud within the
-mapper's 25 m ray range. Predictions expressed outside the GT frame are aligned by a RANSAC--Umeyama 
-% $\mathrm{Sim}(3)$ 
-fitted only to timestamp-matched trajectory positions; no
-mesh-to-GT registration is used. Reconstructions
-built from the same corrected trajectory share one transform per case.
+mapper's 25 m ray range. Predictions expressed outside the GT frame are aligned to it using only timestamp-matched trajectory positions; no mesh-to-GT registration is used. Reconstructions built from the same corrected trajectory share one alignment per case.
 Voxgraph is aligned from its own reported trajectory because it maintains an
 independently optimized submap frame; this baseline-specific trajectory fit
 cannot improve WarpVox relative to Voxgraph.
@@ -147,47 +143,46 @@ Kimera, 10 cm (11) & 6.219 & 0.244 & 5.298 & 0.004 & 1.038 & 12.803 \\
 \newcommand{\qd}[1]{\includegraphics[width=.245\linewidth,trim=100 20 100 20,clip]{#1}}
 \begin{tabular}{cccc}
 \qa{Figures/qualitative/5_voxblox_pre.png} &
-\qa{Figures/qualitative/5_voxblox_post.png} &
 \qa{Figures/qualitative/5_voxgraph_post_sep.png} &
-\qa{Figures/qualitative/5_warped_tsdf.png} \\[2pt]
+\qa{Figures/qualitative/5_warped_tsdf.png} &
+\qa{Figures/qualitative/5_voxblox_post.png} \\[2pt]
 \qb{Figures/qualitative/28_voxblox_pre.png} &
-\qb{Figures/qualitative/28_voxblox_post.png} &
 \qb{Figures/qualitative/28_voxgraph_post_sep.png} &
-\qb{Figures/qualitative/28_warped_tsdf.png} \\[2pt]
+\qb{Figures/qualitative/28_warped_tsdf.png} &
+\qb{Figures/qualitative/28_voxblox_post.png} \\[2pt]
 \qc{Figures/qualitative/40_voxblox_pre.png} &
-\qc{Figures/qualitative/40_voxblox_post.png} &
 \qc{Figures/qualitative/40_voxgraph_post_sep.png} &
-\qc{Figures/qualitative/40_warped_tsdf.png} \\[2pt]
-\qd{Figures/qualitative/35_voxblox_pre.png} &
-\qd{Figures/qualitative/35_voxblox_post.png} &
-\qd{Figures/qualitative/35_voxgraph_post_sep.png} &
-\qd{Figures/qualitative/35_warped_tsdf.png} \\[4pt]
+\qc{Figures/qualitative/40_warped_tsdf.png} &
+\qc{Figures/qualitative/40_voxblox_post.png} \\[2pt]
+% \qd{Figures/qualitative/35_voxblox_pre.png} &
+% \qd{Figures/qualitative/35_voxgraph_post_sep.png} &
+% \qd{Figures/qualitative/35_warped_tsdf.png} &
+% \qd{Figures/qualitative/35_voxblox_post.png} \\[4pt]
 \qc{Figures/qualitative/76_voxblox_pre.png} &
-\qc{Figures/qualitative/76_voxblox_post.png} &
 \qc{Figures/qualitative/76_voxgraph_post_sep.png} &
-\qc{Figures/qualitative/76_warped_tsdf.png} \\[2pt]
-\qd{Figures/qualitative/77_voxblox_pre.png} &
-\qd{Figures/qualitative/77_voxblox_post.png} &
-\qd{Figures/qualitative/77_voxgraph_post_sep.png} &
-\qd{Figures/qualitative/77_warped_tsdf.png} \\[2pt]
+\qc{Figures/qualitative/76_warped_tsdf.png} &
+\qc{Figures/qualitative/76_voxblox_post.png} \\[2pt]
+% \qd{Figures/qualitative/77_voxblox_pre.png} &
+% \qd{Figures/qualitative/77_voxgraph_post_sep.png} &
+% \qd{Figures/qualitative/77_warped_tsdf.png} &
+% \qd{Figures/qualitative/77_voxblox_post.png} \\[2pt]
 \small Voxblox$_{\mathrm{Pre}}$ &
-\small Voxblox reintegration &
 \small Voxgraph &
-\small \textbf{WarpVox}
+\small \textbf{WarpVox} &
+\small Voxblox reintegration
 \end{tabular}
-\caption{\textbf{Qualitative reconstruction comparison at 0.25 m.} Four
-Kimera-Multi loop-closure cases are shown in the top four rows and two KITTI
-cases in the bottom two rows; each row uses the same view across methods.}
+\caption{\textbf{Qualitative reconstruction comparison at 0.25 m.} Three
+Kimera-Multi loop-closure cases are shown in the top three rows and one KITTI
+cases in the bottom one rows; each row uses the same view across methods.}
 \label{fig:qualitative_ral}
 \end{figure*}
-
 
 
 
 \subsection{Event-Triggered Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Both methods take the unoptimized trajectory and frontend mesh produced by the same Kimera-VIO run. Each bag is evaluated under the same final VIO-to-PGMO trajectory correction: the PGMO mesh is scored directly, whereas WarpVox applies this correction to the corresponding VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares surface correction alone.
+This experiment isolates the target mechanism: PGMO displaces from spatio-temporal proximity, WarpVox from its Stage-1--2 observation targets. Both methods take the unoptimized trajectory and frontend mesh produced by the same Kimera-VIO run. Each bag is evaluated under the same final VIO-to-PGMO trajectory correction: the PGMO mesh is scored directly, whereas WarpVox applies this correction to the corresponding VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares correction without source-volume support transfer.
 
 \begin{table}[t]
 \centering

@@ -14,9 +14,7 @@ severely noisy or topologically corrupted source maps are outside its scope.
 Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world
 frame before and after trajectory correction. The map built with $T^-$ consists
 of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation
-distance $\tau$. Marching Cubes (MC)~\cite{10.1145/37402.37422} extracts the source surface $\mathcal M^-=(V^-,F)$, from which WarpVox begins its correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$.
-
-During online fusion, the implementation stores the timestamped, modality-native range images of SLAM keyframes so that these measurements remain available at later correction events,
+distance $\tau$. Marching Cubes (MC)~\cite{10.1145/37402.37422} extracts the source surface $\mathcal M^-=(V^-,F)$, then WarpVox begins its correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. During online fusion, the implementation stores the timestamped, modality-native range images of SLAM keyframes so that these measurements remain available at later correction events,
 \begin{equation}
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
 \label{eq:keyframe_cache}
@@ -323,7 +321,7 @@ w_{\rm fb}(x), & x\in\Omega_{\rm fb},\\
 Because transferred weights are positive on $\Omega_{\rm tr}$ and the fallback
 band is strict, by construction
 $\Omega^+=\{x\in\mathcal X^+:w^+(x)>0\}$. Outside $\Omega^+$ the zero weight
-makes the stored distance immaterial. If no TSDF was provided (mesh-only), the final Stage-3 surface is converted without the source TSDF into a signed Euclidean distance field within 1.5 voxel widths of the surface, with synthetic linearly decaying weights. The resulting
+makes the stored distance immaterial. When no source TSDF is available, the final Stage-3 surface is converted into a closest-triangle-normal signed Euclidean distance field within 1.5 voxel widths, with synthetic finite-band weights. The resulting
 $(\Phi^+,w^+)$ is serialized in the native Voxblox TSDF format; its MC mesh is used for surface evaluation and visualization.
 
 \subsection{Complexity and Scope}
