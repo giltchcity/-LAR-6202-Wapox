@@ -45,8 +45,19 @@ committed. Fig.~\ref{fig:pipeline} summarizes the four stages.
 
 \subsection{Stage 1: Keyframe--Surface Association}
 
-Stage~1 projects the current surface into cached keyframes and returns
-bounded vertex records,
+For source vertex $v_j^-$, let
+$\widetilde v_j^-=[(v_j^-)^\top,1]^\top$ and
+\begin{equation}
+\begin{aligned}
+x_{ij}&=\left[T^-(t_i)^{-1}\widetilde v_j^-\right]_{1:3},\\
+\mathcal E_j&=\left\{i\in{\rm KF}:
+ z_{\min}<x_{ij,z}<z_{\max},\ \Pi(x_{ij})\in\mathcal I\right\},
+\end{aligned}
+\label{eq:eligible_keyframes}
+\end{equation}
+where $\Pi$ is the modality-native projection and $\mathcal I$ its valid image
+domain. Stage~1 scans all cached keyframes to construct $\mathcal E_j$, applies
+the consistency tests below, and returns bounded vertex records,
 \begin{equation}
 \begin{aligned}
 \mathcal O&=\mathcal R(\mathcal M^-,T^-,\mathcal C_{\rm KF}),\\
@@ -102,14 +113,13 @@ The effective association reliability is
 \frac{g_{rj}}{1+z_{rj}^{\rm proj}/z_0}.
 \label{eq:association_weight}
 \end{equation}
-Candidates additionally satisfy the fixed range-dependent gates
-$e^g_{rj}\le\epsilon_g(\rho_r)$,
-$|e^z_{rj}|\le\epsilon_z(\rho_r)$, and
-$\alpha_{rj}\ge\alpha_{\min}$. LiDAR uses the analogous construction with
-spherical projection and radial range. This is geometric support rather than
-exact voxel-integration provenance. The $z_0$ term ranks distant samples during
-capped association; a separate range factor below models target reliability
-after association.
+Candidates satisfy the range-dependent geometric gate
+$e^g_{rj}\le\epsilon_g(\rho_r)$. Depth residual and viewing direction enter
+$\alpha_{rj}$, and candidates with $\alpha_{rj}<\alpha_{\min}$ are rejected.
+LiDAR uses the analogous construction with spherical projection and radial
+range. This is geometric support rather than exact voxel-integration
+provenance. The $z_0$ term ranks distant samples during capped association; a
+separate range factor below models target reliability after association.
 
 \subsection{Stage 2: Corrected Surface Targets}
 
@@ -209,11 +219,41 @@ exactly so that ARAP does not attenuate the supplied trajectory correction.
 The standard local--global iterations solve this single event-level
 optimization.
 
-Proxy displacement is transferred to $V^-$ by topology-local interpolation. A
-local validity pass~\cite{sorkine2004laplacian,aigerman2013bounded} repairs
-isolated violations of fixed edge-stretch, area-ratio, and aspect-ratio bounds,
-then omits faces that remain invalid. The
-retained source and warped surfaces therefore satisfy
+Proxy displacement is transferred to $V^-$ by topology-local barycentric
+interpolation. For $a=\pi(j)$, let
+\begin{equation}
+\begin{aligned}
+f_j&=\operatorname*{arg\,min}_{f\in\operatorname{star}(a)}
+\operatorname{dist}(v_j^-,f),\\
+v_j^+&=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),
+\qquad \lambda_{jb}\ge0,\quad \sum_{b\in f_j}\lambda_{jb}=1,
+\end{aligned}
+\label{eq:proxy_transfer}
+\end{equation}
+where $\lambda_{jb}$ are the barycentric coordinates of the closest point on
+$f_j$. Faces with excessive edge stretch, area change, or aspect ratio trigger
+local harmonic smoothing~\cite{sorkine2004laplacian,aigerman2013bounded} of the
+displacements in a risk region $\mathcal V_R$:
+\begin{equation}
+d_i^{(\ell+1)}=
+\frac12d_i^{(\ell)}+
+\frac{1}{2|\mathcal N(i)|}
+\sum_{k\in\mathcal N(i)}\widetilde d_k^{(\ell)},
+\qquad i\in\mathcal V_R,
+\label{eq:harmonic_repair}
+\end{equation}
+where $\widetilde d_k^{(\ell)}=d_k^{(\ell)}$ inside $\mathcal V_R$ and
+equals the fixed pre-repair displacement outside it. At most three
+80-iteration passes are applied. A face is removed only if
+\begin{equation}
+\max_{(i,k)\in\partial f}
+\frac{\|v_i^+-v_k^+\|}{\|v_i^--v_k^-\|}\ge3
+\quad\text{or}\quad
+\frac{\operatorname{area}(f^+)}{\operatorname{area}(f^-)}\ge6.
+\label{eq:face_rejection}
+\end{equation}
+Aspect ratio triggers repair but not removal. The retained source and warped
+surfaces therefore satisfy
 \begin{equation}
 \bar{\mathcal M}^-=(\bar V^-,\bar F),
 \qquad
@@ -229,7 +269,7 @@ assumptions.
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
 
 The warped surface supplies the corrected zero set~\cite{sussman1999redistancing},
-while the source TSDF supplies observed-space semantics. Let $n_b$ be the
+while the source TSDF primarily supplies observed-space semantics. Let $n_b$ be the
 number of voxels per block edge, $h=n_bs$ the block width, and $o_b=hb$ and
 $c_b=o_b+\frac{h}{2}\mathbf 1$ the origin and centre of block $b$. With
 $\mathcal N_1$ denoting a one-block Chebyshev dilation, the allocation domain is
@@ -351,13 +391,19 @@ proxy vertices, and allocated output voxels. At fixed resolution, MC produces
 only a constant number of surface elements per active cell, so $|V^-|=O(A)$.
 The cache and resolved correction state require
 $O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage, respectively. Let
-$\kappa\le K_{\rm KF}$ be the maximum number of eligible cached keyframes
-tested for any source vertex. The block-local allocation in
-\eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather
-than scene extent. The complete correction cost is
+$\kappa=\max_j|\mathcal E_j|$ be the maximum number of projection-eligible
+keyframes for a source vertex. Constructing $\mathcal E_j$ scans all cached
+keyframes, after which consistency tests and record capping cost
+\begin{equation}
+C_{\rm assoc}=O(K_{\rm KF}A+\kappa A+n_vA).
+\label{eq:association_complexity}
+\end{equation}
+The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the
+warped-surface footprint rather than scene extent. The complete correction cost
+is
 \begin{equation}
 \begin{aligned}
-C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
+C_{\rm corr}={}&O((K_{\rm KF}+\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
 &+C_{\rm vol}(X^+,\bar F),
 \end{aligned}
 \label{eq:complexity}
@@ -365,7 +411,7 @@ C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
 where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost.
 The reported implementation uses $n_v=15$ and a 60K-vertex proxy cap; all
 remaining thresholds and discrete predicates are fixed within each sensor
-modality, and are listed in the supplementary code. The dense-frame reintegration term
-$O(N|\Omega|)$ is replaced by keyframe reassociation $O(\kappa A)$; Stages~3--4
-then follow the active surface, proxy, and output volume. Cache storage grows
-linearly with $K_{\rm KF}$.
+modality and listed in the supplementary code. WarpVox avoids the
+$O(N|\Omega|)$ volumetric replay of dense frames, although Stage~1 still grows
+with the cached-keyframe count; Stages~3--4 follow the active surface, proxy,
+and output volume. Cache storage grows linearly with $K_{\rm KF}$.
