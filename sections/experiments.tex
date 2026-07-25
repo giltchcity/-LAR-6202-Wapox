@@ -176,13 +176,10 @@ cases in the bottom two rows; each row uses the same view across methods.}
 \label{fig:qualitative_ral}
 \end{figure*}
 
-
-
-
 \subsection{Event-Triggered Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Both methods use the unoptimized trajectory and frontend mesh produced by the same Kimera-VIO run. For each bag, the evaluated PGMO output is the final trajectory--mesh pair whose optimized trajectory has the lowest ATE. The PGMO mesh is scored directly, while WarpVox applies the corresponding final VIO-to-PGMO correction to the matching VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares surface correction alone.
+For each bag, one Kimera-VIO run produces the VIO trajectory and its frontend mesh. Kimera-PGMO takes these two outputs, optimizes the trajectory, and deforms the frontend mesh to produce its final mesh. WarpVox takes the same VIO trajectory and frontend mesh together with the final PGMO trajectory, applies the resulting VIO-to-PGMO correction once, and produces its corrected mesh. Because the VIO pre-mesh carries no source TSDF, WarpVox uses mesh-only Stage~4; this experiment therefore compares surface correction alone.
 
 \begin{table}[t]
 \centering
