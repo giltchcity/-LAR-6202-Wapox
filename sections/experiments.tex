@@ -10,8 +10,9 @@ are recorded. Every method reconstructs the same
 temporal interval. For Kimera-Multi, the reference geometry is the official ground-truth point cloud, cropped to a 5 m tube around the
 corresponding official trajectory to match Voxblox's maximum integration
 range. For KITTI, the reference is the GT-registered point cloud within the
-mapper's 25 m ray range. Predictions expressed outside the GT frame are aligned by a RANSAC--Umeyama
-$\mathrm{Sim}(3)$ fitted only to timestamp-matched trajectory positions; no
+mapper's 25 m ray range. Predictions expressed outside the GT frame are aligned by a RANSAC--Umeyama 
+% $\mathrm{Sim}(3)$ 
+fitted only to timestamp-matched trajectory positions; no
 mesh-to-GT registration is used. Reconstructions
 built from the same corrected trajectory share one transform per case.
 Voxgraph is aligned from its own reported trajectory because it maintains an

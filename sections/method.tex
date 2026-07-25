@@ -102,10 +102,9 @@ The effective association reliability is
 \frac{g_{rj}}{1+z_{rj}^{\rm proj}/z_0}.
 \label{eq:association_weight}
 \end{equation}
-Candidates additionally satisfy the fixed range-dependent gates
-$e^g_{rj}\le\epsilon_g(\rho_r)$,
-$|e^z_{rj}|\le\epsilon_z(\rho_r)$, and
-$\alpha_{rj}\ge\alpha_{\min}$. LiDAR uses the analogous construction with
+Candidates satisfy the range-dependent geometric gate
+$e^g_{rj}\le\epsilon_g(\rho_r)$. Depth residual and viewing direction enter
+$\alpha_{rj}$, and candidates with $\alpha_{rj}<\alpha_{\min}$ are rejected. LiDAR uses the analogous construction with
 spherical projection and radial range. This is geometric support rather than
 exact voxel-integration provenance. The $z_0$ term ranks distant samples during
 capped association; a separate range factor below models target reliability
@@ -229,7 +228,7 @@ Deformation accuracy therefore depends on target correctness and coverage.
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
 
 The warped surface supplies the corrected zero set~\cite{sussman1999redistancing},
-while the source TSDF supplies observed-space semantics. Let $n_b$ be the
+while the source TSDF primarily supplies observed-space semantics. Let $n_b$ be the
 number of voxels per block edge, $h=n_bs$ the block width, and $o_b=hb$ and
 $c_b=o_b+\frac{h}{2}\mathbf 1$ the origin and centre of block $b$. With
 $\mathcal N_1$ denoting a one-block Chebyshev dilation, the allocation domain is
