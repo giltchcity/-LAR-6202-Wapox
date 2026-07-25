@@ -52,11 +52,7 @@ TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched
 0.25 m finest level.
 
 \noindent\textbf{Timing protocol.}
-For all methods, we report core map-update time from in-memory state on an AMD
-Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh
-optimization, or WarpVox source-mesh-to-TSDF correction, as applicable. Disk
-I/O, evaluation-only mesh extraction, and processing outside correction,
-including PGMO MeshFrontend construction, are excluded.
+For all methods, we report core map-update time from in-memory state on an AMD Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh optimization, or WarpVox source-mesh-to-TSDF correction, as applicable. Disk I/O, mesh extraction, and processing outside correction, including PGMO MeshFrontend construction, are excluded.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -234,7 +230,7 @@ point, while PGMO provides intermediate updates and temporal mesh associations.
 \subsection{Ablation Study}
 Table~\ref{tab:ablation} traces the downstream ablation from full-mesh
 deformation to the final TSDF on the same ten 0.25 m Kimera-Multi cases.
-Stage~1/2, the source meshes, and the target files are fixed throughout.
+Stages~1--2 and their corrected target sets are fixed throughout.
 \begin{table}[t]
 \centering
 \caption{\textbf{Ablation path on ten 0.25 m Kimera-Multi checkpoints.}}

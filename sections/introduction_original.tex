@@ -20,14 +20,14 @@ Re-expressing the matched samples with corrected poses yields corrected
 world-space surface targets without volumetric reintegration.
 
 \vspace{1mm}\noindent\textit{Our approach.}
-WarpVox has four stages: (i) projectively re-associate keyframe range measurements with the current pre-correction surface,(ii)~compute robust targets from the
+WarpVox has four stages: (i) projectively re-associate keyframe range measurements with the current pre-correction surface, (ii)~compute robust targets from the
 corrected poses, (iii)~propagate sparse displacements through a single
 event-level ARAP optimization~\cite{ARAP_modeling:2007} on a QEM proxy, and
 (iv)~reconstruct a TSDF whose zero set follows the warped surface while
 observed support, sign, and weight primarily follow the source volume. The final stage
 prevents a surface-only conversion from labeling unsupported space as
 observed. The corrected volume replaces the active TSDF and fusion resumes from
-the next frame.Only Stages~1--2 use keyframe measurements to construct correction targets; deformation and reconstruction operate on the active geometry and output
+the next frame. Only Stages~1--2 use keyframe measurements to construct correction targets; deformation and reconstruction operate on the active geometry and output
 volume.
 
 \vspace{1mm}\noindent\textit{Contributions.}
