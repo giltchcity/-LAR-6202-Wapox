@@ -27,8 +27,9 @@ WarpVox has four stages: (i)~re-associate the current pre-correction surface
 with cached keyframe observations, (ii)~compute robust targets from the
 corrected poses, (iii)~propagate sparse displacements through a single
 event-level ARAP optimization~\cite{ARAP_modeling:2007} on a QEM proxy, and
-(iv)~reconstruct a TSDF whose zero set follows the warped surface while
-observed support, sign, and weight follow the source volume. The final stage
+(iv)~reconstruct a TSDF whose zero set follows the warped surface, while
+support, sign, and weight are transferred from the source volume where
+available, with a narrow, boundary-aware fallback band otherwise. The final stage
 prevents a surface-only conversion from labeling unsupported space as
 observed. The corrected volume replaces the active TSDF and fusion resumes from
 the next frame. Only Stage~1 revisits cached keyframes; deformation and
