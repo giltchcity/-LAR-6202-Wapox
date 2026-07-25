@@ -344,16 +344,21 @@ used for surface evaluation and visualization.
 Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$,
 $X^+=|\mathcal X^+|$, and $\kappa=\max_j|\mathcal E_j|$. At fixed resolution,
 $|V^-|=O(A)$; the cache and resolved records require
-$O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage. Since eligibility scans
-all cached keyframes, the complete correction cost is
+$O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage. Constructing the
+eligibility sets scans all $K_{\rm KF}$ keyframes, while consistency testing
+examines at most $\kappa$ candidates per source vertex. The complete correction
+cost is therefore
 \begin{equation}
 \begin{aligned}
-C_{\rm corr}={}&O((K_{\rm KF}+\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
-&+C_{\rm vol}(X^+,\bar F).
+C_{\rm corr}={}&O((K_{\rm KF}+\kappa+n_v)A)
++C_{\rm ARAP}(P,F_P)\
+&+C_{\rm vol}(X^+,\bar F),
 \end{aligned}
 \label{eq:complexity}
 \end{equation}
-Block-local allocation keeps $X^+$ on the warped-surface footprint. The
-implementation uses $n_v=15$ and a 60K-vertex proxy cap. WarpVox avoids
-$O(N|\Omega|)$ dense-frame volumetric replay, although Stage~1 grows with the
-cached-keyframe count; Stages~3--4 follow the active geometry and output volume.
+where $C_{\rm vol}$ denotes accelerated closest-triangle reconstruction.
+Block-local allocation keeps $X^+$ on the warped-surface footprint. WarpVox
+avoids $O(N|\Omega|)$ dense-frame volumetric replay, although Stage~1 grows
+with the cached-keyframe count; Stages~3--4 follow the active geometry and
+output volume.
+
