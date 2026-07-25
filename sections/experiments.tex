@@ -195,15 +195,14 @@ bags.}}
 \toprule
 Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 \midrule
+VIO pre-mesh & 4.26 & 12.67 & 23.93 & -- \\
 Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
 \textbf{WarpVox (mesh-only)} & \textbf{6.53} &
 \textbf{18.72} & \textbf{34.57} & \textbf{47.02} \\
 \bottomrule
 \end{tabular}
 \vspace{1pt}
-\parbox{\columnwidth}{\scriptsize Kimera-PGMO reports the incremental
-mesh-deformation time required to produce its final mesh; WarpVox reports one
-correction of the corresponding VIO pre-mesh.}
+\parbox{\columnwidth}{\scriptsize The VIO pre-mesh is the shared unoptimized input. Kimera-PGMO reports the incremental mesh-deformation time required to produce its final mesh; WarpVox reports one correction of the corresponding VIO pre-mesh.}
 \end{table}
 
 One WarpVox correction improves mean F@25/F@50 by 1.24/3.03 pp, using
@@ -270,7 +269,6 @@ For the fields defined in \eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}, we c
 
 
 Varying the per-vertex association cap $n_v \in \{1,4,8,15\}$ on the same ten cases changes mean F@25 by only $0.019$ pp, with a maximum per-checkpoint range of $0.085$ pp. At $n_v=15$, vertices retain only $2.91$ records on average and $1.90\%$ reach the cap; we therefore use $n_v=15$ to avoid truncating valid support while keeping per-vertex storage bounded.
-
 
 
 
