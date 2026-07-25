@@ -366,7 +366,7 @@ C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
 where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost.
 The reported implementation uses $n_v=15$ and a 60K-vertex proxy cap; all
 remaining thresholds and discrete predicates are fixed within each sensor
-modality, are not tuned per case, and are listed in the supplementary code. The dense-frame reintegration term
+modality, and are listed in the supplementary code. The dense-frame reintegration term
 $O(N|\Omega|)$ is replaced by keyframe reassociation $O(\kappa A)$; Stages~3--4
 then follow the active surface, proxy, and output volume. Cache storage grows
 linearly with $K_{\rm KF}$.
