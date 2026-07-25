@@ -10,7 +10,7 @@ are recorded. Every method reconstructs the same
 temporal interval. For Kimera-Multi, the reference geometry is the official ground-truth point cloud, cropped to a 5 m tube around the
 corresponding official trajectory to match Voxblox's maximum integration
 range. For KITTI, the reference is the GT-registered point cloud within the
-mapper's 25 m ray range.Predictions expressed outside the GT frame are aligned by a RANSAC--Umeyama
+mapper's 25 m ray range. Predictions expressed outside the GT frame are aligned by a RANSAC--Umeyama
 $\mathrm{Sim}(3)$ fitted only to timestamp-matched trajectory positions; no
 mesh-to-GT registration is used. Reconstructions
 built from the same corrected trajectory share one transform per case.
@@ -49,7 +49,7 @@ For all methods, we report the core algorithm runtime from in-memory state
 (e.g., TSDF/occupancy integration or submap optimization) on an AMD 9700X with 64,GB RAM. Disk I/O, evaluation-only mesh extraction, and processing outside the correction (PGMO MeshFrontend construction) are excluded.
 
 
-Supplementary contains all implementation and cases configurations code.
+Supplementary contains all implementation/cases code.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -141,7 +141,7 @@ the truncation-normalized TSDF MAE
 $\mathbb E[|\Phi^+-\Phi_{\rm reint}|]/\tau$ is 0.384, where
 $\Phi_{\rm reint}$ denotes the reintegrated reference field; sign agreement is
 $95.17\%$. Treating $w>0$ as observed, support precision, recall, and IoU are
-$95.53\%$, $68.38\%$, and $66.33\%$, respectively. Thus, WarpVox
+$95.53\%$, $68.38\%$, and $66.33\%$, respectively. We
 conservatively preserves observed-space semantics, introducing little
 unsupported space but retaining less support than full reintegration.
 
@@ -222,19 +222,22 @@ Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
 \bottomrule
 \end{tabular}
 \vspace{1pt}
-\parbox{\columnwidth}{\scriptsize Kimera-PGMO optimizes the mesh incrementally,
-so its time is the optimization and mesh deformation cost of reaching the final state; WarpVox reaches
-it in one association, target estimation, deformation, and mesh-only TSDF update.}
+\parbox{\columnwidth}{\scriptsize Kimera-PGMO reports the optimization and mesh-deformation cost of producing
+its final mesh; WarpVox reports one correction of the corresponding VIO
+pre-mesh.}
 \end{table}
 
-One WarpVox update improves mean F@25/F@50 by 1.24/3.03 pp (median F@50
-difference 0.20 pp) while using 47.02 s against PGMO's 435.97 s of incremental optimization to
-the same final state. Per-bag F@50 differences form two groups: four gains of
-5.5--11.7 pp and six cases within $\pm0.5$ pp; two of the latter are marginally
-negative. The two negative cases exhibit opposite precision--recall tradeoffs:
-one gains 6.51 pp recall while losing 3.26 pp precision, whereas the other gains
-1.41 pp precision while losing 0.92 pp recall. Thus WarpVox offers a lower-cost
-final-state operating point, while PGMO provides intermediate updates and
+One WarpVox correction improves mean F@25/F@50 by 1.24/3.03 pp
+(median F@50 difference 0.20 pp), using 47.02 s versus 435.97 s for
+Kimera-PGMO to produce its final mesh incrementally. Per-bag F@50 differences form two groups: four gains of
+5.5--11.7 pp and six cases within $\pm0.5$ pp; 
+
+
+% two of the latter are marginally
+% negative. The two negative cases exhibit opposite precision--recall tradeoffs:
+% one gains 6.51 pp recall while losing 3.26 pp precision, whereas the other gains 1.41 pp precision while losing 0.92 pp recall. 
+
+Thus WarpVox offers a lower-cost final-state operating point, while PGMO provides intermediate updates and
 temporal mesh associations.
 
 
@@ -286,16 +289,12 @@ costs at most 0.122 pp mean surface F-score. Within Stage~4, source-supported
 reconstruction adds 0.062 s over mesh-only while improving F@10/F@25/F@50 by
 $0.173/0.216/0.324$ pp and suppressing unsupported surfaces at open boundaries.
 
-
-\noindent\textbf{Sensitivity to $n_\text{max}$.}
-$n_\text{max}$ caps the observations retained per associated vertex.
-On the same ten 0.25-m checkpoints used for ablation, sweeping
-$n_\text{max}\in\{1,4,8,15\}$ changes mean F@25 by only
-$0.019$\,pp; the largest per-checkpoint range is $0.085$\,pp.
-At $n_\text{max}=15$, vertices retain $2.91$ observations on average and
-only $1.90\%$ reach the cap. We therefore use $n_\text{max}=15$ to preserve
-enough candidates for robust target aggregation while keeping the retained
-support bounded.
+\noindent\textbf{Sensitivity to $n_v$.}
+$n_v$ caps observations retained per vertex. On the ablation set,
+sweeping $n_v\in\{1,4,8,15\}$ shifts mean F@25 by only $0.019$\,pp
+(largest per-checkpoint range $0.085$\,pp). At $n_v=15$, vertices
+retain $2.91$ observations on average and only $1.90\%$ reach the cap, so we
+adopt it as a safe upper bound.
 
 
 
