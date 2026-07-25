@@ -102,13 +102,14 @@ The effective association reliability is
 \frac{g_{rj}}{1+z_{rj}^{\rm proj}/z_0}.
 \label{eq:association_weight}
 \end{equation}
-Candidates satisfy the range-dependent geometric gate
-$e^g_{rj}\le\epsilon_g(\rho_r)$. Depth residual and viewing direction enter
-$\alpha_{rj}$, and candidates with $\alpha_{rj}<\alpha_{\min}$ are rejected.
-LiDAR uses the analogous construction with spherical projection and radial
-range. This is geometric support rather than exact voxel-integration
-provenance. The $z_0$ term ranks distant samples during capped association; a
-separate range factor below models target reliability after association.
+Candidates additionally satisfy the fixed range-dependent gates
+$e^g_{rj}\le\epsilon_g(\rho_r)$,
+$|e^z_{rj}|\le\epsilon_z(\rho_r)$, and
+$\alpha_{rj}\ge\alpha_{\min}$. LiDAR uses the analogous construction with
+spherical projection and radial range. This is geometric support rather than
+exact voxel-integration provenance. The $z_0$ term ranks distant samples during
+capped association; a separate range factor below models target reliability
+after association.
 
 \subsection{Stage 2: Corrected Surface Targets}
 
@@ -350,8 +351,8 @@ proxy vertices, and allocated output voxels. At fixed resolution, MC produces
 only a constant number of surface elements per active cell, so $|V^-|=O(A)$.
 The cache and resolved correction state require
 $O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage, respectively. Let
-$\kappa\le K_{\rm KF}$ be the maximum number of eligible cached keyframes
-tested for any source vertex. The block-local allocation in
+$\kappa\le K_{\rm KF}$ be the maximum number of cached keyframes examined for
+any source vertex. The block-local allocation in
 \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather
 than scene extent. The complete correction cost is
 \begin{equation}
@@ -362,6 +363,9 @@ C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
 \label{eq:complexity}
 \end{equation}
 where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost.
-The dense-frame reintegration term $O(N|\Omega|)$ is replaced by keyframe
-reassociation $O(\kappa A)$; Stages~3--4 then follow the active surface, proxy,
-and output volume. Cache storage grows linearly with $K_{\rm KF}$.
+The reported implementation uses $n_v=15$ and a 60K-vertex proxy cap; all
+remaining thresholds and discrete predicates are fixed within each sensor
+modality, and are listed in the supplementary code. The dense-frame reintegration term
+$O(N|\Omega|)$ is replaced by keyframe reassociation $O(\kappa A)$; Stages~3--4
+then follow the active surface, proxy, and output volume. Cache storage grows
+linearly with $K_{\rm KF}$.
