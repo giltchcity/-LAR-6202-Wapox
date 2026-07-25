@@ -14,39 +14,27 @@ severely noisy or topologically corrupted source maps are outside its scope.
 Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world
 frame before and after trajectory correction. The map built with $T^-$ consists
 of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation
-distance $\tau$. Marching Cubes (MC)~\cite{10.1145/37402.37422} extracts the
+distance $\tau$. After Marching Cubes (MC)~\cite{10.1145/37402.37422} extracts the
 source surface $\mathcal M^-=(V^-,F)$. Let $\mathcal A$ denote the active TSDF
 cells that contribute triangles to $\mathcal M^-$.
 
-During fusion, WarpVox caches the timestamped, modality-native range images of
-SLAM keyframes,
+During online fusion, the implementation stores the timestamped, modality-native range images of SLAM keyframes so that these measurements remain available at later correction events,
 \begin{equation}
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
 \label{eq:keyframe_cache}
 \end{equation}
-where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D
-depth image or a spherical LiDAR range image. The cache persists across
-correction events and is augmented by subsequent keyframes. At every event,
-Stage~1 uses $T^-$ to rebuild associations between the current source surface
-and the cached observations. Thus observations acquired before an earlier
-correction remain available to later events. Only the derived associations,
-targets, and deformation state are discarded after the corrected volume is
-committed. Fig.~\ref{fig:pipeline} summarizes the four stages.
+where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D depth image or a spherical LiDAR range image. Together with $T^-$, these measurements form the observation input to Stage~1. The measurements remain available across correction events, whereas event-specific vertex records, targets, and deformation state are discarded after the corrected volume is committed. Fig.~\ref{fig:pipeline} summarizes the four stages.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{Figures/pipeline_v5.jpg}
-  \caption{WarpVox caches keyframe range images during fusion, re-associates
-  them with the current source surface at each trajectory revision, computes
-  corrected targets, performs one event-level proxy deformation, and transfers
-  source-volume support to the corrected TSDF.}
+  \caption{WarpVox projectively re-associates keyframe range measurements with the current source surface at each trajectory revision, computes corrected targets, performs one event-level proxy deformation, and reconstructs a source-supported TSDF.}
   \label{fig:pipeline}
 \end{figure}
 
 \subsection{Stage 1: Keyframe--Surface Association}
 
-Stage~1 projects the current surface into cached keyframes and returns
-bounded vertex records,
+Stage~1 projects the current surface into the keyframe range images and returns bounded vertex records,
 \begin{equation}
 \begin{aligned}
 \mathcal O&=\mathcal R(\mathcal M^-,T^-,\mathcal C_{\rm KF}),\\
@@ -55,8 +43,7 @@ bounded vertex records,
 \end{aligned}
 \label{eq:resolved_records}
 \end{equation}
-where each record $r$ identifies a cached keyframe and a valid projected range
-sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
+where each record $r$ identifies a keyframe range image and a valid projected range sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
 effective reliability of associating it with source vertex $v_j^-$. Records are
 matched by acquisition time rather than trajectory row index. The correction
 backend therefore receives vertex-indexed records and never re-fuses
@@ -344,14 +331,9 @@ used for surface evaluation and visualization.
 
 \subsection{Complexity and Scope}
 
-Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and
-$X^+=|\mathcal X^+|$ be the numbers of active source cells, cached keyframes,
-proxy vertices, and allocated output voxels. At fixed resolution, MC produces
+Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC produces
 only a constant number of surface elements per active cell, so $|V^-|=O(A)$.
-The cache and resolved correction state require
-$O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage, respectively. Let
-$\kappa\le K_{\rm KF}$ be the maximum number of cached keyframes examined for
-any source vertex. The block-local allocation in
+The stored measurements and resolved correction state require $O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage, respectively. Let $\kappa\le K_{\rm KF}$ be the maximum number of keyframe range images projection-tested for any source vertex before the $n_v$-record cap is applied. The block-local allocation in
 \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather
 than scene extent. The complete correction cost is
 \begin{equation}
@@ -364,7 +346,6 @@ C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
 where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost.
 The reported implementation uses $n_v=15$ and a 60K-vertex proxy cap; all
 remaining thresholds and discrete predicates are fixed within each sensor
-modality, and are listed in the supplementary code. The dense-frame reintegration term
+modality. The dense-frame reintegration term
 $O(N|\Omega|)$ is replaced by keyframe reassociation $O(\kappa A)$; Stages~3--4
-then follow the active surface, proxy, and output volume. Cache storage grows
-linearly with $K_{\rm KF}$.
+then follow the active surface, proxy, and output volume. Measurement storage grows linearly with $K_{\rm KF}$.

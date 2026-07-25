@@ -25,7 +25,7 @@ executes Stages~2--4, replaces the active Voxblox TSDF, discards the derived
 event state, and resumes fusion from the next frame. For the eighteen RGB-D
 sequences, the cache holds one uncompressed 16-bit depth image per keyframe at
 $0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707
-keyframes (mean $2.1\,\mathrm{GiB}$). All methods use the same keyframe trajectories recorded at each loop event.
+keyframes (mean $2.1\,\mathrm{GiB}$). 
 
 
 \noindent\textbf{Baselines.}
@@ -36,6 +36,14 @@ Wavemap~\cite{reijgwart2023wavemap} rebuilds a wavelet occupancy map, and
 Voxgraph~\cite{reijgwart2020voxgraph} optimizes rigid TSDF submaps. Voxblox
 reintegration~\cite{Oleynikova_2017} is therefore the representation-matched
 reference. WarpVox instead uses the active uncorrected TSDF.
+
+At each loop event, WarpVox, Voxblox reintegration, Open3D, and Wavemap
+receive the same corrected keyframe trajectory; Voxgraph retains its
+independently optimized submap frame as described above. For the
+representation-matched reference, Voxblox interpolates this trajectory to
+every range-frame timestamp in the reconstructed interval and re-fuses the
+complete range stream. WarpVox instead uses the keyframe range measurements
+only to construct correction targets; it does not volumetrically re-fuse them.
 
 We compute precision and recall by bidirectional nearest-neighbour tests and
 report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop,
@@ -198,7 +206,7 @@ Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 \midrule
 VIO pre-mesh & 4.26 & 12.67 & 23.93 & -- \\
 Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
-\textbf{WarpVox (mesh-only)} & \textbf{6.53} &
+\textbf{WarpVox} & \textbf{6.53} &
 \textbf{18.72} & \textbf{34.57} & \textbf{47.02} \\
 \bottomrule
 \end{tabular}
