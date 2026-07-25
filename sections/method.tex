@@ -411,7 +411,7 @@ C_{\rm corr}={}&O((K_{\rm KF}+\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
 where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost.
 The reported implementation uses $n_v=15$ and a 60K-vertex proxy cap; all
 remaining thresholds and discrete predicates are fixed within each sensor
-modality and listed in the supplementary code. WarpVox avoids the
-$O(N|\Omega|)$ volumetric replay of dense frames, although Stage~1 still grows
-with the cached-keyframe count; Stages~3--4 follow the active surface, proxy,
-and output volume. Cache storage grows linearly with $K_{\rm KF}$.
+modality. WarpVox avoids the $O(N|\Omega|)$ volumetric replay of dense frames,
+although Stage~1 still grows with the cached-keyframe count; Stages~3--4 follow
+the active surface, proxy, and output volume. Cache storage grows linearly with
+$K_{\rm KF}$.
