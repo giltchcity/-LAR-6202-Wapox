@@ -17,8 +17,7 @@ world-frame pose correction, but its association to an evolving map surface is
 not. WarpVox therefore caches timestamped keyframe range images and rebuilds
 surface associations at every correction event. Re-expressing the matched
 samples with corrected poses yields corrected world-space surface targets, so
-correction re-queries a sparse keyframe cache rather than re-fusing the dense
-range stream.
+correction performs no volumetric fusion: cached keyframes are projected, not re-integrated.
 
 \vspace{1mm}\noindent\textit{Our approach.}
 WarpVox has four stages: (i)~re-associate the current pre-correction surface
@@ -29,13 +28,13 @@ event-level ARAP optimization~\cite{ARAP_modeling:2007} on a QEM proxy, and
 observed support, sign, and weight follow the source volume. The final stage
 prevents a surface-only conversion from labeling unsupported space as
 observed. The corrected volume replaces the active TSDF and fusion resumes from
-the next frame. Only Stage~1 revisits cached keyframes; deformation and
+the next frame. Only Stage~1 touches cached keyframes, and does so by projection rather than integration; deformation and
 reconstruction follow the active surface and output volume rather than the
 accumulated dense stream.
 
 \vspace{1mm}\noindent\textit{Contributions.}
 \begin{itemize}
-    \item We formulate loop-closure map correction from persistent keyframe range images with event-wise surface reassociation, avoiding volumetric replay of accumulated dense frames.
+    \item We formulate loop-closure map correction from persistent keyframe range images with event-wise surface reassociation, replacing per-frame volumetric integration with per-keyframe projective re-association.
     \item We combine observation-derived targets, one event-level proxy deformation, and source-supported TSDF reconstruction to return a native Voxblox TSDF suitable for continued fusion.
     \item We evaluate RGB-D and LiDAR correction against reintegration and mapping baselines over 51 checkpoints and compare final-state correction with Kimera-PGMO on ten complete bags.
 \end{itemize}
