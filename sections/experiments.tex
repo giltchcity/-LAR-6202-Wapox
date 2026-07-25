@@ -25,8 +25,6 @@ event state, and resumes fusion from the next frame. For the eighteen RGB-D
 sequences, the cache holds one uncompressed 16-bit depth image per keyframe at
 $0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707
 keyframes (mean $2.1\,\mathrm{GiB}$). All methods use the same keyframe trajectories recorded at each loop event.
-Voxblox interpolates the corrected trajectory to the full frame stream for
-reintegration, whereas WarpVox operates directly on the keyframes.
 
 
 \noindent\textbf{Baselines.}
@@ -181,7 +179,6 @@ cases in the bottom two rows; each row uses the same view across methods.}
 
 
 
-
 \subsection{Event-Triggered Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
@@ -220,7 +217,6 @@ point, while PGMO provides intermediate updates and temporal mesh associations.
 % two of the latter are marginally
 % negative. The two negative cases exhibit opposite precision--recall tradeoffs:
 % one gains 6.51 pp recall while losing 3.26 pp precision, whereas the other gains 1.41 pp precision while losing 0.92 pp recall. 
-
 
 
 
