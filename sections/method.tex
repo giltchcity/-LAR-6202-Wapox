@@ -45,7 +45,7 @@ committed. Fig.~\ref{fig:pipeline} summarizes the four stages.
 
 \subsection{Stage 1: Keyframe--Surface Association}
 
-For source vertex $v_j^-$, let
+For an RGB-D source vertex $v_j^-$, let
 $\widetilde v_j^-=[(v_j^-)^\top,1]^\top$ and
 \begin{equation}
 \begin{aligned}
@@ -55,9 +55,10 @@ x_{ij}&=\left[T^-(t_i)^{-1}\widetilde v_j^-\right]_{1:3},\\
 \end{aligned}
 \label{eq:eligible_keyframes}
 \end{equation}
-where $\Pi$ is the modality-native projection and $\mathcal I$ its valid image
-domain. Stage~1 scans all cached keyframes to construct $\mathcal E_j$, applies
-the consistency tests below, and returns bounded vertex records,
+where $\Pi$ is the image projection and $\mathcal I$ its valid domain. LiDAR
+uses the analogous spherical projection and radial sensor range. Stage~1 scans
+all cached keyframes to construct $\mathcal E_j$, applies the consistency tests
+below, and returns bounded vertex records,
 \begin{equation}
 \begin{aligned}
 \mathcal O&=\mathcal R(\mathcal M^-,T^-,\mathcal C_{\rm KF}),\\
@@ -231,9 +232,10 @@ v_j^+&=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),
 \label{eq:proxy_transfer}
 \end{equation}
 where $\lambda_{jb}$ are the barycentric coordinates of the closest point on
-$f_j$. Faces with excessive edge stretch, area change, or aspect ratio trigger
-local harmonic smoothing~\cite{sorkine2004laplacian,aigerman2013bounded} of the
-displacements in a risk region $\mathcal V_R$:
+$f_j$. With $d_i^{(0)}=v_i^+-v_i^-$, faces with excessive edge stretch, area
+change, or aspect ratio trigger local harmonic
+smoothing~\cite{sorkine2004laplacian,aigerman2013bounded} of the displacements
+in a risk region $\mathcal V_R$:
 \begin{equation}
 d_i^{(\ell+1)}=
 \frac12d_i^{(\ell)}+
