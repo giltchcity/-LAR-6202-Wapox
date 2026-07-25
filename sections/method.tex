@@ -214,11 +214,7 @@ v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),
 \qquad \lambda_{jb}\ge0,\quad\sum_{b\in f_j}\lambda_{jb}=1.
 \label{eq:proxy_transfer}
 \end{equation}
-Risk-region displacements are harmonically smoothed with boundary
-displacements fixed~\cite{sorkine2004laplacian,aigerman2013bounded}, using at
-most three 80-iteration passes. Faces still exceeding an edge-stretch ratio of
-$3$ or an area ratio of $6$ are removed; aspect ratio only triggers repair. The
-retained surfaces satisfy
+Risk-region displacements are harmonically smoothed with fixed boundary conditions; faces that remain severely distorted under fixed edge-stretch or area-ratio criteria are then removed, while aspect ratio only triggers repair. The retained surfaces satisfy
 \begin{equation}
 \bar{\mathcal M}^-=(\bar V^-,\bar F),\qquad
 \mathcal M^+=(\bar V^+,\bar F),\qquad \bar F\subseteq F.
