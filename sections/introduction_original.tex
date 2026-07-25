@@ -12,30 +12,27 @@ The standard remedy is to discard the map and reintegrate all $N$ range frames w
 Submap methods such as Voxgraph~\cite{reijgwart2020voxgraph} apply rigid per-submap transforms but leave intra-submap drift unresolved. Non-rigid surfel SLAM~\cite{whelan2016elasticfusion} is embedded in its own tracking system rather than exposing an external TSDF-correction interface, while neural implicit maps~\cite{sucar2021imap,zhu2022niceslam,liso2024loopyslam,bruns2024neuralgraphmap} require representation-specific re-optimization.
 
 \vspace{1mm}\noindent\textit{Observation invariance:}
-A calibrated range sample expressed in its sensor frame is unchanged by a later
-world-frame pose correction, but its association to an evolving map surface is
-not. WarpVox therefore caches timestamped keyframe range images and rebuilds
-surface associations at every correction event. Re-expressing the matched
-samples with corrected poses yields corrected world-space surface targets, so
-correction does not re-integrate measurements; cached keyframe measurements are
-used for projective surface re-association.
+A calibrated range sample expressed in its sensor frame is unchanged by a
+later world-frame pose correction, although its relation to the current map
+surface is not. WarpVox therefore uses keyframe range measurements to rebuild
+projective measurement--surface correspondences at each correction event.
+Re-expressing the matched samples with corrected poses yields corrected
+world-space surface targets without volumetric reintegration.
 
 \vspace{1mm}\noindent\textit{Our approach.}
-WarpVox has four stages: (i)~re-associate the current pre-correction surface
-with cached keyframe observations, (ii)~compute robust targets from the
+WarpVox has four stages: (i) projectively re-associate keyframe range measurements with the current pre-correction surface,(ii)~compute robust targets from the
 corrected poses, (iii)~propagate sparse displacements through a single
 event-level ARAP optimization~\cite{ARAP_modeling:2007} on a QEM proxy, and
 (iv)~reconstruct a TSDF whose zero set follows the warped surface while
 observed support, sign, and weight primarily follow the source volume. The final stage
 prevents a surface-only conversion from labeling unsupported space as
 observed. The corrected volume replaces the active TSDF and fusion resumes from
-the next frame. Only Stage~1 uses cached keyframe measurements for projective
-re-association; deformation and reconstruction follow the active surface and
-output volume.
+the next frame.Only Stages~1--2 use keyframe measurements to construct correction targets; deformation and reconstruction operate on the active geometry and output
+volume.
 
 \vspace{1mm}\noindent\textit{Contributions.}
 \begin{itemize}
-    \item We formulate loop-closure map correction from persistent keyframe range images by replacing volumetric reintegration with projective measurement--surface re-association.
+    \item We formulate loop-closure TSDF correction as projective measurement--surface re-association followed by geometry-level deformation and TSDF reconstruction, replacing historical volumetric replay.
     \item We combine observation-derived targets, one event-level proxy deformation, and source-supported TSDF reconstruction to return a native Voxblox TSDF suitable for continued fusion.
     \item We evaluate RGB-D and LiDAR correction against reintegration and mapping baselines over 51 checkpoints and compare final-state correction with Kimera-PGMO on ten complete bags.
 \end{itemize}
