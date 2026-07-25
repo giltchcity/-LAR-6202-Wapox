@@ -49,11 +49,11 @@ Stage~1 projects the current surface into cached keyframes and returns
 bounded vertex records,
 \begin{equation}
 \begin{aligned}
-\mathcal O&=\mathcal R(\mathcal M^-,T^-,\mathcal C_{\rm KF}),\
-\mathcal O_j&={(r,\alpha_{rj})},
+\mathcal O&=\mathcal R(\mathcal M^-,T^-,\mathcal C_{\rm KF}),\\
+\mathcal O_j&=\{(r,\alpha_{rj})\},
 \qquad |\mathcal O_j|\le n_v.
 \end{aligned}
-\label{eq}
+\label{eq:resolved_records}
 \end{equation}
 where each record $r$ identifies a cached keyframe and a valid projected range
 sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
@@ -63,8 +63,8 @@ backend therefore receives vertex-indexed records and never re-fuses
 measurements into the volume. Its contract is
 \begin{equation}
 (\Phi^-,w^-,\mathcal M^-,T^+,\mathcal O)
-\longmapsto(\Phi^+,w^+),
-\label{eq}
+\longmapsto (\Phi^+,w^+),
+\label{eq:contract}
 \end{equation}
 where the warped mesh is intermediate and $(\Phi^+,w^+)$ is a
 Voxblox-compatible TSDF volume.
@@ -75,9 +75,9 @@ z-depth $z_r$ defines the invariant sensor-frame sample
 m_r=z_rK^{-1}\bar u_r,
 \qquad
 \widetilde m_r=[m_r^\top,1]^\top.
-\label{eq}
+\label{eq:sensor_sample}
 \end{equation}
-Let $\rho_r=z_r$ for RGB-D and $\rho_r=|m_r|$ for LiDAR. The inverse
+Let $\rho_r=z_r$ for RGB-D and $\rho_r=\|m_r\|$ for LiDAR. The inverse
 pre-correction pose projects source vertex $v_j^-$ into the record frame.
 Candidate observations must agree in depth, three-dimensional position, and
 viewing direction. Let $n_j^-$ be the source normal, $\ell_{rj}^-$ the unit
@@ -86,21 +86,21 @@ the projected vertex depth. We define
 \begin{equation}
 \begin{aligned}
 e^g_{rj}
-&=\left|[T^-(t_r)\widetilde m_r]{1:3}-v_j^-\right|,\
-e^z{rj}
-&=z_{rj}^{\rm proj}-z_r,\
+&=\left\|[T^-(t_r)\widetilde m_r]_{1:3}-v_j^-\right\|,\\
+e^z_{rj}
+&=z_{rj}^{\rm proj}-z_r,\\
 g_{rj}
-&=\left|(n_j^-)^\top\ell_{rj}^-\right|.
+&=\left|(n_j^-)^\top \ell_{rj}^-\right|.
 \end{aligned}
-\label{eq}
+\label{eq:association_residuals}
 \end{equation}
 The effective association reliability is
 \begin{equation}
 \alpha_{rj}=
-\exp!\left(-\frac{e^g_{rj}}{\sigma_g}\right)
-\exp!\left(-\frac{|e^z_{rj}|}{\sigma_z}\right)
+\exp\!\left(-\frac{e^g_{rj}}{\sigma_g}\right)
+\exp\!\left(-\frac{|e^z_{rj}|}{\sigma_z}\right)
 \frac{g_{rj}}{1+z_{rj}^{\rm proj}/z_0}.
-\label{eq}
+\label{eq:association_weight}
 \end{equation}
 Candidates satisfy the range-dependent geometric gate
 $e^g_{rj}\le\epsilon_g(\rho_r)$. Depth residual and viewing direction enter
@@ -352,17 +352,16 @@ The cache and resolved correction state require
 $O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(n_vA)$ storage, respectively. Let
 $\kappa\le K_{\rm KF}$ be the maximum number of eligible cached keyframes
 tested for any source vertex. The block-local allocation in
-\eqref{eq} makes $X^+$ follow the warped-surface footprint rather
+\eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather
 than scene extent. The complete correction cost is
 \begin{equation}
 \begin{aligned}
-C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\
+C_{\rm corr}={}&O((\kappa+n_v)A)+C_{\rm ARAP}(P,F_P)\\
 &+C_{\rm vol}(X^+,\bar F),
 \end{aligned}
-\label{eq}
+\label{eq:complexity}
 \end{equation}
 where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost.
 The dense-frame reintegration term $O(N|\Omega|)$ is replaced by keyframe
 reassociation $O(\kappa A)$; Stages~3--4 then follow the active surface, proxy,
 and output volume. Cache storage grows linearly with $K_{\rm KF}$.
-
