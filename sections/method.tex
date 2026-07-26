@@ -39,7 +39,7 @@ Stage~1 projects the current surface into the keyframe range images and returns 
 \label{eq:resolved_records}
 \end{equation}
 where each record $r$ identifies a keyframe range image and a valid projected range sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
-effective reliability of associating it with source vertex $v_j^-$. After exact association, a fixed maximum number of observations is retained per vertex for target construction. RGB-D uses a camera-centre KD-tree with a bounding sphere of the finite camera frustum, whereas LiDAR uses a sensor-position grid with cached local candidates followed by an exact 80\,m radius check; both then apply the unchanged projection and association tests. Records are matched by acquisition time rather than trajectory row index. The correction
+effective reliability of associating it with source vertex $v_j^-$. After exact association, a fixed maximum number of observations is retained per vertex for target construction. RGB-D conservatively restricts candidates with a camera-centre KD-tree and a bounding sphere of the finite camera frustum, whereas LiDAR uses a sensor-position grid with cached local candidates followed by an exact 80\,m radius check; both then apply the unchanged projection and association tests. Records are matched by acquisition time rather than trajectory row index. The correction
 backend therefore receives vertex-indexed records and never re-fuses
 measurements into the volume. Its contract is
 \begin{equation}
@@ -326,7 +326,7 @@ $(\Phi^+,w^+)$ is serialized in the native Voxblox TSDF format; its MC mesh is u
 
 Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC produces only a constant number of surface elements per active cell, so $|V^-|=O(A)$. The stored measurements and fixed per-vertex association state require $O(\sum_{i\in{\rm KF}}|D_i|)$ and $O(A)$ storage, respectively.
 
-Let $\kappa\le K_{\rm KF}$ be the maximum number of keyframes returned for one source vertex by the modality-specific spatial index. RGB-D association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$; with fixed grid resolution and search radius, LiDAR association costs $O(K_{\rm KF}+A(1+\kappa))$. Denoting the corresponding indexed association cost by $C_{\rm assoc}$, the complete correction cost is
+Let $\kappa\le K_{\rm KF}$ be the maximum number of keyframes returned for one source vertex by the modality-specific spatial index. Under the standard output-sensitive spatial-index model, RGB-D association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$; with fixed grid resolution and search radius, LiDAR association costs $O(K_{\rm KF}+A(1+\kappa))$. Denoting the corresponding indexed association cost by $C_{\rm assoc}$, the complete correction cost is
 \begin{equation}
 C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)
 +C_{\rm vol}(X^+,\bar F),
