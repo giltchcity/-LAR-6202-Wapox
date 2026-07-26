@@ -21,9 +21,8 @@ world-space surface targets without volumetric reintegration.
 
 \vspace{1mm}\noindent\textit{Our approach.} WarpVox combines four stages: (i) projectively re-associate keyframe range measurements with the current pre-correction surface, (ii)~compute robust targets from the corrected poses, (iii)~propagate sparse displacements through a single event-level ARAP ~\cite{ARAP_modeling:2007} on a QEM proxy, and (iv)~reconstruct a TSDF whose zero set follows the warped surface while observed support, sign, and weight primarily follow the source volume.The final stage transfers observed-space support from the source volume to the corrected surface, rather than geometry alone. The corrected volume replaces the active TSDF and fusion resumes from the next frame. Only Stages~1--2 use keyframe measurements to construct correction targets; deformation and reconstruction operate on the active geometry and output volume.
 
-\vspace{1mm}\noindent\textit{Contributions.}
 \begin{itemize}
-    \item We formulate loop-closure TSDF correction as projective measurement--surface re-association followed by geometry-level deformation and TSDF reconstruction, replacing historical volumetric replay.
-    \item We combine observation-derived targets, one event-level proxy deformation, and source-supported TSDF reconstruction to return a native Voxblox TSDF suitable for continued fusion.
-    \item We evaluate RGB-D and LiDAR correction against reintegration and mapping baselines over 51 checkpoints and compare final-state correction with Kimera-PGMO on ten complete bags.
+\item We introduce an event-level system that converts an external trajectory revision and an already fused active TSDF into a corrected, fusion-ready TSDF without replaying the complete historical range stream.
+\item The system constructs correction targets through projective measurement--surface reassociation, propagates them through one proxy deformation, and reconstructs source-supported TSDF fields so that the corrected volume can replace the active map.
+\item We evaluate RGB-D and LiDAR correction against reintegration and mapping baselines over 51 loop closure cases, and separately compare final-state surface correction with Kimera-PGMO on ten complete bags.
 \end{itemize}
