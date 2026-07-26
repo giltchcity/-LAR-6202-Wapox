@@ -221,40 +221,46 @@ point, while PGMO provides intermediate updates and temporal mesh associations.
 
 
 
-
 \subsection{Ablation Study}
-Table~\ref{tab:ablation} isolates three core design choices on the same ten
-0.25 m Kimera-Multi checkpoints.
+Table~\ref{tab:ablation} isolates the Stage~1--2, Stage~3, and Stage~4 design
+choices on the same ten 0.25 m Kimera-Multi checkpoints.
 \begin{table}[t]
 \centering
-\caption{\textbf{Ablation of three core design choices.}}
+\caption{\textbf{Ablation of Stages~1--4 on ten Kimera-Multi checkpoints.}}
 \label{tab:ablation}
 \scriptsize
-\setlength{\tabcolsep}{1.35pt}
-\begin{tabular}{@{}lrrrr@{}}
+\setlength{\tabcolsep}{1.1pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
-Design choice & $\Delta$F@10 (pp) & $\Delta$F@25 (pp) & $\Delta$F@50 (pp) & Runtime \\
+Variant & F@10 (\%) & F@25 (\%) & F@50 (\%) & S1--2 & S3 & S4 & Total \\
 \midrule
-Observation-derived targets
-  & +0.293 & +0.724 & +0.969 & -- \\
-Robust 60K proxy
-  & -0.001 & -0.032 & -0.054 & $2.36\times$ faster \\
-Source-supported TSDF
-  & +0.173 & +0.216 & +0.324 & +0.062 s \\
+Nearest-KF transport
+  & 9.872 & 25.979 & 44.546 & 0.044 & 1.111 & 0.328 & 1.483 \\
+Full-mesh ARAP
+  & 10.278 & 26.749 & 45.490 & 0.480 & 3.323 & -- & 3.803 \\
+Robust 60K QEM proxy
+  & 10.277 & 26.717 & 45.436 & 0.480 & 1.408 & -- & 1.888 \\
+Mesh-only TSDF
+  & 9.982 & 26.400 & 45.068 & 0.480 & 1.408 & 0.098 & 1.986 \\
+Source-supported TSDF (Final)
+  & 10.155 & 26.616 & 45.392 & 0.480 & 1.408 & 0.160 & 2.048 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \vspace{1pt}
-\parbox{\columnwidth}{\scriptsize Positive F-score differences favor the named design. Comparisons are against nearest-keyframe pose transport, full-mesh ARAP, and mesh-only TSDF, respectively; all remaining stages are fixed within each comparison.}
+\parbox{\columnwidth}{\scriptsize Comparisons are nearest-KF transport versus Final, full-mesh ARAP versus the robust 60K proxy, and mesh-only versus source-supported TSDF; all remaining stages are fixed. Stage~3 rows evaluate the deformed ARAP surface, while the other rows evaluate meshes re-extracted from the output TSDF. All times are in seconds.}
 \end{table}
 
-Observation-derived targets consistently outperform nearest-keyframe pose
-transport, showing that measurement--surface association contributes beyond
-trajectory-only propagation. The robust 60K proxy preserves full-mesh
-accuracy while substantially reducing Stage~3 cost, supporting geometry-scaled
-deformation. Source-supported reconstruction improves the final surface and
-suppresses unsupported geometry at small additional cost. A voxel-level
-comparison further shows high sign agreement and conservative support transfer:
-unsupported space is rarely introduced, although some observed support is lost.
+Observation-derived targets improve all three mean F-scores over nearest-keyframe
+pose transport, indicating that projective measurement--surface reassociation
+preserves more observation-consistent geometry than trajectory-only propagation.
+The robust 60K QEM proxy matches full-mesh ARAP accuracy while substantially
+reducing Stage~3 cost, supporting geometry-scaled deformation. Source-supported
+reconstruction improves the final surface over mesh-only conversion and
+suppresses unsupported geometry at small additional cost.
+
+\noindent\textbf{Stage-4 source-volume semantics.}
+For the fields defined in \eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}, we compare WarpVox with corrected-pose Voxblox reintegration on the same ten cases. Over voxels with positive weight in both maps and within the reintegrated truncation band, the truncation-normalized absolute field difference $\mathbb E[|\Phi^+-\Phi_{\rm reint}|]/\tau$ is 0.384, with $95.17\%$ sign agreement. The field difference is not purely a geometric error: WarpVox uses Euclidean distance to the warped surface, whereas Voxblox integrates projective ray distances, which need not coincide away from the same zero set~\cite{han2018flashfusion}. We therefore assess zero-set consistency using the surface F-scores above and sidedness using sign agreement. Treating $w>0$ as observed, support precision, recall, and IoU are $95.53\%$, $68.38\%$, and $66.33\%$, respectively. WarpVox thus introduces little unsupported space, although it retains less observed support than full reintegration.
 
 % Additionally, With Stages~3--4 fixed, observation-derived targets improve mean F@10/F@25/F@50 by 0.62/0.99/1.38 pp over trajectory-delta targets and qualitatively produce more spatially coherent and geometrically faithful mesh corrections.
 
