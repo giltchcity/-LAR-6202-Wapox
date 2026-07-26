@@ -18,10 +18,7 @@ cannot improve WarpVox relative to Voxgraph.
 WarpVox runs alongside the standard Voxblox fusion pipeline, automatically extracting and caching the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. At every loop event, WarpVox
 re-associates the current source surface with the cached keyframes,
 executes Stages~2--4, replaces the active Voxblox TSDF, discards the derived
-event state, and resumes fusion from the next frame. For the eighteen RGB-D
-sequences, the cache holds one uncompressed 16-bit depth image per keyframe at
-$0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707
-keyframes (mean $2.1\,\mathrm{GiB}$). 
+event state, and resumes fusion from the next frame. Until the next loop closure, when Warpvox corrects again. For the eighteen RGB-D sequences, the cache holds one uncompressed 16-bit depth image per keyframe at $0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707 keyframes (mean $2.1\,\mathrm{GiB}$). 
 
 
 \noindent\textbf{Baselines.}
@@ -48,7 +45,7 @@ TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched
 0.25 m finest level.
 
 \noindent\textbf{Timing protocol.}
-For all methods, we report core map-update time from in-memory state on an AMD Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh optimization, or WarpVox source-mesh-to-TSDF correction, as applicable. Disk I/O, mesh extraction, and processing outside correction, including PGMO MeshFrontend construction, are excluded.
+For all methods, we report core map-update time from in-memory state on an AMD Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh optimization, or WarpVox source-mesh-to-TSDF correction, as applicable. Disk I/O, and processing outside correction, including PGMO MeshFrontend construction, are excluded. 
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
