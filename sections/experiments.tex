@@ -84,26 +84,12 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 \parbox{\columnwidth}{\scriptsize A dash marks an untimed update: the uncorrected map applies no correction, and Open3D was not timed.}
 \end{table}
 
-On Kimera-Multi, WarpVox differs from reintegration by
-$+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. We treat these sub-percentage-point
-mean differences as parity and do not claim superiority over reintegration.
-WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and
-$3.23\times$ on KITTI. The smaller KITTI gain is consistent with cheap
-sparse-LiDAR replay and WarpVox's larger active surface and output volume.
-Paired F@50 differences span $[-1.95,2.28]$ pp and $[-1.46,0.53]$ pp,
-respectively, with no monotonic increase across event index. Voxgraph improves
-over Voxblox$_{\mathrm{Pre}}$ at every threshold by aligning rigid SDF submaps;
-its remaining gap to WarpVox and reintegration is consistent with uncorrected
-intra-submap drift. Wavemap's profile---low F@10 but competitive KITTI
-F@50---is consistent with a hierarchical occupancy representation whose
-0.25 m setting is its finest rather than a uniform resolution.
+On Kimera-Multi, WarpVox differs from reintegration by $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. We treat these sub-percentage-point mean differences as parity and do not claim superiority over reintegration. WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller KITTI gain is consistent with cheap sparse-LiDAR replay and WarpVox's larger active surface and output volume.
+% Paired F@50 differences span $[-1.95,2.28]$ pp and $[-1.46,0.53]$ pp,
+% respectively, with no monotonic increase across event index. 
+Voxgraph improves over Voxblox$_{\mathrm{Pre}}$ at every threshold by aligning rigid SDF submaps; its remaining gap to WarpVox and reintegration is consistent with uncorrected intra-submap drift. Wavemap's profile---low F@10 but competitive KITTI F@50---is consistent with a hierarchical occupancy representation whose 0.25 m setting is its finest rather than a uniform resolution.
 
-At 0.10 m on 11 Kimera-Multi cases, WarpVox obtains
-17.13/39.77/57.83 at F@10/25/50 versus 17.21/39.68/57.12 for reintegration,
-while reducing core time from 192.548 to 9.207 s ($20.91\times$).
-Table~\ref{tab:runtime_breakdown} separates association, target estimation,
-deformation, topology processing, and TSDF reconstruction at both resolutions.
-Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
+At 0.10 m on 11 Kimera-Multi cases, WarpVox obtains 17.13/39.77/57.83 at F@10/25/50 versus 17.21/39.68/57.12 for reintegration, while reducing core time from 192.548 to 9.207 s ($20.91\times$). Table~\ref{tab:runtime_breakdown} separates association, target estimation, deformation, topology processing, and TSDF reconstruction at both resolutions. Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
 
 
 \begin{table}[t]
