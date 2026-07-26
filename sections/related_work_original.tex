@@ -10,7 +10,7 @@ rather than returning a corrected persistent TSDF, and
 ElasticFusion~\cite{whelan2016elasticfusion} repeatedly deforms a surfel map
 inside its own tracking system. Voxgraph~\cite{reijgwart2020voxgraph} instead
 optimizes rigid submaps, leaving spatially varying intra-submap errors
-unresolved. Kimera-PGMO~\cite{kimera_pgmo} jointly optimizes robot poses and a timestamped mesh in a unified deformation graph. Like Kintinuous, it corrects a surface-level representation rather than returning a persistent TSDF. We report it separately in Sec.~\ref{sec:pgmo} because it operates on its own trajectory and mesh.
+unresolved. Kimera-PGMO~\cite{kimera_pgmo} jointly optimizes robot poses and a timestamped mesh in a unified deformation graph. Like Kintinuous, it corrects a surface-level representation rather than returning a persistent TSDF.
 
 \vspace{1mm}\noindent\textit{Surface deformation.}
 ARAP~\cite{ARAP_modeling:2007} and embedded deformation~\cite{10.1145/1276377.1276478} preserve local shape while satisfying sparse controls. DynamicFusion~\cite{7298631}, KillingFusion~\cite{slavcheva2017killingfusion}, and VolumeDeform~\cite{innmann2016volumedeform} estimate continuous non-rigid scene motion. WarpVox instead addresses a static scene with a discrete trajectory revision: corrected poses generate the controls, and a single QEM-proxy deformation propagates them over the extracted surface.
