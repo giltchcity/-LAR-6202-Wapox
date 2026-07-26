@@ -221,6 +221,7 @@ point, while PGMO provides intermediate updates and temporal mesh associations.
 
 \begin{table}[t]
 \centering
+
 \caption{\textbf{Ablation of Stages~1--4 on ten Kimera-Multi checkpoints.}}
 \label{tab:ablation}
 \scriptsize
@@ -228,7 +229,7 @@ point, while PGMO provides intermediate updates and temporal mesh associations.
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-Variant & F@10 (\%) & F@25 (\%) & F@50 (\%) & S1--2 & S3 & S4 \\
+Variant & F@10 (\%) & F@25 (\%) & F@50 (\%) & S1--2 (s) & S3 (s) & S4 (s) \\
 \midrule
 Full-mesh ARAP
   & 10.278 & 26.749 & 45.490 & - & 3.323 & -- \\
@@ -248,7 +249,7 @@ Source-supported TSDF (Final)
 \end{table}
 
 
-Observation-derived targets improve all three mean F-scores over nearest-keyframe pose targets, indicating that projective measurement--surface reassociation preserves more observation-consistent geometry than trajectory-only propagation. The robust 60K QEM proxy matches full-mesh ARAP accuracy while substantially reducing Stage~3 cost, enabling deformation of larger geometries. Converting the robust Stage~3 surface back to a fusible TSDF changes mean F-score by at most 0.122 pp, indicating negligible reconstruction loss. Within Stage~4, source-supported reconstruction improves the final surface over mesh-only conversion at little additional cost while better preserving the source TSDF's observed-space semantics.
+Observation-derived targets improve all three mean F-scores over nearest-keyframe pose targets, by $0.637$ pp at F@25, indicating that projective measurement--surface reassociation preserves more observation-consistent geometry than trajectory-only propagation. The robust 60K QEM proxy matches full-mesh ARAP accuracy ($-0.032$ pp at F@25) while cutting Stage~3 from $3.323$ to $1.408$ s ($2.36\times$), enabling deformation of larger geometries. Converting the robust Stage~3 surface back to a fusible TSDF changes all three mean F-scores by at most $0.122$ pp, indicating negligible reconstruction loss. Within Stage~4, source-supported reconstruction improves F@25 by $0.216$ pp over mesh-only conversion for $0.062$ s, better preserving the source TSDF's observed-space semantics.
 
 \noindent\textbf{Stage-4 source-volume semantics.}
 For the fields defined in \eqref{eq:hybrid_tsdf}--\eqref{eq:hybrid_weight}, we compare WarpVox with corrected-pose Voxblox reintegration on the same ten cases. Over voxels with positive weight in both maps and within the reintegrated truncation band, the truncation-normalized absolute field difference $\mathbb E[|\Phi^+-\Phi_{\rm reint}|]/\tau$ is 0.384, with $95.17\%$ sign agreement. The field difference is not purely a geometric error: WarpVox uses Euclidean distance to the warped surface, whereas Voxblox integrates projective ray distances, which need not coincide away from the same zero set~\cite{han2018flashfusion}. We therefore assess zero-set consistency using the surface F-scores above and sidedness using sign agreement. Treating $w>0$ as observed, support precision, recall, and IoU are $95.53\%$, $68.38\%$, and $66.33\%$, respectively. WarpVox thus introduces little unsupported space, although it retains less observed support than full reintegration.
