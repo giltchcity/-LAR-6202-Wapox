@@ -74,7 +74,7 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
  & Voxgraph & 8.27 & 22.78 & 39.49 & 5.54 \\
  & Wavemap & 1.73 & 11.54 & 30.91 & 8.32 \\
  & Voxblox reint. & 10.93 & 28.71 & 48.67 & 109.25 \\
- & \textbf{WarpVox} & 11.13 & 28.76 & 48.39 & 2.51 \\
+ & \textbf{WarpVox} & 11.13 & 28.76 & 48.39 & 2.26 \\
 \midrule
 \multirow{6}{*}{KITTI (12)}
  & Uncorrected & 7.13 & 27.91 & 49.22 & -- \\
@@ -93,7 +93,7 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 On Kimera-Multi, WarpVox differs from reintegration by
 $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. We treat these sub-percentage-point
 mean differences as parity and do not claim superiority over reintegration.
-WarpVox is $43.46\times$ faster than reintegration on Kimera-Multi and
+WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and
 $3.23\times$ on KITTI. The smaller KITTI gain is consistent with cheap
 sparse-LiDAR replay and WarpVox's larger active surface and output volume.
 Paired F@50 differences span $[-1.95,2.28]$ pp and $[-1.46,0.53]$ pp,
@@ -106,7 +106,7 @@ F@50---is consistent with a hierarchical occupancy representation whose
 
 At 0.10 m on 11 Kimera-Multi cases, WarpVox obtains
 17.13/39.77/57.83 at F@10/25/50 versus 17.21/39.68/57.12 for reintegration,
-while reducing core time from 192.548 to 12.803 s ($15.04\times$).
+while reducing core time from 192.548 to 9.207 s ($20.91\times$).
 Table~\ref{tab:runtime_breakdown} separates association, target estimation,
 deformation, topology processing, and TSDF reconstruction at both resolutions.
 Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
@@ -122,9 +122,9 @@ Figure~\ref{fig:qualitative_ral} complements the quantitative comparison.
 \toprule
 Setting & Assoc. & Target & ARAP & Topol. & TSDF & Total \\
 \midrule
-Kimera, 25 cm (39) & 0.456 & 0.399 & 1.419 & 0.008 & 0.231 & 2.514 \\
+Kimera, 25 cm (39) & 0.199 & 0.399 & 1.419 & 0.008 & 0.231 & 2.256 \\
 KITTI, 25 cm (12)   & 0.310 & 0.069 & 2.457 & 0.147 & 1.888 & 4.872 \\
-Kimera, 10 cm (11) & 6.219 & 0.244 & 5.298 & 0.004 & 1.038 & 12.803 \\
+Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
 \bottomrule
 \end{tabular}
 \vspace{1pt}
@@ -198,7 +198,7 @@ Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 Kimera-VIO pre-mesh & 4.26 & 12.67 & 23.93 & -- \\
 Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
 \textbf{WarpVox} & \textbf{6.53} &
-\textbf{18.72} & \textbf{34.57} & \textbf{47.02} \\
+\textbf{18.72} & \textbf{34.57} & \textbf{28.61} \\
 \bottomrule
 \end{tabular}
 \vspace{1pt}
@@ -206,7 +206,7 @@ Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
 \end{table}
 
 One WarpVox correction improves mean F@25/F@50 by 1.24/3.03 pp, using
-47.02 s versus 435.97 s for the incremental PGMO mesh deformation required
+28.61 s versus 435.97 s for the incremental PGMO mesh deformation required
 to produce its final mesh.
 Per-bag F@50 differences comprise four gains of 5.5--11.7 pp and six cases
 within $\pm0.5$ pp. Thus WarpVox offers a lower-cost final-state operating
