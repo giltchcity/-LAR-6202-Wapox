@@ -15,10 +15,7 @@ Voxgraph is aligned from its own reported trajectory because it maintains an
 independently optimized submap frame; this baseline-specific trajectory fit
 cannot improve WarpVox relative to Voxgraph.
 
-WarpVox runs alongside the standard Voxblox fusion pipeline, automatically extracting and caching the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. At every loop event, WarpVox
-re-associates the current source surface with the cached keyframes,
-executes Stages~2--4, replaces the active Voxblox TSDF, discards the derived
-event state, and resumes fusion from the next frame. Until the next loop closure, when Warpvox corrects again. For the eighteen RGB-D sequences, the cache holds one uncompressed 16-bit depth image per keyframe at $0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707 keyframes (mean $2.1\,\mathrm{GiB}$). 
+WarpVox runs alongside the standard Voxblox fusion pipeline, automatically extracting and caching the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. At every loop event, WarpVox re-associates the current source surface with the cached keyframes, executes Stages~1--4, replaces the active Voxblox TSDF, discards the derived event state, and Voxblox resumes fusion until the next loop closure triggers another Warpvox correction. For the eighteen RGB-D sequences, the cache holds one uncompressed 16-bit depth image per keyframe at $0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707 keyframes (mean $2.1\,\mathrm{GiB}$). 
 
 
 \noindent\textbf{Baselines.}
