@@ -14,7 +14,7 @@ severely noisy or topologically corrupted source maps are outside its scope.
 Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world
 frame before and after trajectory correction. The map built with $T^-$ consists
 of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation
-distance $\tau$. Marching Cubes (MC)~\cite{10.1145/37402.37422} extracts the source surface $\mathcal M^-=(V^-,F)$, then WarpVox begins its correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. During online fusion, the implementation stores the timestamped, modality-native range images of SLAM keyframes so that these measurements remain available at later correction events,
+distance $\tau$. WarpVox begins its correction after receiving the source mesh $\mathcal M^-=(V^-,F)$ extracted from the active Voxblox TSDF by Marching Cubes (MC)~\cite{10.1145/37402.37422}. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. During online fusion, the implementation stores the timestamped, modality-native range images of SLAM keyframes so that these measurements remain available at later correction events,
 \begin{equation}
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
 \label{eq:keyframe_cache}
