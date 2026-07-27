@@ -93,7 +93,7 @@ pose. Missing interior poses use linear translation interpolation and SLERP
 rotation over a bounded gap~\cite{shoemake1985slerp}. The invariant sample then
 defines the corrected candidate
 \begin{equation}
-q_{rj}^+=\left[T^+(t_r)\widetilde m_r\right]_{1:3}.
+q_r^+=\left[T^+(t_r)\widetilde m_r\right]_{1:3}.
 \label{eq:corrected_target}
 \end{equation}
 This candidate is exact when the static-scene association, calibration, and
@@ -103,7 +103,7 @@ $\mathcal J_j=\{r:(r,\alpha_{rj})\in\mathcal O_j\}$. We first compute
 \omega_{rj}=\frac{\alpha_{rj}}{1+\rho_r/\rho_t},
 \qquad
 \bar q_j=
-\frac{\sum_{r\in\mathcal J_j}\omega_{rj}q_{rj}^+}
+\frac{\sum_{r\in\mathcal J_j}\omega_{rj}q_r^+}
      {\sum_{r\in\mathcal J_j}\omega_{rj}}.
 \label{eq:target_initial}
 \end{equation}
@@ -115,9 +115,9 @@ its rejection threshold:
 \theta_j&=\max\!\left(
 \epsilon_t,
 \kappa_t\operatorname*{median}_{r\in\mathcal J_j}
-\|q_{rj}^+-\bar q_j\|\right),\\
+\|q_r^+-\bar q_j\|\right),\\
 I_j&=\left\{r\in\mathcal J_j:
-\|q_{rj}^+-\bar q_j\|\le\theta_j\right\}.
+\|q_r^+-\bar q_j\|\le\theta_j\right\}.
 \end{aligned}
 \label{eq:target_inliers}
 \end{equation}
@@ -125,11 +125,11 @@ When fewer than three candidates are available, $I_j=\mathcal J_j$. The final
 target and its observable dispersion are
 \begin{equation}
 v_j^*=
-\frac{\sum_{r\in I_j}\omega_{rj}q_{rj}^+}
+\frac{\sum_{r\in I_j}\omega_{rj}q_r^+}
      {\sum_{r\in I_j}\omega_{rj}},
 \qquad
 \sigma_j^2=
-\frac{\sum_{r\in I_j}\omega_{rj}\|q_{rj}^+-v_j^*\|^2}
+\frac{\sum_{r\in I_j}\omega_{rj}\|q_r^+-v_j^*\|^2}
      {\sum_{r\in I_j}\omega_{rj}}.
 \label{eq:target}
 \end{equation}
