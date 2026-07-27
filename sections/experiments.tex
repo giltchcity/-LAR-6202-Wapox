@@ -5,12 +5,9 @@
 
 Each bag is processed once end-to-end rather than replayed independently at individual loop-closure checkpoints. ORB-SLAM3 and Voxblox run from the start of the bag; at each trajectory revision, WarpVox corrects the current active TSDF and commits the returned native volume back to Voxblox, which continues fusion from that state until the next loop closure. We evaluate 39 RGB-D loop-closure cases from 18 Kimera-Multi sequences~\cite{tian23arxiv_kimeramultiexperiments} and 12 LiDAR cases from six KITTI sequences~\cite{Geiger2013IJRR}. 
 % Each bag is run through ORB-SLAM3 once, and all loop-closure events it produces are recorded. 
-Every method reconstructs the same temporal interval. For Kimera-Multi, the reference geometry is the official ground-truth point cloud. 
-% cropped to a 5 m tube around the corresponding official trajectory to match Voxblox's maximum integration range. 
-For KITTI, the reference is the GT-registered point cloud.
-% within the mapper's 25 m ray range. 
-Predictions expressed outside the GT frame are aligned to it using only timestamp-matched trajectory positions; no mesh-to-GT registration is used. Reconstructions built from the same corrected trajectory share one alignment per case. Voxgraph is aligned from its own trajectory because it maintains an optimized poses with its own advantage. 
-% this baseline-specific trajectory fit cannot improve WarpVox relative to Voxgraph.
+Every method reconstructs the same temporal interval. For Kimera-Multi, the reference geometry is the official ground-truth point cloud, cropped to a 5 m tube around the GT trajectory to match Voxblox's maximum integration range. 
+For KITTI, the reference is the GT-registered point cloud, within the mapper's 25 m ray range. 
+Predictions expressed outside the GT frame are aligned to it using only timestamp-matched trajectory positions; no mesh-to-GT registration is used. Voxgraph is aligned using the trajectory recovered from its jointly optimized submap-pose graph, whereas reconstructions built from the same corrected ORB-SLAM3 trajectory share one alignment per case.
 
 WarpVox runs alongside the standard Voxblox fusion pipeline and automatically caches the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. Event-specific associations, targets, and deformation state are discarded after each committed correction, whereas the keyframe cache and corrected active TSDF persist across events. For the eighteen RGB-D sequences, the cache holds one uncompressed 16-bit depth image per keyframe at $0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707 keyframes (mean $2.1\,\mathrm{GiB}$). 
 
@@ -155,7 +152,7 @@ cases in the bottom two rows; each row uses the same view across methods.}
 
 
 
-\subsection{Event-Triggered Comparison with Kimera-PGMO}
+\subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
 Both methods take the unoptimized trajectory and 5\,cm frontend mesh produced by the same Kimera-VIO run. Each bag is evaluated under the same final VIO-to-PGMO trajectory correction: the PGMO mesh is scored directly, whereas WarpVox applies this correction to the corresponding VIO pre-mesh. That pre-mesh carries no source TSDF, so WarpVox uses mesh-only Stage~4: this experiment compares correction without source-volume support transfer.
@@ -181,12 +178,7 @@ Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
 \parbox{\columnwidth}{\scriptsize The VIO pre-mesh is the shared unoptimized input. Kimera-PGMO reports the mesh-deformation time required to produce its final mesh; WarpVox reports one correction of the corresponding VIO pre-mesh.}
 \end{table}
 
-Table~\ref{tab:pgmo_full10} shows that WarpVox achieves mean F@25/F@50 values 1.24/3.03 pp higher than Kimera-PGMO, using
-28.61 s versus 435.97 s for the PGMO mesh deformation required
-to produce its final mesh.
-Per-bag F@50 differences comprise four gains of 5.5--11.7 pp and six cases
-within $\pm0.5$ pp. Thus WarpVox offers a lower-cost final-state operating
-point, while PGMO provides intermediate updates and temporal mesh associations.
+Table~\ref{tab:pgmo_full10} shows that WarpVox achieves mean F@25/F@50 values 1.24/3.03 pp than Kimera-PGMO, using 28.61 s versus 435.97 s for the PGMO mesh deformation required to produce its final mesh. Per-bag F@50 differences comprise four gains of 5.5--11.7 pp and six within $\pm0.5$ pp. Thus WarpVox offers a lower-cost at an operating point, while PGMO provides inter-updates and temporal mesh associations.
 
 
 % two of the latter are marginally
