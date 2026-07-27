@@ -34,7 +34,7 @@ Stage~1 projects the current surface into the keyframe range images and returns 
 \label{eq:resolved_records}
 \end{equation}
 where each record $r$ identifies a keyframe range image and a valid projected range sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
-effective reliability of associating it with source vertex $v_j^-$. After exact association, vertex retains at most 15 observations for target construction. RGB-D conservatively restricts candidates with a camera-centre KD-tree and a bounding sphere of the finite camera frustum, whereas LiDAR uses a sensor-position grid with cached local candidates followed by an exact 80\,m radius check; both then apply the unchanged projection and association tests. Records are matched by acquisition time rather than trajectory row index. The correction
+effective reliability of associating it with source vertex $v_j^-$. For target construction, each vertex retains at most 15 association records, giving fixed-size per-vertex state. RGB-D conservatively restricts candidates with a camera-centre KD-tree and a bounding sphere of the finite camera frustum, whereas LiDAR uses a sensor-position grid with cached local candidates followed by an exact 80\,m radius check; both then apply the unchanged projection and association tests. Records are matched by acquisition time rather than trajectory row index. The correction
 backend therefore receives vertex-indexed records and never re-fuses
 measurements into the volume. Its contract is
 \begin{equation}
@@ -327,4 +327,6 @@ C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)
 +C_{\rm vol}(X^+,\bar F),
 \label{eq:complexity}
 \end{equation}
-where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent. In the worst case $\kappa=K_{\rm KF}$, so the spatial indices exploit locality without changing the association rule or its worst-case dependence on surface size and keyframe count. The reported implementation uses a 60K-vertex proxy cap; all remaining thresholds and discrete predicates are fixed within each sensor modality. Full reintegration incurs $O(N|\Omega|)$ historical volumetric replay. Measurement storage grows linearly with $K_{\rm KF}$.
+where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent. In the worst case $\kappa=K_{\rm KF}$, so the spatial indices exploit locality without changing the association rule or its worst-case dependence on surface size and keyframe count. The resulting proxy contains at most 60K vertices.
+% all remaining thresholds and discrete predicates are fixed within each sensor modality. 
+Full reintegration incurs $O(N|\Omega|)$ historical volumetric replay. Measurement storage grows linearly with $K_{\rm KF}$.
