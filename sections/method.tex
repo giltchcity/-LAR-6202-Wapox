@@ -9,7 +9,7 @@ connectivity are coherent in local neighborhoods although the map is globally
 inconsistent. WarpVox corrects this global inconsistency after loop closure;
 severely noisy or topologically corrupted source maps are outside its scope.
 
-\subsection{Problem and Correction Inputs} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF ~\cite{10.1145/37402.37422}, while the implementation stores the timestamped, modality-native range images of SLAM keyframes. When a trajectory correction becomes available, WarpVox receives the current, already-available mesh as its source surface and begins the correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. The stored keyframe measurements remain available at later correction events,
+\subsection{Problem and Correction Inputs} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF~\cite{10.1145/37402.37422}, while WarpVox stores the timestamped, modality-native range images of SLAM keyframes. When a trajectory correction becomes available, WarpVox receives the current, already-available mesh as its source surface and begins the correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. The stored keyframe measurements remain available at later correction events,
 \begin{equation}
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
 \label{eq:keyframe_cache}
@@ -204,7 +204,7 @@ Deformation accuracy therefore depends on target correctness and coverage.
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
 
 The warped surface supplies the corrected zero set~\cite{sussman1999redistancing},
-while the source TSDF primarily supplies observed-space semantics. Let $n_b$ be the
+while the source TSDF primarily supplies support, sign, and integration weights. Let $n_b$ be the
 number of voxels per block edge, $h=n_bs$ the block width, and $o_b=hb$ and
 $c_b=o_b+\frac{h}{2}\mathbf 1$ the origin and centre of block $b$. With
 $\mathcal N_1$ denoting a one-block Chebyshev dilation, the allocation domain is
@@ -315,7 +315,7 @@ Because transferred weights are positive on $\Omega_{\rm tr}$ and the fallback
 band is strict, by construction
 $\Omega^+=\{x\in\mathcal X^+:w^+(x)>0\}$. Outside $\Omega^+$ the zero weight
 makes the stored distance immaterial. When no source TSDF is available, the final Stage-3 surface is converted into a closest-triangle-normal signed Euclidean distance field within 1.5 voxel widths, with synthetic finite-band weights. The resulting
-$(\Phi^+,w^+)$ is serialized in the native Voxblox TSDF format; its MC mesh is used for surface evaluation and visualization.
+$(\Phi^+,w^+)$ is serialized in the native Voxblox TSDF format; its MC mesh is used for surface evaluation and visualization. The returned volume replaces the active Voxblox TSDF, so subsequent fusion and later correction events proceed from the corrected state.
 
 \subsection{Complexity and Scope}
 
