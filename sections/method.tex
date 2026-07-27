@@ -34,7 +34,7 @@ Stage~1 projects the current surface into the keyframe range images and returns 
 \label{eq:resolved_records}
 \end{equation}
 where each record $r$ identifies a keyframe range image and a valid projected range sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
-effective reliability of associating it with source vertex $v_j^-$. After exact association, a fixed maximum number of observations is retained per vertex for target construction. RGB-D conservatively restricts candidates with a camera-centre KD-tree and a bounding sphere of the finite camera frustum, whereas LiDAR uses a sensor-position grid with cached local candidates followed by an exact 80\,m radius check; both then apply the unchanged projection and association tests. Records are matched by acquisition time rather than trajectory row index. The correction
+effective reliability of associating it with source vertex $v_j^-$. After exact association, vertex retains at most 15 observations for target construction. RGB-D conservatively restricts candidates with a camera-centre KD-tree and a bounding sphere of the finite camera frustum, whereas LiDAR uses a sensor-position grid with cached local candidates followed by an exact 80\,m radius check; both then apply the unchanged projection and association tests. Records are matched by acquisition time rather than trajectory row index. The correction
 backend therefore receives vertex-indexed records and never re-fuses
 measurements into the volume. Its contract is
 \begin{equation}
