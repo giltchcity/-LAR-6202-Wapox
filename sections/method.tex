@@ -34,7 +34,7 @@ Stage~1 projects the current surface into the keyframe range images and returns 
 \label{eq:resolved_records}
 \end{equation}
 where each record $r$ identifies a keyframe range image and a valid projected range sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
-effective reliability of associating it with source vertex $v_j^-$. For target construction, each vertex retains at most 15 association records, giving fixed-size per-vertex state. RGB-D conservatively restricts candidates with a camera-centre KD-tree and a bounding sphere of the finite camera frustum, whereas LiDAR uses a sensor-position grid with cached local candidates followed by an exact 80\,m radius check; both then apply the unchanged projection and association tests. Records are matched by acquisition time rather than trajectory row index. The correction
+effective reliability of associating it with source vertex $v_j^-$. For target construction, each vertex retains at most 15 association records, giving fixed-size per-vertex state. RGB-D conservatively restricts candidates with a camera-centre KD-tree and a bounding sphere of the finite camera frustum, whereas LiDAR uses a sensor-position grid with cached local candidates followed by an exact 80\,m radius check; both then apply the unchanged projection and association tests. Records are matched by acquisition time, not by trajectory row index. The correction
 backend therefore receives vertex-indexed records and never re-fuses
 measurements into the volume. Its contract is
 \begin{equation}
@@ -81,7 +81,7 @@ The effective association reliability is
 Candidates satisfy the range-dependent geometric gate
 $e^g_{rj}\le\epsilon_g(\rho_r)$. Depth residual and viewing direction enter
 $\alpha_{rj}$, and candidates with $\alpha_{rj}<\alpha_{\min}$ are rejected. LiDAR uses the analogous construction with
-spherical projection and radial range. This is geometric support rather than
+spherical projection and radial range. This establishes geometric support, not
 exact voxel-integration provenance. The $z_0$ term provides distance-aware
 ranking during association; a separate range factor below models target
 reliability after association.
@@ -134,8 +134,7 @@ v_j^*=
 \label{eq:target}
 \end{equation}
 A target becomes a control only if $|I_j|\ge n_{\min}$ and
-$\sigma_j\le\sigma_{\max}$. Dispersion measures agreement among retained
-candidates but cannot detect a mutually consistent yet incorrect association.
+$\sigma_j\le\sigma_{\max}$.
 
 \subsection{Stage 3: Surface Deformation}
 
@@ -191,7 +190,7 @@ Risk-region displacements are harmonically smoothed with fixed boundary conditio
 \mathcal M^+=(\bar V^+,\bar F),\qquad \bar F\subseteq F.
 \label{eq:retained_topology}
 \end{equation}
-Deformation accuracy therefore depends on target correctness and coverage.
+Deformation accuracy depends on target correctness and coverage.
 
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
 
@@ -309,4 +308,4 @@ $\Omega^+=\{x\in\mathcal X^+:w^+(x)>0\}$. Outside $\Omega^+$ the zero weight
 makes the stored distance immaterial. When no source TSDF is available, the final Stage-3 surface is converted into a closest-triangle-normal signed Euclidean distance field within 1.5 voxel widths, with synthetic finite-band weights. The resulting
 $(\Phi^+,w^+)$ is serialized in the native Voxblox TSDF format; its MC mesh is used for surface evaluation and visualization. The returned volume replaces the active Voxblox TSDF, so subsequent fusion and later correction events proceed from the corrected state.
 
-\subsection{Complexity and Scope} Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC yields a constant number of surface elements per active cell, so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the measurements and $O(A)$ for the per-vertex association state. With $\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source vertex, association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and $O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive index model, giving \begin{equation} C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F), \label{eq:complexity} \end{equation} where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The spatial indices accelerate lookup without changing the association rule. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent, and the proxy contains at most 60K vertices. Session length enters \eqref{eq:complexity} only through $K_{\rm KF}$, in index construction and candidate lookup; the retained association state per surface element is bounded by a constant, and each output voxel is written once rather than once per contributing measurement. Full reintegration instead re-fuses every historical measurement at $O(N|D|)$. The two costs are indexed by different quantities, so their ratio depends on the sensor and trajectory rather than on either method alone.
+\subsection{Complexity and Scope} Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC yields a constant number of surface elements per active cell, so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the measurements and $O(A)$ for the per-vertex association state. With $\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source vertex, association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and $O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive index model, giving \begin{equation} C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F), \label{eq:complexity} \end{equation} where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The spatial indices accelerate lookup without changing the association rule. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent, and the proxy contains at most 60K vertices. Session length enters \eqref{eq:complexity} only through $K_{\rm KF}$, in index construction and candidate lookup; the retained association state per surface element is bounded by a constant, and each output voxel is written once rather than once per contributing measurement. Full reintegration instead re-fuses every historical measurement at $O(N|D|)$. The two costs are indexed by different quantities: indexed keyframe association and active-map geometry for WarpVox, versus complete measurement replay for reintegration.
