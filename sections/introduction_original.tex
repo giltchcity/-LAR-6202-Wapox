@@ -17,3 +17,6 @@ WarpVox combines four stages: (i) projectively re-associate keyframe range measu
 \item A source-supported TSDF reconstruction that pairs the warped zero set with support, sign, and integration weights pulled back from the source volume, returning a native Voxblox map that replaces the active TSDF and continues fusing.
 \item An evaluation of RGB-D and LiDAR correction against reintegration and mapping baselines over 51 loop-closure cases, together with a separate comparison of final-state surface correction against Kimera-PGMO on ten complete bags.
 \end{itemize}
+
+% \item We introduce an event-level system that converts an external trajectory revision and an already fused active TSDF into a corrected, fusion-ready TSDF without replaying the complete historical range stream.
+% \item The system constructs correction targets through projective measurement--surface reassociation, propagates them through one proxy deformation, and reconstructs source-supported TSDF fields so that the corrected volume can replace the active map.
