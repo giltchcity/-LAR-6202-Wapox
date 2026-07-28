@@ -19,7 +19,7 @@ where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D depth
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{Figures/pipeline_v5.jpg}
-  \caption{WarpVox projectively re-associates keyframe range measurements with the current source surface at each trajectory revision, computes corrected targets, performs one event-level proxy deformation, and reconstructs a source-supported TSDF.}
+  \caption{WarpVox projectively re-associates keyframe range measurements with the current source surface at each trajectory revision, computes corrected targets, performs one proxy deformation per correction, and reconstructs a source-supported TSDF.}
   \label{fig:pipeline}
 \end{figure}
 
@@ -137,7 +137,7 @@ A target becomes a control only if $|I_j|\ge n_{\min}$ and
 $\sigma_j\le\sigma_{\max}$. Dispersion measures agreement among retained
 candidates but cannot detect a mutually consistent yet incorrect association.
 
-\subsection{Stage 3: Event-Level Surface Deformation}
+\subsection{Stage 3: Surface Deformation}
 
 The deformation stage propagates observation-derived motion; it does not infer
 correction from shape alone. Let $d_j=v_j^*-v_j^-$ be an accepted control
@@ -162,9 +162,7 @@ robust nearby motion through three spatially separated synthetic anchors. Let
 $\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted
 measured or synthesized targets $p_a^*$.
 
-WarpVox performs a single event-level proxy ARAP
-optimization~\cite{ARAP_modeling:2007,
-10.1007/978-3-662-05105-4_2,libigl}:
+WarpVox performs one proxy ARAP solve per correction\cite{ARAP_modeling:2007, 10.1007/978-3-662-05105-4_2,libigl}:
 \begin{equation}
 \begin{aligned}
 \min_{P^+,\{R_a\in SO(3)\}}\quad
@@ -176,13 +174,7 @@ optimization~\cite{ARAP_modeling:2007,
 \end{aligned}
 \label{eq:arap}
 \end{equation}
-Here $\mathcal N_P(a)$ is the one-ring neighbourhood induced by $F_P$, and
-$c_{ab}=c_{ba}$ are symmetric cotangent-derived weights; the factor $1/2$
-removes double counting. Association reliability and robust aggregation decide
-which controls survive and where they lie. Once accepted, controls are imposed
-exactly so that ARAP does not attenuate the supplied trajectory correction.
-The standard local--global iterations solve this single event-level
-optimization.
+Here $\mathcal N_P(a)$ is the one-ring neighbourhood induced by $F_P$, and $c_{ab}=c_{ba}$ are symmetric cotangent-derived weights; the factor $1/2$ removes double counting. Association reliability and robust aggregation decide which controls survive and where they lie. Once accepted, controls are imposed exactly so that ARAP does not attenuate the supplied trajectory correction. The standard local--global iterations solve this single optimization.
 
 Proxy displacement is transferred to $V^-$ by topology-local barycentric
 interpolation. Let $f_j$ be the closest triangle to $v_j^-$ in
@@ -329,4 +321,4 @@ C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)
 \end{equation}
 where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent. In the worst case $\kappa=K_{\rm KF}$, so the spatial indices exploit locality without changing the association rule or its worst-case dependence on surface size and keyframe count. The resulting proxy contains at most 60K vertices.
 % all remaining thresholds and discrete predicates are fixed within each sensor modality. 
-Full reintegration incurs $O(N|\Omega|)$ historical volumetric replay. Measurement storage grows linearly with $K_{\rm KF}$. 
+Neither $N$ nor $|\Omega|$ appears in \eqref{eq:complexity}. The correction reads at most $\kappa$ cached samples per active surface element and writes each output voxel once, rather than once per contributing measurement. Its cost therefore follows map coverage, whereas reintegration follows coverage scaled by observation redundancy.

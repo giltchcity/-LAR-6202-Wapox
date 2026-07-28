@@ -42,7 +42,7 @@ A single-sequence case study extends the same targets to Gaussian centres.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.87\textwidth]{Figures/teaser_v1.jpg}
-\caption{\textbf{WarpVox corrects a TSDF after loop closure without re-fusing the historical range stream.} The pre-correction map remains locally coherent but is globally inconsistent with the revised trajectory. WarpVox re-associates keyframe range measurements with the current surface, propagates the resulting targets through one event-level deformation, and reconstructs a corrected TSDF.}
+\caption{\textbf{WarpVox corrects a TSDF after loop closure without re-fusing the historical range stream.} The pre-correction map remains locally coherent but is globally inconsistent with the revised trajectory. WarpVox re-associates keyframe range measurements with the current surface, propagates the resulting targets through one deformation per correction, and reconstructs a corrected TSDF.}
 \label{fig:teaser}
 \end{figure*}
 
