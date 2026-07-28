@@ -43,7 +43,7 @@ measurements into the volume. Its contract is
 \label{eq:contract}
 \end{equation}
 where the warped mesh is intermediate and $(\Phi^+,w^+)$ is a
-Voxblox-compatible TSDF volume.
+Voxblox TSDF volume.
 
 For an RGB-D record $r$, pixel $\bar u_r=[u_r,v_r,1]^\top$ with measured
 z-depth $z_r$ defines the invariant sensor-frame sample
@@ -96,7 +96,7 @@ defines the corrected candidate
 q_r^+=\left[T^+(t_r)\widetilde m_r\right]_{1:3}.
 \label{eq:corrected_target}
 \end{equation}
-This candidate is exact when the static-scene association, calibration, and
+This candidate is geometrically consistent when the static-scene association, calibration, and
 corrected pose are valid. Let
 $\mathcal J_j=\{r:(r,\alpha_{rj})\in\mathcal O_j\}$. We first compute
 \begin{equation}
@@ -162,7 +162,7 @@ robust nearby motion through three spatially separated synthetic anchors. Let
 $\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted
 measured or synthesized targets $p_a^*$.
 
-WarpVox performs one proxy ARAP solve per correction\cite{ARAP_modeling:2007, 10.1007/978-3-662-05105-4_2,libigl}:
+WarpVox performs one proxy ARAP solve per correction~\cite{ARAP_modeling:2007, 10.1007/978-3-662-05105-4_2,libigl}:
 \begin{equation}
 \begin{aligned}
 \min_{P^+,\{R_a\in SO(3)\}}\quad
