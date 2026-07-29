@@ -131,7 +131,7 @@ cases in the bottom two rows; each row uses the same view across methods. Colors
 \subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Both methods use the Kimera-VIO trajectory and corresponding $8\,\text{cm}$ frontend mesh produced by the same run. For each bag, the PGMO mesh is scored directly, while its corresponding optimized trajectory defines the VIO-to-PGMO correction applied by WarpVox to the VIO pre-mesh. Because this pre-mesh carries no source TSDF, WarpVox uses mesh-only Stage~4; this experiment compares surface correction without source-volume support transfer.
+Both methods use the Kimera-VIO trajectory and corresponding $8\,\text{cm}$ frontend mesh produced by the same run. For each bag, the PGMO mesh is scored directly, while its corresponding optimized trajectory defines the VIO-to-PGMO correction applied by WarpVox to the VIO pre-mesh. Kimera-PGMO's cost is necessarily cumulative---its final mesh is the product of incremental deformation-graph optimization---whereas WarpVox corrects the corresponding VIO pre-mesh in one pass. Because this pre-mesh carries no source TSDF, WarpVox uses mesh-only Stage~4; this experiment compares surface correction without source-volume support transfer.
 
 \begin{table}[t]
 \centering
