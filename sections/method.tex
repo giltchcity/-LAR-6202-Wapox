@@ -9,7 +9,7 @@ connectivity are coherent in local neighborhoods although the map is globally
 inconsistent. WarpVox corrects this global inconsistency after loop closure;
 severely noisy or topologically corrupted source maps are outside its scope.
 
-\subsection{Problem and Correction Inputs} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF~\cite{10.1145/37402.37422}, while WarpVox stores the timestamped, modality-native range images of SLAM keyframes. When a trajectory correction becomes available, WarpVox receives the current, already-available mesh as its source surface and begins the correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. The stored keyframe measurements remain available at later correction events,
+\subsection{Problem and Correction Inputs} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF~\cite{10.1145/37402.37422}, while WarpVox stores the timestamped, modality-native range images of SLAM keyframes. When a trajectory correction becomes available, WarpVox receives the current, already-available mesh as its source surface and begins the correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. 
 \begin{equation}
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
 \label{eq:keyframe_cache}
@@ -53,7 +53,7 @@ m_r=z_rK^{-1}\bar u_r,
 \widetilde m_r=[m_r^\top,1]^\top.
 \label{eq:sensor_sample}
 \end{equation}
-Let $\rho_r=z_r$ for RGB-D and $\rho_r=\|m_r\|$ for LiDAR. The inverse
+The inverse
 pre-correction pose projects source vertex $v_j^-$ into the record frame.
 Candidate observations must agree in depth, three-dimensional position, and
 viewing direction. Let $n_j^-$ be the source normal, $\ell_{rj}^-$ the unit
@@ -73,18 +73,14 @@ g_{rj}
 The effective association reliability is
 \begin{equation}
 \alpha_{rj}=
-\exp\!\left(-\frac{e^g_{rj}}{\sigma_g}\right)
-\exp\!\left(-\frac{|e^z_{rj}|}{\sigma_z}\right)
-\frac{g_{rj}}{1+z_{rj}^{\rm proj}/z_0}.
+\exp\!\left(-\frac{e^g_{rj}}{0.048\,\mathrm{m}}\right)
+\exp\!\left(-\frac{|e^z_{rj}|}{0.08\,\mathrm{m}}\right)
+\frac{g_{rj}}{1+z_{rj}^{\rm proj}/8\,\mathrm{m}}.
 \label{eq:association_weight}
 \end{equation}
-Candidates satisfy the range-dependent geometric gate
-$e^g_{rj}\le\epsilon_g(\rho_r)$. Depth residual and viewing direction enter
-$\alpha_{rj}$, and candidates with $\alpha_{rj}<\alpha_{\min}$ are rejected. LiDAR uses the analogous construction with
+Candidates satisfy the depth-dependent geometric gate $e^g_{rj}\le 0.08\,\mathrm{m}+0.01\,z_{rj}^{\rm proj}$, and candidates with $\alpha_{rj}<0.05$ are rejected. LiDAR uses the analogous construction with
 spherical projection and radial range. This establishes geometric support, not
-exact voxel-integration provenance. The $z_0$ term provides distance-aware
-ranking during association; a separate range factor below models target
-reliability after association.
+exact voxel-integration provenance. The attenuation in \eqref{eq:association_weight} ranks candidates during association; the separate factor in \eqref{eq:target_initial} models target reliability after association.
 
 \subsection{Stage 2: Corrected Surface Targets}
 
@@ -100,49 +96,40 @@ This candidate is geometrically consistent when the static-scene association, ca
 corrected pose are valid. Let
 $\mathcal J_j=\{r:(r,\alpha_{rj})\in\mathcal O_j\}$. We first compute
 \begin{equation}
-\omega_{rj}=\frac{\alpha_{rj}}{1+\rho_r/\rho_t},
+\omega_{rj}=\frac{\alpha_{rj}}{1+z_r/3\,\mathrm{m}},
 \qquad
 \bar q_j=
 \frac{\sum_{r\in\mathcal J_j}\omega_{rj}q_r^+}
      {\sum_{r\in\mathcal J_j}\omega_{rj}}.
 \label{eq:target_initial}
 \end{equation}
+for LiDAR, the attenuation is in the candidate displacement $\|q_r^+-v_j^-\|$ instead.
 The reliability-weighted center is paired with an unweighted median residual
 scale so that no single high-weight candidate controls both the estimate and
 its rejection threshold:
 \begin{equation}
 \begin{aligned}
 \theta_j&=\max\!\left(
-\epsilon_t,
-\kappa_t\operatorname*{median}_{r\in\mathcal J_j}
+0.02\,\mathrm{m},
+2.5\operatorname*{median}_{r\in\mathcal J_j}
 \|q_r^+-\bar q_j\|\right),\\
 I_j&=\left\{r\in\mathcal J_j:
 \|q_r^+-\bar q_j\|\le\theta_j\right\}.
 \end{aligned}
 \label{eq:target_inliers}
 \end{equation}
-When fewer than three candidates are available, $I_j=\mathcal J_j$. The final
-target and its observable dispersion are
+When fewer than three candidates are available, $I_j=\mathcal J_j$. The final target is
 \begin{equation}
 v_j^*=
 \frac{\sum_{r\in I_j}\omega_{rj}q_r^+}
-     {\sum_{r\in I_j}\omega_{rj}},
-\qquad
-\sigma_j^2=
-\frac{\sum_{r\in I_j}\omega_{rj}\|q_r^+-v_j^*\|^2}
      {\sum_{r\in I_j}\omega_{rj}}.
 \label{eq:target}
 \end{equation}
-A target becomes a control only if $|I_j|\ge n_{\min}$ and
-$\sigma_j\le\sigma_{\max}$.
+Each vertex with at least one valid record yields a target; the resulting controls are screened by the robust spatial-consistency filter of Stage~3.
 
 \subsection{Stage 3: Surface Deformation}
 
-The deformation stage propagates observation-derived motion; it does not infer
-correction from shape alone. Let $d_j=v_j^*-v_j^-$ be an accepted control
-displacement. Before proxy construction, an inverse-distance prediction from
-neighbouring controls in the same component rejects displacements whose
-residual exceeds the component median by $\kappa_d$ times its MAD.
+The deformation stage propagates observation-derived motion; it does not infer correction from shape alone. Let $d_j=v_j^*-v_j^-$ be an control displacement. Before proxy construction, a component-aware inverse-distance prediction supplies each control's expected displacement; controls whose residual exceeds the global median by more than $1.5$ times a normalized MAD scale, floored at $0.05$\,m, are rejected.
 
 Component-separated spatial clustering~\cite{rossignac1993vertexclustering}
 constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ and selects one QEM
@@ -184,7 +171,7 @@ v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),
 \qquad \lambda_{jb}\ge0,\quad\sum_{b\in f_j}\lambda_{jb}=1.
 \label{eq:proxy_transfer}
 \end{equation}
-Risk-region displacements are harmonically smoothed with fixed boundary conditions; faces that remain severely distorted under fixed edge-stretch or area-ratio criteria are then removed, while aspect ratio only triggers repair. The retained surfaces satisfy
+A face is flagged when its deformed-to-source edge-length ratio reaches $3$, its area ratio $6$, or its aspect ratio exceeds $20$; flagged vertices form the risk region, whose displacements are relaxed toward the harmonic interpolant of the fixed surroundings. Faces still exceeding the edge-length or area bound are removed; a high aspect ratio alone only triggers the relaxation. The retained surfaces satisfy
 \begin{equation}
 \bar{\mathcal M}^-=(\bar V^-,\bar F),\qquad
 \mathcal M^+=(\bar V^+,\bar F),\qquad \bar F\subseteq F.
