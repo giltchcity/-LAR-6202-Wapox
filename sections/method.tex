@@ -54,11 +54,7 @@ m_r=z_rK^{-1}\bar u_r,
 \label{eq:sensor_sample}
 \end{equation}
 The inverse
-pre-correction pose projects source vertex $v_j^-$ into the record frame.
-Candidate observations must agree in depth, three-dimensional position, and
-viewing direction. Let $n_j^-$ be the source normal, $\ell_{rj}^-$ the unit
-viewing direction in the pre-correction world frame, and $z_{rj}^{\rm proj}$
-the projected vertex depth. We define
+The inverse pre-correction pose projects source vertex $v_j^-$ into the record frame. Candidate agreement combines depth residual, three-dimensional position, and viewing direction. Let $n_j^-$ be the source normal, $\ell_{rj}^-$ the unit viewing direction in the pre-correction world frame, and $z_{rj}^{\rm proj}$ the projected vertex depth. We define
 \begin{equation}
 \begin{aligned}
 e^g_{rj}
@@ -78,9 +74,7 @@ The effective association reliability is
 \frac{g_{rj}}{1+z_{rj}^{\rm proj}/8\,\mathrm{m}}.
 \label{eq:association_weight}
 \end{equation}
-RGB-D candidates satisfy the depth-dependent geometric gate $e^g_{rj}\le 0.08\,\mathrm{m}+0.01\,z_{rj}^{\rm proj}$, and candidates with $\alpha_{rj}<0.05$ are rejected. LiDAR uses the analogous construction with
-spherical projection and radial range. This establishes geometric support, not
-exact voxel-integration provenance. The attenuation in \eqref{eq:association_weight} ranks candidates during association; the separate factor in \eqref{eq:target_initial} models target reliability after association.
+RGB-D candidates satisfy the depth-dependent geometric gate $e^g_{rj}\le 0.08\,\mathrm{m}+0.01\,z_{rj}^{\rm proj}$, and candidates with $\alpha_{rj}<0.05$ are rejected. LiDAR uses spherical projection with radial range $\rho$: candidates satisfy $e^g_{rj}\le 0.25\,\mathrm{m}+0.003\,\rho_{rj}^{\rm proj}$ and are scored by \begin{equation} \alpha_{rj}=\exp\!\left(-\frac{e^g_{rj}}{0.15\,\mathrm{m}}\right) \frac{g_{rj}}{1+\rho_{rj}^{\rm proj}/40\,\mathrm{m}}, \label{eq:association_weight_lidar} \end{equation} with no further $\alpha$ threshold. This establishes geometric support, not exact voxel-integration provenance. The attenuation in \eqref{eq:association_weight} ranks candidates during association; the separate factor in \eqref{eq:target_initial} models target reliability after association.
 
 \subsection{Stage 2: Corrected Surface Targets}
 
@@ -100,7 +94,7 @@ $\mathcal J_j=\{r:(r,\alpha_{rj})\in\mathcal O_j\}$. We first compute
      {\sum_{r\in\mathcal J_j}\omega_{rj}}.
 \label{eq:target_initial}
 \end{equation}
-For LiDAR, the attenuation is in the candidate displacement $\|q_r^+-v_j^-\|$ instead.
+For LiDAR, $\omega_{rj}=\alpha_{rj}/(1+\|q_r^+-v_j^-\|/20\,\mathrm{m})$ and the floor in \eqref{eq:target_inliers} is $0.05\,\mathrm{m}$.
 The reliability-weighted center is paired with an unweighted median residual
 scale so that no single high-weight candidate controls both the estimate and
 its rejection threshold:
