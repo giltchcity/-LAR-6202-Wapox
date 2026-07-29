@@ -4,24 +4,6 @@
 \subsection{Evaluation Protocol}
 
 
-
-Each bag is processed once end-to-end; individual loop-closure checkpoints are not replayed independently. ORB-SLAM3 and Voxblox run from the start of the bag; at each trajectory revision, WarpVox corrects the current active TSDF and commits the returned native volume back to Voxblox, which continues fusion from that state until the next loop closure. We evaluate 39 RGB-D loop-closure cases from 18 Kimera-Multi sequences~\cite{tian23arxiv_kimeramultiexperiments} and 12 LiDAR cases from six KITTI sequences~\cite{Geiger2013IJRR}. 
-% Each bag is run through ORB-SLAM3 once, and all loop-closure events it produces are recorded. 
-Every method reconstructs the same temporal interval. For Kimera-Multi, the reference geometry is the official ground-truth point cloud, cropped to a 5 m tube around the GT trajectory to match Voxblox's maximum integration range. 
-For KITTI, the reference is the Velodyne point cloud aggregated at ground-truth poses, within the mapper's 25 m ray range. 
-Predictions expressed outside the GT frame are aligned to it using only timestamp-matched trajectory positions; no mesh-to-GT registration is used. Voxgraph is aligned using the trajectory recovered from its jointly optimized submap-pose graph, whereas reconstructions built from the same corrected ORB-SLAM3 trajectory share one alignment per case.
-
-WarpVox runs alongside the standard Voxblox fusion pipeline and automatically caches the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. Event-specific associations, targets, and deformation state are discarded after each committed correction, whereas the keyframe cache and corrected active TSDF persist across events. For the eighteen RGB-D sequences, the cache holds 0.9--3.6\,GiB of uncompressed 16-bit keyframe depth images (mean 2.1 GiB over 1349–5707 keyframes).
-
-
-\noindent\textbf{Baselines.} Uncorrected Voxblox TSDF uses the pre-correction trajectory. Open3D~\cite{zhou2018open3dmodernlibrary3d}, a widely used third-party library, provides an independent corrected-pose TSDF rebuild; Wavemap~\cite{reijgwart2023wavemap} represents efficient occupancy mapping with a wavelet occupancy rebuild, and Voxgraph~\cite{reijgwart2020voxgraph}, the submap-based online correction baseline, optimizes rigid TSDF submaps. Voxblox reintegration~\cite{Oleynikova_2017} rebuilds the same TSDF representation from the corrected trajectory and is the representation-matched reference. WarpVox starts from the active uncorrected TSDF. At each loop event, WarpVox, Voxblox reintegration, Open3D, and Wavemap receive the same corrected keyframe trajectory; Voxgraph retains its independently optimized submap frame as described above. Voxblox reintegration, Open3D, and Wavemap re-fuse every range frame, interpolating the corrected trajectory to each frame timestamp; WarpVox uses only the keyframe measurements, and only to construct targets. We compute precision and recall by bidirectional nearest-neighbour tests and report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop, spatial region, two-million-point sample, random seed, and thresholds. Main TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched 0.25 m finest level. Lacking a surface extractor, Wavemap is evaluated on its official occupancy point cloud, one point per occupied cell. The 11-case high-resolution subset and ten-bag subset were each randomly selected once; the latter is shared by the PGMO comparison and ablation.
-
-\noindent\textbf{Timing protocol.} We report core map-update time from in-memory state on an AMD Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh optimization, or WarpVox source-mesh-to-TSDF correction, as applicable. Disk I/O and processing outside correction, including PGMO MeshFrontend construction, are excluded.
-
-\subsection{Reconstruction Fidelity and Update Cost}
-
-Table~\ref{tab:broad_main} gives the uniform 0.25 m comparison. WarpVox is the closest method to Voxblox reintegration at every threshold, differing by $+0.20/+0.05/-0.28$ pp on Kimera-Multi and by at most $0.38$ pp on KITTI. These sub-percentage-point differences indicate close agreement in the reported mean F-scores.
-
 \begin{table}[t]
 \centering
 \caption{\textbf{Mean reconstruction accuracy and core time at
@@ -52,6 +34,24 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 \end{tabular}
 \parbox{\columnwidth}{\vspace{2pt}\scriptsize A dash marks an untimed update: the uncorrected map applies no correction, and Open3D was not timed.}
 \end{table}
+
+Each bag is processed once end-to-end; individual loop-closure checkpoints are not replayed independently. ORB-SLAM3 and Voxblox run from the start of the bag; at each trajectory revision, WarpVox corrects the current active TSDF and commits the returned native volume back to Voxblox, which continues fusion from that state until the next loop closure. We evaluate 39 RGB-D loop-closure cases from 18 Kimera-Multi sequences~\cite{tian23arxiv_kimeramultiexperiments} and 12 LiDAR cases from six KITTI sequences~\cite{Geiger2013IJRR}. 
+% Each bag is run through ORB-SLAM3 once, and all loop-closure events it produces are recorded. 
+Every method reconstructs the same temporal interval. For Kimera-Multi, the reference geometry is the official ground-truth point cloud, cropped to a 5 m tube around the GT trajectory to match Voxblox's maximum integration range. 
+For KITTI, the reference is the Velodyne point cloud aggregated at ground-truth poses, within the mapper's 25 m ray range. 
+Predictions expressed outside the GT frame are aligned to it using only timestamp-matched trajectory positions; no mesh-to-GT registration is used. Voxgraph is aligned using the trajectory recovered from its jointly optimized submap-pose graph, whereas reconstructions built from the same corrected ORB-SLAM3 trajectory share one alignment per case.
+
+WarpVox runs alongside the standard Voxblox fusion pipeline and automatically caches the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. Event-specific associations, targets, and deformation state are discarded after each committed correction, whereas the keyframe cache and corrected active TSDF persist across events. For the eighteen RGB-D sequences, the cache holds 0.9--3.6\,GiB of uncompressed 16-bit keyframe depth images (mean 2.1 GiB over 1349–5707 keyframes).
+
+
+\noindent\textbf{Baselines.} Uncorrected Voxblox TSDF uses the pre-correction trajectory. Open3D~\cite{zhou2018open3dmodernlibrary3d}, a widely used third-party library, provides an independent corrected-pose TSDF rebuild; Wavemap~\cite{reijgwart2023wavemap} represents efficient occupancy mapping with a wavelet occupancy rebuild, and Voxgraph~\cite{reijgwart2020voxgraph}, the submap-based online correction baseline, optimizes rigid TSDF submaps. Voxblox reintegration~\cite{Oleynikova_2017} rebuilds the same TSDF representation from the corrected trajectory and is the representation-matched reference. WarpVox starts from the active uncorrected TSDF. At each loop event, WarpVox, Voxblox reintegration, Open3D, and Wavemap receive the same corrected keyframe trajectory; Voxgraph retains its independently optimized submap frame as described above. Voxblox reintegration, Open3D, and Wavemap re-fuse every range frame, interpolating the corrected trajectory to each frame timestamp; WarpVox uses only the keyframe measurements, and only to construct targets. We compute precision and recall by bidirectional nearest-neighbour tests and report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop, spatial region, two-million-point sample, random seed, and thresholds. Main TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched 0.25 m finest level. Lacking a surface extractor, Wavemap is evaluated on its official occupancy point cloud, one point per occupied cell. The 11-case high-resolution subset and ten-bag subset were each randomly selected once; the latter is shared by the PGMO comparison and ablation.
+
+\noindent\textbf{Timing protocol.} We report core map-update time from in-memory state on an AMD Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh optimization, or WarpVox source-mesh-to-TSDF correction, as applicable. Disk I/O and processing outside correction, including PGMO MeshFrontend construction, are excluded.
+
+\subsection{Reconstruction Fidelity and Update Cost}
+
+Table~\ref{tab:broad_main} gives the uniform 0.25 m comparison. WarpVox is the closest method to Voxblox reintegration at every threshold.
+
 
 
 On Kimera-Multi, WarpVox differs from reintegration by $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. These sub-percentage-point differences indicate close agreement in the reported mean F-scores. WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller KITTI gain is consistent with cheap sparse-LiDAR replay and WarpVox's larger active surface and output volume. The mean F@50 gap to reintegration changes from $-0.776$ pp over the 18 first closures to $+0.180$ pp over the 12 third-or-later closures, providing no evidence of aggregate error accumulation across repeated corrections. Voxgraph improves over Voxblox$_{\rm Pre}$ at every threshold by aligning rigid SDF submaps, but stays $5.98$ and $12.08$ pp below WarpVox at F@25 on the two datasets, consistent with uncorrected intra-submap drift. Wavemap's profile---low F@10 but competitive KITTI F@50---is consistent with a hierarchical occupancy representation whose 0.25 m setting is its finest level, not a uniform map resolution; its grid-centred evaluation points can also sit up to 0.22\,m from the true surface.
@@ -131,12 +131,7 @@ cases in the bottom two rows; each row uses the same view across methods. Colors
 \subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Both methods use the Kimera-VIO trajectory and corresponding $5\,\text{cm}$ frontend
-mesh produced by the same run. For each bag, the PGMO mesh is scored directly,
-while its corresponding optimized trajectory defines the VIO-to-PGMO
-correction applied by WarpVox to the VIO pre-mesh. Because this pre-mesh
-carries no source TSDF, WarpVox uses mesh-only Stage~4; this experiment
-compares surface correction without source-volume support transfer.
+Both methods use the Kimera-VIO trajectory and corresponding $8\,\text{cm}$ frontend mesh produced by the same run. For each bag, the PGMO mesh is scored directly, while its corresponding optimized trajectory defines the VIO-to-PGMO correction applied by WarpVox to the VIO pre-mesh. Because this pre-mesh carries no source TSDF, WarpVox uses mesh-only Stage~4; this experiment compares surface correction without source-volume support transfer.
 
 \begin{table}[t]
 \centering
@@ -200,7 +195,7 @@ Source-supported TSDF (Final)
 
 Observation-derived targets recover a more accurate surface than naive nearest-keyframe transport---which moves each retained control using its spatially closest keyframe's pose correction---improving all three mean F-scores, including 0.637 pp at F@25. The robust 60K QEM proxy remains within 0.032 pp of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to 1.408 s. Converting the resulting Stage~3 surface back to a fusible TSDF changes the three mean F-scores by at most 0.122 pp. Source-supported reconstruction further raises mean F@25 by 0.216 pp over mesh-only conversion at an additional 0.062 s. 
 
-Reintegrating only the cached keyframes on the same ten cases reaches $24.18/41.62$ at F@25/F@50, $2.44/3.78$ pp below WarpVox: the cache supports target construction but not a complete volumetric rebuild.
+Beyond the stage ablation, reintegrating only the cached keyframes on the same ten cases reaches $24.18/41.62$ at F@25/F@50 in $33.70$\,s, still an order of magnitude above WarpVox and $2.44/3.78$ pp below it: the cache supports target construction but not a complete volumetric rebuild.
 
 \noindent\textbf{Stage-4 TSDF sign and weight consistency.} Beyond restoring the corrected zero set, Stage~4 seeks to reconstruct the surrounding volumetric state using the sign and integration weights transferred from the source TSDF. We compare these fields with corrected-pose Voxblox reintegration on the same ten cases. Over voxels with positive weight in both volumes, the TSDF sign agrees for $95.17\%$ of voxels, indicating that the free-space side of the reconstructed surface is largely consistent with reintegration. The integration-weight fields attain a mean weighted Jaccard similarity of $78.52\%$, computed as $\sum_x \min(w^+(x), w_{\rm reint}(x)) / \sum_x \max(w^+(x), w_{\rm reint}(x))$. These results show that Stage~4 reconstructs a corrected native TSDF whose source-derived volumetric fields largely agree with those produced by reintegration.
 
