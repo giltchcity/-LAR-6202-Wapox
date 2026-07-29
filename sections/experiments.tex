@@ -20,10 +20,7 @@ WarpVox runs alongside the standard Voxblox fusion pipeline and automatically ca
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
-Table~\ref{tab:broad_main} gives the uniform 0.25 m comparison. WarpVox is
-the closest method to Voxblox reintegration at every threshold: its largest
-absolute deviation is 0.28 pp on Kimera-Multi and 0.38 pp on KITTI. It also has
-the best F@25 and F@50 among non-reference methods on both datasets.
+Table~\ref{tab:broad_main} gives the uniform 0.25 m comparison. WarpVox is the closest method to Voxblox reintegration at every threshold, differing by $+0.20/+0.05/-0.28$ pp on Kimera-Multi and by at most $0.38$ pp on KITTI. These sub-percentage-point differences indicate close agreement in the reported mean F-scores.
 
 \begin{table}[t]
 \centering
@@ -57,7 +54,7 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 \end{table}
 
 
-On Kimera-Multi, WarpVox differs from reintegration by $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. These sub-percentage-point differences indicate close agreement in the reported mean F-scores. WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller KITTI gain is consistent with cheap sparse-LiDAR replay and WarpVox's larger active surface and output volume. The mean F@50 gap to reintegration changes from $-0.776$ pp over the 18 first closures to $+0.180$ pp over the 12 third-or-later closures, providing no evidence of aggregate error accumulation across repeated corrections. Voxgraph improves over Voxblox$_{\mathrm{Pre}}$ at every threshold by aligning rigid SDF submaps; its remaining gap to WarpVox and reintegration is consistent with uncorrected intra-submap drift. Wavemap's profile---low F@10 but competitive KITTI F@50---is consistent with a hierarchical occupancy representation whose 0.25 m setting is its finest level, not a uniform map resolution; its grid-centred evaluation points can also sit up to 0.22\,m from the true surface.
+On Kimera-Multi, WarpVox differs from reintegration by $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. These sub-percentage-point differences indicate close agreement in the reported mean F-scores. WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller KITTI gain is consistent with cheap sparse-LiDAR replay and WarpVox's larger active surface and output volume. The mean F@50 gap to reintegration changes from $-0.776$ pp over the 18 first closures to $+0.180$ pp over the 12 third-or-later closures, providing no evidence of aggregate error accumulation across repeated corrections. Voxgraph improves over Voxblox$_{\rm Pre}$ at every threshold by aligning rigid SDF submaps, but stays $5.98$ and $12.08$ pp below WarpVox at F@25 on the two datasets, consistent with uncorrected intra-submap drift. Wavemap's profile---low F@10 but competitive KITTI F@50---is consistent with a hierarchical occupancy representation whose 0.25 m setting is its finest level, not a uniform map resolution; its grid-centred evaluation points can also sit up to 0.22\,m from the true surface.
 
 % Paired F@50 differences span $[-1.95,2.28]$ pp and $[-1.46,0.53]$ pp,
 
@@ -201,7 +198,9 @@ Source-supported TSDF (Final)
 \parbox{\columnwidth}{\vspace{2pt}\scriptsize Times are listed only for the stage under comparison. The upper block varies S3, stops before Stage~4, and is scored on the ARAP surface; the lower varies S1--2 and S4 against Final and is scored on meshes re-extracted from the output TSDF.}
 \end{table}
 
-Observation-derived targets recover a more accurate surface than naive nearest-keyframe transport---which moves each retained control using its spatially closest keyframe's pose correction---improving all three mean F-scores, including 0.637 pp at F@25. The robust 60K QEM proxy remains within 0.032 pp of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to 1.408 s. Converting the resulting Stage~3 surface back to a fusible TSDF changes the three mean F-scores by at most 0.122 pp. Source-supported reconstruction further raises mean F@25 by 0.216 pp over mesh-only conversion at an additional 0.062 s.
+Observation-derived targets recover a more accurate surface than naive nearest-keyframe transport---which moves each retained control using its spatially closest keyframe's pose correction---improving all three mean F-scores, including 0.637 pp at F@25. The robust 60K QEM proxy remains within 0.032 pp of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to 1.408 s. Converting the resulting Stage~3 surface back to a fusible TSDF changes the three mean F-scores by at most 0.122 pp. Source-supported reconstruction further raises mean F@25 by 0.216 pp over mesh-only conversion at an additional 0.062 s. 
+
+Reintegrating only the cached keyframes on the same ten cases reaches $24.18/41.62$ at F@25/F@50, $2.44/3.78$ pp below WarpVox: the cache supports target construction but not a complete volumetric rebuild.
 
 \noindent\textbf{Stage-4 TSDF sign and weight consistency.} Beyond restoring the corrected zero set, Stage~4 seeks to reconstruct the surrounding volumetric state using the sign and integration weights transferred from the source TSDF. We compare these fields with corrected-pose Voxblox reintegration on the same ten cases. Over voxels with positive weight in both volumes, the TSDF sign agrees for $95.17\%$ of voxels, indicating that the free-space side of the reconstructed surface is largely consistent with reintegration. The integration-weight fields attain a mean weighted Jaccard similarity of $78.52\%$, computed as $\sum_x \min(w^+(x), w_{\rm reint}(x)) / \sum_x \max(w^+(x), w_{\rm reint}(x))$. These results show that Stage~4 reconstructs a corrected native TSDF whose source-derived volumetric fields largely agree with those produced by reintegration.
 
