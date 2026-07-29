@@ -53,7 +53,6 @@ m_r=z_rK^{-1}\bar u_r,
 \widetilde m_r=[m_r^\top,1]^\top.
 \label{eq:sensor_sample}
 \end{equation}
-The inverse
 The inverse pre-correction pose projects source vertex $v_j^-$ into the record frame. Candidate agreement combines depth residual, three-dimensional position, and viewing direction. Let $n_j^-$ be the source normal, $\ell_{rj}^-$ the unit viewing direction in the pre-correction world frame, and $z_{rj}^{\rm proj}$ the projected vertex depth. We define
 \begin{equation}
 \begin{aligned}
@@ -122,7 +121,7 @@ Each vertex with at least one valid record yields a target; the resulting contro
 
 The deformation stage propagates observation-derived motion; it does not infer correction from shape alone. Let $d_j=v_j^*-v_j^-$ be a control displacement. Before proxy construction, a component-aware inverse-distance prediction supplies each control's expected displacement; controls whose residual exceeds the global median by more than $1.5$ times a normalized MAD scale, floored at $0.05$\,m, are rejected.
 
-Component-separated spatial clustering~\cite{rossignac1993vertexclustering} constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ and selects one QEM representative~\cite{garland1997qem} per occupied cell. Let $\pi:V^-\rightarrow P^-$ map source vertices to representatives and $\mathcal K_a=\{j:\pi(j)=a\}$ collect their controls. For $\mathcal K_a\neq\emptyset$, the measured proxy target is $p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$. A Welsch-weighted local-rigid fit~\cite{schoenemann1966procrustes,yao2020welsch} estimates each neighbourhood's motion and replaces measured targets that disagree with it. Components without accepted controls inherit nearby fitted motion through synthetic anchors. Let $\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted measured or synthesized targets $p_a^*$.
+Component-separated spatial clustering~\cite{rossignac1993vertexclustering} constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ and selects one QEM representative~\cite{garland1997qem} per occupied cell. Let $\pi:V^-\rightarrow P^-$ map source vertices to representatives and $\mathcal K_a=\{j:\pi(j)=a\}$ collect their controls. For $\mathcal K_a\neq\emptyset$, the measured proxy target is $p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$. A Welsch-weighted local-rigid fit~\cite{schoenemann1966procrustes,yao2020welsch} estimates each neighbourhood's motion, but an observed target is replaced only when its disagreement is shared by a strict majority of controls in the same connected component; isolated disagreements remain unchanged. Components without accepted controls inherit the robust median displacement of nearby surviving controls through synthetic anchors. Let $\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted measured or synthesized targets $p_a^*$.
 
 WarpVox performs one proxy ARAP solve per correction~\cite{ARAP_modeling:2007, 10.1007/978-3-662-05105-4_2,libigl}:
 \begin{equation}
@@ -147,7 +146,7 @@ v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),
 \qquad \lambda_{jb}\ge0,\quad\sum_{b\in f_j}\lambda_{jb}=1.
 \label{eq:proxy_transfer}
 \end{equation}
-A face is flagged when its deformed-to-source edge-length ratio reaches $3$, its area ratio $6$, or its aspect ratio exceeds $20$; flagged vertices form the risk region, whose displacements are relaxed toward the harmonic interpolant of the fixed surroundings. Faces still exceeding the edge-length or area bound are removed; a high aspect ratio alone only triggers the relaxation. The retained surfaces satisfy
+Faces exhibiting excessive edge or area expansion, or macroscopic needle-like distortion, define a risk region. Its displacements are relaxed toward the harmonic interpolant of the surrounding non-risk vertices. Faces that remain severely expanded are removed, whereas needle-like distortion alone triggers relaxation. The retained surfaces satisfy
 \begin{equation}
 \bar{\mathcal M}^-=(\bar V^-,\bar F),\qquad
 \mathcal M^+=(\bar V^+,\bar F),\qquad \bar F\subseteq F.
