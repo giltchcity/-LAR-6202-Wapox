@@ -197,7 +197,16 @@ Observation-derived targets recover a more accurate surface than naive nearest-k
 
 Beyond the stage ablation, reintegrating only the cached keyframes on the same ten cases reaches $24.18/41.62$ at F@25/F@50 in $33.70$\,s, still an order of magnitude above WarpVox and $2.44/3.78$ pp below it: the cache supports target construction but not a complete volumetric rebuild.
 
-\noindent\textbf{Stage-4 TSDF and downstream ESDF semantics.} On ten representative 0.25-m checkpoints, we compare WarpVox with corrected-pose Voxblox reintegration. Raw-TSDF sign is evaluated per case where both weights are positive and $0.5s\leq|\Phi_{\rm reint}|\leq\tau$; its macro agreement is $95.15\%$. The macro weight-mass IoU is $78.52\%$, computed as $\sum_x\min(w^+(x),w_{\rm reint}(x))/\sum_x\max(w^+(x),w_{\rm reint}(x))$. Passing both maps through the same official Voxblox ESDF integrator yields $96.62\%$ macro sign agreement where both ESDFs are observed and outside their $\pm0.5s$ boundary bands, with $0.169$\,m free-space MAE on common support. WarpVox covers $59.73/87.08\%$ of reintegration's confidently free/occupied voxels, or $93.27/97.79\%$ when weighted by reference TSDF weight; false-occupied/free rates within common support are $3.37/2.01\%$. Thus, Stage~4 preserves strongly observed near-surface volumetric semantics without claiming the complete historical free-space extent.
+\noindent\textbf{Stage-4 volumetric consistency.}
+On ten representative $0.25$-m checkpoints, WarpVox attains
+$86.19\%$ support IoU and $80.06\%$ weight-mass IoU with
+corrected-pose Voxblox reintegration. Transported free space covers
+$98.50\%$ of the reference free-space weight, while TSDF signs agree
+for $96.29\%$ of the common supported voxels outside the zero-level
+ambiguity band. The weighted false-occupied/free rates are only
+$1.36/0.95\%$. Free-space transport leaves the reported mesh F-scores
+unchanged, showing that it recovers volumetric support without moving the
+corrected zero set.
 
 % Additionally, With Stages~3--4 fixed, observation-derived targets improve mean F@10/F@25/F@50 by 0.62/0.99/1.38 pp over trajectory-delta targets and qualitatively produce more spatially coherent and geometrically faithful mesh corrections.
 
