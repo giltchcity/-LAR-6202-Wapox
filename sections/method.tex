@@ -9,10 +9,9 @@ connectivity are coherent in local neighborhoods although the map is globally
 inconsistent. WarpVox corrects this global inconsistency after loop closure;
 severely noisy or topologically corrupted source maps are outside its scope.
 
-\subsection{Problem and Correction Inputs} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF~\cite{10.1145/37402.37422}, while WarpVox stores the timestamped, modality-native range images of SLAM keyframes. When a trajectory correction becomes available, WarpVox receives the current, already-available mesh as its source surface and begins the correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. 
+\subsection{Problem and Correction Inputs} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF~\cite{10.1145/37402.37422}. When a trajectory correction becomes available, WarpVox receives the current, already-available mesh as its source surface and begins the correction procedure. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. WarpVox stores the timestamped, modality-native range images of SLAM keyframes,
 \begin{equation}
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
-\label{eq:keyframe_cache}
 \end{equation}
 where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D depth image or a spherical LiDAR range image. Together with $T^-$, these measurements form the observation input to Stage~1. The measurements remain available across correction events, whereas event-specific vertex records, targets, and deformation state are discarded after the corrected volume is committed. Fig.~\ref{fig:pipeline} summarizes the four stages.
 
@@ -103,7 +102,7 @@ $\mathcal J_j=\{r:(r,\alpha_{rj})\in\mathcal O_j\}$. We first compute
      {\sum_{r\in\mathcal J_j}\omega_{rj}}.
 \label{eq:target_initial}
 \end{equation}
-for LiDAR, the attenuation is in the candidate displacement $\|q_r^+-v_j^-\|$ instead.
+For LiDAR, the attenuation is in the candidate displacement $\|q_r^+-v_j^-\|$ instead.
 The reliability-weighted center is paired with an unweighted median residual
 scale so that no single high-weight candidate controls both the estimate and
 its rejection threshold:
@@ -131,22 +130,7 @@ Each vertex with at least one valid record yields a target; the resulting contro
 
 The deformation stage propagates observation-derived motion; it does not infer correction from shape alone. Let $d_j=v_j^*-v_j^-$ be a control displacement. Before proxy construction, a component-aware inverse-distance prediction supplies each control's expected displacement; controls whose residual exceeds the global median by more than $1.5$ times a normalized MAD scale, floored at $0.05$\,m, are rejected.
 
-Component-separated spatial clustering~\cite{rossignac1993vertexclustering}
-constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ and selects one QEM
-representative~\cite{garland1997qem} per occupied cell. Let
-$\pi:V^-\rightarrow P^-$ map source vertices to representatives and
-$\mathcal K_a=\{j:\pi(j)=a\}$ collect their controls. For
-$\mathcal K_a\neq\emptyset$, the measured proxy target is
-$p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$.
-A local-rigid consensus validates measured targets and supplies motion to
-unsupported proxy regions. Welsch-weighted orthogonal-Procrustes
-fits~\cite{schoenemann1966procrustes,yao2020welsch} estimate local motion; a
-measured target is replaced only when its compatibility residual lies outside
-the local median--MAD envelope and more than half of its same-component support
-agrees with the fitted motion. Components without accepted controls inherit
-robust nearby motion through three spatially separated synthetic anchors. Let
-$\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted
-measured or synthesized targets $p_a^*$.
+Component-separated spatial clustering~\cite{rossignac1993vertexclustering} constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ and selects one QEM representative~\cite{garland1997qem} per occupied cell. Let $\pi:V^-\rightarrow P^-$ map source vertices to representatives and $\mathcal K_a=\{j:\pi(j)=a\}$ collect their controls. For $\mathcal K_a\neq\emptyset$, the measured proxy target is $p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$. A Welsch-weighted local-rigid fit~\cite{schoenemann1966procrustes,yao2020welsch} estimates each neighbourhood's motion and replaces measured targets that disagree with it. Components without accepted controls inherit this motion through synthetic anchors. Components without accepted controls inherit robust nearby motion through three spatially separated synthetic anchors. Let $\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted measured or synthesized targets $p_a^*$.
 
 WarpVox performs one proxy ARAP solve per correction~\cite{ARAP_modeling:2007, 10.1007/978-3-662-05105-4_2,libigl}:
 \begin{equation}
@@ -295,5 +279,4 @@ $\Omega^+=\{x\in\mathcal X^+:w^+(x)>0\}$. Outside $\Omega^+$ the zero weight
 makes the stored distance immaterial. When no source TSDF is available, the final Stage-3 surface is converted into a closest-triangle-normal signed Euclidean distance field within 1.5 voxel widths, with synthetic finite-band weights. The resulting
 $(\Phi^+,w^+)$ is serialized in the native Voxblox TSDF format; its MC mesh is used for surface evaluation and visualization. The returned volume replaces the active Voxblox TSDF, so subsequent fusion and later correction events proceed from the corrected state.
 
-\subsection{Complexity and Scope} Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC yields a constant number of surface elements per active cell, so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the measurements and $O(A)$ for the per-vertex association state. With $\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source vertex, association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and $O(K_{\rm KF}+A(1+\kappa))$ 
-For LiDAR under the standard output-sensitive index model, giving \begin{equation} C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F), \label{eq:complexity} \end{equation} where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The spatial indices accelerate lookup without changing the association rule. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent, and the proxy contains at most 60K vertices. Session length enters \eqref{eq:complexity} only through $K_{\rm KF}$, in index construction and candidate lookup; the retained association state per surface element is bounded by a constant, and each output voxel is written once rather than once per contributing measurement. Full reintegration instead re-fuses every historical measurement at $O(N|D|)$. The two costs are indexed by different quantities: the keyframes and the active map for WarpVox, the measurement history for reintegration.
+\subsection{Complexity and Scope} Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC yields a constant number of surface elements per active cell, so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the measurements and $O(A)$ for the per-vertex association state. With $\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source vertex, association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and $O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive index model, giving \begin{equation} C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F), \label{eq:complexity} \end{equation} where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The spatial indices accelerate lookup without changing the association rule. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent, and the proxy contains at most 60K vertices. Session length enters \eqref{eq:complexity} only through $K_{\rm KF}$, in index construction and candidate lookup; the retained association state per surface element is bounded by a constant, and each output voxel is written once rather than once per contributing measurement. Full reintegration instead re-fuses every historical measurement at $O(N|D|)$. The two costs are indexed by different quantities: the keyframes and the active map for WarpVox, the measurement history for reintegration.
