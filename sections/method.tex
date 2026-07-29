@@ -34,7 +34,7 @@ Stage~1 projects the current surface into the keyframe range images and returns 
 \end{equation}
 where each record $r$ identifies a keyframe range image and a valid projected range sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
 effective reliability of associating it with source vertex $v_j^-$. For target construction, each vertex retains at most 15 association records, giving fixed-size per-vertex state. RGB-D restricts candidates with a camera-centre KD-tree, LiDAR with a
-sensor-position grid and an 80\,m radius check. Records are matched by acquisition time. The correction
+sensor-position grid and an 80\,m radius check. The correction
 backend therefore receives vertex-indexed records and never re-fuses
 measurements into the volume. Its contract is
 \begin{equation}
