@@ -14,7 +14,7 @@ Predictions expressed outside the GT frame are aligned to it using only timestam
 WarpVox runs alongside the standard Voxblox fusion pipeline and automatically caches the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. Event-specific associations, targets, and deformation state are discarded after each committed correction, whereas the keyframe cache and corrected active TSDF persist across events. For the eighteen RGB-D sequences, the cache holds one uncompressed 16-bit depth image per keyframe at $0.646\,\mathrm{MiB}$, giving $0.9$--$3.6\,\mathrm{GiB}$ over 1349--5707 keyframes (mean $2.1\,\mathrm{GiB}$). 
 
 
-\noindent\textbf{Baselines.} Uncorrected Voxblox TSDF uses the pre-correction trajectory. Open3D~\cite{zhou2018open3dmodernlibrary3d} is an independent corrected-pose TSDF rebuild; Wavemap~\cite{reijgwart2023wavemap} rebuilds a wavelet occupancy map, and Voxgraph~\cite{reijgwart2020voxgraph} optimizes rigid TSDF submaps. Voxblox reintegration~\cite{Oleynikova_2017} is the representation-matched reference. WarpVox starts from the active uncorrected TSDF. At each loop event, WarpVox, Voxblox reintegration, Open3D, and Wavemap receive the same corrected keyframe trajectory; Voxgraph retains its independently optimized submap frame as described above. For the representation-matched reference, Voxblox interpolates this trajectory to every range-frame timestamp in the reconstructed interval and re-fuses the complete range stream. WarpVox uses the keyframe range measurements only to construct correction targets. We compute precision and recall by bidirectional nearest-neighbour tests and report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop, spatial region, two-million-point sample, random seed, and thresholds. Main TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched 0.25 m finest level. The 11-case high-resolution subset and ten-bag subset were each randomly selected once; the latter is shared by the PGMO comparison and ablation.
+\noindent\textbf{Baselines.} Uncorrected Voxblox TSDF uses the pre-correction trajectory. Open3D~\cite{zhou2018open3dmodernlibrary3d} is an independent corrected-pose TSDF rebuild; Wavemap~\cite{reijgwart2023wavemap} rebuilds a wavelet occupancy map, and Voxgraph~\cite{reijgwart2020voxgraph} optimizes rigid TSDF submaps. Voxblox reintegration~\cite{Oleynikova_2017} is the representation-matched reference. WarpVox starts from the active uncorrected TSDF. At each loop event, WarpVox, Voxblox reintegration, Open3D, and Wavemap receive the same corrected keyframe trajectory; Voxgraph retains its independently optimized submap frame as described above. For the representation-matched reference, Voxblox interpolates this trajectory to every range-frame timestamp in the reconstructed interval and re-fuses the complete range stream. WarpVox uses the keyframe range measurements only to construct correction targets. We compute precision and recall by bidirectional nearest-neighbour tests and report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop, spatial region, two-million-point sample, random seed, and thresholds. Main TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched 0.25 m finest level. Lacking a surface extractor, Wavemap is evaluated on its official occupancy point cloud, one point per occupied cell. The 11-case high-resolution subset and ten-bag subset were each randomly selected once; the latter is shared by the PGMO comparison and ablation.
 
 \noindent\textbf{Timing protocol.}
 For all methods, we report core map-update time from in-memory state on an AMD Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh optimization, or WarpVox source-mesh-to-TSDF correction, as applicable. Disk I/O, and processing outside correction, including PGMO MeshFrontend construction, are excluded. 
@@ -58,7 +58,7 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 \end{table}
 
 
-On Kimera-Multi, WarpVox differs from reintegration by $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. These sub-percentage-point differences indicate close agreement in the reported mean F-scores. WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller KITTI gain is consistent with cheap sparse-LiDAR replay and WarpVox's larger active surface and output volume. The mean F@50 gap to reintegration changes from $-0.776$ pp at first loop closure to $+0.180$ pp at third loop closure and more, providing no evidence of aggregate error accumulation across repeated corrections. Voxgraph improves over Voxblox$_{\mathrm{Pre}}$ at every threshold by aligning rigid SDF submaps; its remaining gap to WarpVox and reintegration is consistent with uncorrected intra-submap drift. Wavemap's profile---low F@10 but competitive KITTI F@50---is consistent with a hierarchical occupancy representation whose 0.25 m setting is its finest level, not a uniform map resolution.
+On Kimera-Multi, WarpVox differs from reintegration by $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. These sub-percentage-point differences indicate close agreement in the reported mean F-scores. WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller KITTI gain is consistent with cheap sparse-LiDAR replay and WarpVox's larger active surface and output volume. The mean F@50 gap to reintegration changes from $-0.776$ pp at first loop closure to $+0.180$ pp at third loop closure and more, providing no evidence of aggregate error accumulation across repeated corrections. Voxgraph improves over Voxblox$_{\mathrm{Pre}}$ at every threshold by aligning rigid SDF submaps; its remaining gap to WarpVox and reintegration is consistent with uncorrected intra-submap drift. Wavemap's profile---low F@10 but competitive KITTI F@50---is consistent with a hierarchical occupancy representation whose 0.25 m setting is its finest level, not a uniform map resolution; its grid-centred evaluation points can also sit up to 0.22\,m from the true surface.
 
 % Paired F@50 differences span $[-1.95,2.28]$ pp and $[-1.46,0.53]$ pp,
 
@@ -164,20 +164,15 @@ evaluated PGMO mesh; WarpVox reports one correction of the corresponding
 VIO pre-mesh.}
 \end{table}
 
-Table~\ref{tab:pgmo_full10} shows that WarpVox achieves mean F@25/F@50
-values 1.24/3.03 pp higher than Kimera-PGMO, using 28.61 s versus 435.97 s
-for the PGMO mesh deformation required to produce the evaluated mesh.
-Per-bag F@50 differences comprise four gains of 5.5--11.7 pp and six cases
-within $\pm0.5$ pp. Thus, WarpVox provides a lower-cost surface-correction
-result, while PGMO additionally provides intermediate updates and temporal
-mesh associations.
+Table~\ref{tab:pgmo_full10} shows that WarpVox achieves mean F@25/F@50 values 1.24/3.03 pp higher than Kimera-PGMO, using 28.61 s versus 435.97 s for the PGMO mesh deformation required to produce the evaluated mesh. Per-bag F@50 differences comprise four gains of 5.5--11.7 pp and six cases within $\pm0.5$ pp. Thus, WarpVox provides a lower-cost surface-correction result, while PGMO additionally provides intermediate updates and temporal mesh associations.
 
 
 % two of the latter are marginally
 % negative. The two negative cases exhibit opposite precision--recall tradeoffs:
 % one gains 6.51 pp recall while losing 3.26 pp precision, whereas the other gains 1.41 pp precision while losing 0.92 pp recall. 
 
-\subsection{Ablation Study} Table~\ref{tab:ablation} ablates one stage at a time on ten of the 39 Kimera-Multi checkpoints at 0.25 m.
+\subsection{Ablation Study} 
+Table~\ref{tab:ablation} ablates one stage at a time on the ten-bag subset at 0.25 m.
 
 \begin{table}[t]
 \centering
