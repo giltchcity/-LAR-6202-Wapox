@@ -54,9 +54,7 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
  & \textbf{WarpVox} & 13.00 & 43.97 & 67.07 & 4.87 \\
 \bottomrule
 \end{tabular}
-\vspace{1pt}
-
-\parbox{\columnwidth}{\scriptsize A dash marks an untimed update: the uncorrected map applies no correction, and Open3D was not timed.}
+\parbox{\columnwidth}{\vspace{2pt}\scriptsize A dash marks an untimed update: the uncorrected map applies no correction, and Open3D was not timed.}
 \end{table}
 
 
@@ -160,8 +158,7 @@ Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
 \textbf{WarpVox} & \textbf{6.53} & \textbf{18.72} & \textbf{34.57} & \textbf{28.61} \\
 \bottomrule
 \end{tabular}
-\vspace{1pt}
-\parbox{\linewidth}{\scriptsize The VIO pre-mesh is the shared input.
+\parbox{\linewidth}{\vspace{2pt}\scriptsize The VIO pre-mesh is the shared input.
 Kimera-PGMO reports the mesh-deformation time required to produce the
 evaluated PGMO mesh; WarpVox reports one correction of the corresponding
 VIO pre-mesh.}
@@ -207,8 +204,7 @@ Source-supported TSDF (Final)
   & 10.155 & 26.616 & 45.392 & 0.480 & 1.408 & 0.160 \\
 \bottomrule
 \end{tabular}}
-\vspace{1pt}
-\parbox{\columnwidth}{\scriptsize Times are listed only for the stage under comparison. The upper block varies S3, stops before Stage~4, and is scored on the ARAP surface; the lower varies S1--2 and S4 against Final and is scored on meshes re-extracted from the output TSDF.}
+\parbox{\columnwidth}{\vspace{2pt}\scriptsize Times are listed only for the stage under comparison. The upper block varies S3, stops before Stage~4, and is scored on the ARAP surface; the lower varies S1--2 and S4 against Final and is scored on meshes re-extracted from the output TSDF.}
 \end{table}
 
 Observation-derived targets recover a more accurate surface than naive nearest-keyframe transport---which moves each retained control using its spatially closest keyframe's pose correction---improving all three mean F-scores, including 0.637 pp at F@25. The robust 60K QEM proxy remains within 0.032 pp of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to 1.408 s. Converting the resulting Stage~3 surface back to a fusible TSDF changes the three mean F-scores by at most 0.122 pp. Source-supported reconstruction further raises mean F@25 by 0.216 pp over mesh-only conversion at an additional 0.062 s.
