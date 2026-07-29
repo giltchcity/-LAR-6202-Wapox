@@ -84,10 +84,7 @@ exact voxel-integration provenance. The attenuation in \eqref{eq:association_wei
 
 \subsection{Stage 2: Corrected Surface Targets}
 
-After loop closure, the timestamp $t_r$ selects the corresponding corrected
-pose. Missing interior poses use linear translation interpolation and SLERP
-rotation over a bounded gap~\cite{shoemake1985slerp}. The invariant sample then
-defines the corrected candidate
+After loop closure, the timestamp $t_r$ selects the corresponding corrected pose. Missing interior poses use linear translation interpolation and SLERP rotation over gaps of at most three times the median trajectory spacing~\cite{shoemake1985slerp}. The invariant sample then defines the corrected candidate
 \begin{equation}
 q_r^+=\left[T^+(t_r)\widetilde m_r\right]_{1:3}.
 \label{eq:corrected_target}
@@ -131,7 +128,7 @@ Each vertex with at least one valid record yields a target; the resulting contro
 
 The deformation stage propagates observation-derived motion; it does not infer correction from shape alone. Let $d_j=v_j^*-v_j^-$ be a control displacement. Before proxy construction, a component-aware inverse-distance prediction supplies each control's expected displacement; controls whose residual exceeds the global median by more than $1.5$ times a normalized MAD scale, floored at $0.05$\,m, are rejected.
 
-Component-separated spatial clustering~\cite{rossignac1993vertexclustering} constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ and selects one QEM representative~\cite{garland1997qem} per occupied cell. Let $\pi:V^-\rightarrow P^-$ map source vertices to representatives and $\mathcal K_a=\{j:\pi(j)=a\}$ collect their controls. For $\mathcal K_a\neq\emptyset$, the measured proxy target is $p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$. A Welsch-weighted local-rigid fit~\cite{schoenemann1966procrustes,yao2020welsch} estimates each neighbourhood's motion and replaces measured targets that disagree with it. Components without accepted controls inherit this motion through synthetic anchors. Let $\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted measured or synthesized targets $p_a^*$.
+Component-separated spatial clustering~\cite{rossignac1993vertexclustering} constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ and selects one QEM representative~\cite{garland1997qem} per occupied cell. Let $\pi:V^-\rightarrow P^-$ map source vertices to representatives and $\mathcal K_a=\{j:\pi(j)=a\}$ collect their controls. For $\mathcal K_a\neq\emptyset$, the measured proxy target is $p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$. A Welsch-weighted local-rigid fit~\cite{schoenemann1966procrustes,yao2020welsch} estimates each neighbourhood's motion and replaces measured targets that disagree with it. Components without accepted controls inherit nearby fitted motion through synthetic anchors. Let $\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the proxy vertices with accepted measured or synthesized targets $p_a^*$.
 
 WarpVox performs one proxy ARAP solve per correction~\cite{ARAP_modeling:2007, 10.1007/978-3-662-05105-4_2,libigl}:
 \begin{equation}
