@@ -13,7 +13,7 @@ severely noisy or topologically corrupted source maps are outside its scope.
 \begin{equation}
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
 \end{equation}
-where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D depth image or a spherical LiDAR range image. Together with $T^-$, these measurements form the observation input to Stage~1. The measurements remain available across correction events, whereas event-specific vertex records, targets, and deformation state are discarded after the corrected volume is committed. Fig.~\ref{fig:pipeline} summarizes the four stages.
+where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D depth image or a spherical LiDAR range image. Together with $T^-$, these measurements form the observation input to Stage~1. The measurements remain available across correction events. Fig.~\ref{fig:pipeline} summarizes the four stages.
 
 \begin{figure}[t]
   \centering
@@ -211,28 +211,8 @@ $x$ to the source volume:
 \label{eq:inverse_map}
 \end{equation}
 This preserves tangential and normal offsets relative to the corresponding
-triangles. With trilinear source samples $\widetilde\Phi^-$ and
-$\widetilde w^-$, define
-\begin{equation}
-\begin{aligned}
-d^+(x)&=\min\!\left(\tau,\|x-q^+\|\right),\\
-\widehat{\Omega}_{\rm tr}&=
-\left\{x\in\mathcal X^+:\widetilde w^-(\Psi_f(x))>0\right\}.
-\end{aligned}
-\label{eq:transferred_support}
-\end{equation}
-Let
-\[
-\Omega_{\rm nb}=
-\left\{x\in\widehat{\Omega}_{\rm tr}:
-\left|\widetilde\Phi^-(\Psi_f(x))\right|<\tau\right\}
-\]
-be the transferred source narrow band. Each 6-connected component of
-$\widehat{\Omega}_{\rm tr}\setminus\Omega_{\rm nb}$ is retained only if it
-touches $\Omega_{\rm nb}$; an extended voxel is rejected if its insertion
-would create a sign change across an adjacent active-voxel pair. Let
-$\Omega_{\rm tr}$ denote $\Omega_{\rm nb}$ together with the surviving
-transferred extension.
+triangles. 
+With trilinear source samples $\widetilde\Phi^-$ and $\widetilde w^-$, define \begin{equation} \begin{aligned} d^+(x)&=\min\!\left(\tau,\|x-q^+\|\right),\\ \widehat{\Omega}_{\rm tr}&= \left\{x\in\mathcal X^+: \widetilde w^-(\Psi_f(x))>0\right\},\\ \Omega_{\rm nb}&= \left\{x\in\widehat{\Omega}_{\rm tr}: \left|\widetilde\Phi^-(\Psi_f(x))\right|<\tau\right\}. \end{aligned} \label{eq:transferred_support} \end{equation} Here, $\Omega_{\rm nb}$ is the transferred source narrow band. Each 6-connected component of $\widehat{\Omega}_{\rm tr}\setminus\Omega_{\rm nb}$ is retained only if it touches $\Omega_{\rm nb}$; an extended voxel is rejected if its insertion would create a sign change across an adjacent active-voxel pair. Let $\Omega_{\rm tr}$ denote $\Omega_{\rm nb}$ together with the surviving transferred extension.
 
 Let $\partial_{\rm open}\mathcal M^+$ denote the union of open boundary edges
 and their incident vertices. Fallback support is restricted to unsupported
@@ -278,4 +258,4 @@ band is strict, by construction
 $\Omega^+=\{x\in\mathcal X^+:w^+(x)>0\}$. When no source TSDF is available, the final Stage-3 surface is converted into a closest-triangle-normal signed Euclidean distance field within 1.5 voxel widths, with synthetic finite-band weights. The resulting
 $(\Phi^+,w^+)$ is serialized in the native Voxblox TSDF format; its MC mesh is used for surface evaluation and visualization. The returned volume replaces the active Voxblox TSDF, so subsequent fusion and later correction events proceed from the corrected state.
 
-\subsection{Complexity and Scope} Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC yields a constant number of surface elements per active cell, so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the measurements and $O(A)$ for the per-vertex association state. With $\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source vertex, association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and $O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive index model, giving \begin{equation} C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F), \label{eq:complexity} \end{equation} where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The spatial indices accelerate lookup without changing the association rule. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent, and the proxy targets approximately 60K vertices. Session length enters \eqref{eq:complexity} only through $K_{\rm KF}$, in index construction and candidate lookup; the retained association state per surface element is bounded by a constant, and each output voxel is written once rather than once per contributing measurement. Full reintegration instead re-fuses every historical measurement at $O(N|D|)$. The two costs are indexed by different quantities: the keyframes and the active map for WarpVox, the measurement history for reintegration.
+\subsection{Complexity and Scope} Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC yields a constant number of surface elements per active cell, so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the measurements and $O(A)$ for the per-vertex association state. With $\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source vertex, association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and $O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive index model, giving \begin{equation} C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F), \label{eq:complexity} \end{equation} where $C_{\rm vol}$ is the accelerated closest-triangle reconstruction cost. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint rather than scene extent, and the proxy targets approximately 60K vertices. Session length enters \eqref{eq:complexity} only through $K_{\rm KF}$, in index construction and candidate lookup; the retained association state per surface element is bounded by a constant, and each output voxel is written once rather than once per contributing measurement. Full reintegration instead re-fuses every historical measurement at $O(N|D|)$. The two costs are indexed by different quantities: the keyframes and the active map for WarpVox, the measurement history for reintegration.
