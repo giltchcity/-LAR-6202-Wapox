@@ -121,37 +121,28 @@ Each vertex with at least one valid record yields a target; the resulting contro
 
 The deformation stage propagates observation-derived motion; it does not
 infer correction from shape alone. Let $d_j=v_j^*-v_j^-$ be a control
-displacement. Before deformation, control-aware mesh cleaning preserves
-connected components carrying observation-derived controls. A fixed
-component-aware robust filter then removes isolated controls whose
-displacements disagree with the surrounding accepted motion. Small
-disconnected components retained only because they initially carried controls
-are excluded if all such controls are subsequently rejected. Remaining
-components with no surviving control inherit a robust local translation from
-nearby accepted controls through synthetic constraints; these constraints
-define otherwise underconstrained motion but are not treated as observations.
+displacement. A component-aware local filter removes isolated motion
+outliers. Fragments supported only by subsequently rejected controls are
+discarded; other components without a surviving control receive synthetic
+constraints carrying a robust local translation from nearby accepted
+controls. These constraints define otherwise unconstrained motion but are
+not treated as observations.
 
 Component-separated spatial clustering~\cite{rossignac1993vertexclustering}
-constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ with a target budget
-of approximately 60K vertices and selects one QEM
-representative~\cite{garland1997qem} per occupied cell. Let
-$\pi:V^-\rightarrow P^-$ map source vertices to representatives and
-$\mathcal K_a=\{j:\pi(j)=a\}$ collect their controls. For
-$\mathcal K_a\neq\emptyset$, the initial proxy target is
-\begin{equation}
-p_a^{(0)}=p_a^-+
-\frac{1}{|\mathcal K_a|}
-\sum_{j\in\mathcal K_a}d_j.
-\label{eq:proxy_target}
-\end{equation}
+constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ of approximately
+60K vertices, selecting one QEM representative~\cite{garland1997qem} per
+occupied cell. Let $\pi:V^-\rightarrow P^-$ map source vertices to proxy
+representatives. Controls mapped to proxy vertex $a$ are averaged as
+$p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$, where
+$\mathcal K_a=\{j:\pi(j)=a\}$.
+
 A robust local-rigid consensus
 ~\cite{schoenemann1966procrustes,yao2020welsch} regularizes these proxy
 targets. An observation-derived target is replaced by the fitted motion only
 when a strict majority of the evaluated targets in the same connected
 component are inconsistent with that fit; isolated disagreements remain
-unchanged. Synthetic targets are regularized by the same local motion field.
-Let $\mathcal C_P\subseteq\{1,\ldots,|P^-|\}$ index the resulting measured
-or synthetic proxy targets $p_a^*$.
+unchanged. Let $\mathcal C_P$ index the resulting measured or synthetic
+targets $p_a^*$.
 
 WarpVox performs one proxy ARAP solve per correction~\cite{ARAP_modeling:2007, 10.1007/978-3-662-05105-4_2,libigl}:
 \begin{equation}
@@ -165,7 +156,10 @@ WarpVox performs one proxy ARAP solve per correction~\cite{ARAP_modeling:2007, 1
 \end{aligned}
 \label{eq:arap}
 \end{equation}
-Here $\mathcal N_P(a)$ is the one-ring neighbourhood induced by $F_P$, and $c_{ab}=c_{ba}$ are symmetric cotangent-derived weights; the factor $1/2$ removes double counting. Once accepted, controls are imposed exactly so that ARAP does not attenuate the supplied trajectory correction. The standard local--global iterations solve this single optimization.
+Here $\mathcal N_P(a)$ is the proxy one-ring and $c_{ab}$ are symmetric
+cotangent-derived weights. The accepted targets are imposed as exact
+constraints, and standard local--global iterations solve one deformation per
+correction.
 
 Proxy displacement is transferred to $V^-$ by topology-local barycentric
 interpolation. Let $f_j$ be the closest triangle to $v_j^-$ in
@@ -176,145 +170,71 @@ v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),
 \qquad \lambda_{jb}\ge0,\quad\sum_{b\in f_j}\lambda_{jb}=1.
 \label{eq:proxy_transfer}
 \end{equation}
-The ARAP solve and topology-local transfer modify vertex positions only;
-before the safety pass, they preserve the source connectivity and the
-separation of disconnected components. A subsequent safety pass harmonically
-relaxes regions exhibiting severe deformation-induced distortion. Faces whose
-edge or area expansion remains unresolved are removed, but no new connections
-are created and the surface is not retriangulated. The retained source and
-warped meshes therefore share the same indexed face subset,
-\begin{equation}
-\bar{\mathcal M}^-=(\bar V^-,\bar F),\qquad
-\mathcal M^+=(\bar V^+,\bar F),\qquad
-\bar F\subseteq F.
-\label{eq:retained_topology}
-\end{equation}
+
+Restricting $f_j$ to $\operatorname{star}(\pi(j))$ prevents displacement
+transfer across nearby disconnected sheets. A subsequent safety pass
+harmonically relaxes severe deformation-induced distortion and removes only
+faces whose edge or area expansion remains unresolved. It creates no new
+connections and performs no retriangulation. Consequently, the retained
+source and warped meshes share the same indexed face subset:
+$\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
+$\mathcal M^+=(\bar V^+,\bar F)$, with $\bar F\subseteq F$.
 
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
 
 The warped surface supplies the corrected zero set
 ~\cite{sussman1999redistancing}, while the source TSDF supplies observed
-support, sign orientation, integration weights, and free space. Let $n_b$ be
-the number of voxels per block edge, $h=n_bs$ the block width, $o_b=hb$ the
-origin of block $b$, and
+support, sign orientation, integration weights, and free space. Let
+$\mathcal B_V^+$ be the blocks intersected by $\bar V^+$,
+$\mathcal B_{\rm fs}^+$ the additional blocks reached by transported free
+space, and $\operatorname{vox}(b)$ the voxel centres in block $b$. WarpVox
+allocates only
 \begin{equation}
-\operatorname{vox}(b)=
-\left\{o_b+s\left(k+\tfrac12\mathbf 1\right):
-k\in\{0,\ldots,n_b-1\}^3\right\}
-\label{eq:block_voxels}
-\end{equation}
-its voxel centres. Let $\mathcal B_{\rm fs}^+$ denote the additional blocks
-reached by forward transport of observed source free space. With
-$\mathcal N_1$ denoting a one-block Chebyshev dilation, the final allocation
-domain is
-\begin{equation}
-\begin{aligned}
-\mathcal B_V^+&=\{\lfloor \bar v/h\rfloor:\bar v\in\bar V^+\},\\
-\mathcal B^+&=\mathcal N_1(\mathcal B_V^+)\cup\mathcal B_{\rm fs}^+,\\
-\mathcal X^+&=\bigcup_{b\in\mathcal B^+}\operatorname{vox}(b).
-\end{aligned}
+\mathcal B^+=\mathcal N_1(\mathcal B_V^+)\cup\mathcal B_{\rm fs}^+,
+\qquad
+\mathcal X^+=\bigcup_{b\in\mathcal B^+}\operatorname{vox}(b),
 \label{eq:allocation}
 \end{equation}
-No scene-wide bounding box is voxelized: the output contains the
-warped-surface footprint and only the additional blocks reached by transported
-free-space support, giving
-$|\mathcal X^+|\le
-n_b^3\!\left(27|\mathcal B_V^+|+|\mathcal B_{\rm fs}^+|\right)$.
+where $\mathcal N_1$ is a one-block dilation. Thus, no scene-wide bounding
+box is voxelized.
+
 For $x\in\mathcal X^+$, a closest-triangle
-query~\cite{10.1145/2601097.2601199} on
-$\mathcal M^+$ returns face $f$, closest point $q^+$, and barycentric
-coordinates $\beta$. Shared face indices locate the corresponding source point
+query~\cite{10.1145/2601097.2601199} on $\mathcal M^+$ returns face $f$,
+closest point $q^+$, and barycentric coordinates $\beta$. Shared face
+indices give the corresponding source point
+$q^-=\sum_{k\in f}\beta_k\bar v_k^-$. Let $R_f^\pm\in SO(3)$ be consistently
+oriented frames built from the same indexed triangle edge and face normal in
+the source and warped meshes. The piecewise local-rigid pullback
 \begin{equation}
-q^-=\sum_{k\in f}\beta_k\bar v_k^-.
-\label{eq:source_correspondence}
-\end{equation}
-Let
-\begin{equation}
-R_f^\pm=
-\begin{bmatrix}
-t_{f,1}^\pm & t_{f,2}^\pm & n_f^\pm
-\end{bmatrix}\in SO(3)
-\label{eq:triangle_frames}
-\end{equation}
-be consistently oriented orthonormal frames of the corresponding source and
-warped triangles. The first tangent follows the same indexed edge and
-$t_{f,2}^\pm=n_f^\pm\times t_{f,1}^\pm$. A piecewise local-rigid pullback,
-motivated by deformation transfer~\cite{sumner2004deformationtransfer}, maps
-$x$ to the source volume:
-\begin{equation}
-\Psi_f(x)=q^-+R_f^-(R_f^+)^\top(x-q^+),
-\qquad x^-=\Psi_f(x).
+\Psi_f(x)=q^-+R_f^-(R_f^+)^\top(x-q^+)
 \label{eq:inverse_map}
 \end{equation}
-This preserves tangential and normal offsets relative to the corresponding
-triangles.
-With source TSDF samples $\widetilde\Phi^-$ and $\widetilde w^-$, let
-\begin{equation}
-r(x)=\|x-q^+\|,
-\qquad
-d^+(x)=\min\!\left(\tau,r(x)\right).
-\label{eq:warped_distance}
-\end{equation}
-A complete trilinear source sample is valid only when every source voxel with
-a nonzero interpolation coefficient carries positive weight. When such a
-sample is available, WarpVox inherits its interpolated weight and its sign
-evidence. When a complete distance sample is unavailable but the pullback
-still reaches observed source support, only the source weight is inherited;
-the corrected distance remains defined by the warped surface. Let
-$w_{\rm src}^+(x)$ denote the resulting inherited source weight.
+preserves tangential and normal offsets between the paired
+triangles~\cite{sumner2004deformationtransfer}.
 
-Let $s_f^+(x)$ denote the oriented warped-surface sign. Whenever possible,
-the corresponding source TSDF orients the warped normal using its variation
-along the source-triangle normal. If this orientation is unavailable, a
-sign-consistent source sample is used in the surface-local band; otherwise
-the oriented warped-surface sign is retained. We denote the resulting sign by
-$s_{\rm tr}(x)$.
 
-The initial source-supported candidates are
-\begin{equation}
-\begin{aligned}
-\widehat{\Omega}_{\rm tr}
-&=\left\{x\in\mathcal X^+:
-r(x)\le\tau,\ w_{\rm src}^+(x)>0\right\},\\
-\Omega_{\rm n}
-&=\left\{x\in\widehat{\Omega}_{\rm tr}:r(x)<1.5s\right\},\\
-\widehat{\Omega}_{\rm e}
-&=\widehat{\Omega}_{\rm tr}\setminus\Omega_{\rm n}.
-\end{aligned}
-\label{eq:transferred_support}
-\end{equation}
 
-Let $\partial_{\rm open}\mathcal M^+$ denote the union of open boundary edges
-and their incident vertices. Where source support is unavailable, unsupported
-voxels in the same finite surface band receive a unit fallback prior:
-\begin{equation}
-\Omega_{\rm fb}=
-\left\{x\in\mathcal X^+\setminus\widehat{\Omega}_{\rm tr}:
-r(x)<1.5s,\ q^+\notin\partial_{\rm open}\mathcal M^+\right\}.
-\label{eq:fallback_support}
-\end{equation}
-Its weight is
-\begin{equation}
-w_{\rm fb}(x)=
-\operatorname{clamp}_{[0,1]}\!\left(
-1.5-\frac{r(x)}{s}\right).
-\label{eq:fallback_weight}
-\end{equation}
-This fallback is a finite prior required to serialize and continue updating
-the corrected zero set; it is not interpreted as recovered observation count.
+Let $r(x)=\|x-q^+\|$ and $d^+(x)=\min(\tau,r(x))$. A valid pullback inherits
+observed source weight and uses the source TSDF, when available, to orient the
+sign of the warped surface. Where only local observed support is available,
+its weight is inherited while the corrected distance remains surface-based.
 
-From $\widehat{\Omega}_{\rm e}$, WarpVox retains only candidates that are
-sign-consistent with neighbouring active support and connected to the
-surface-local support $\Omega_{\rm n}\cup\Omega_{\rm fb}$. Let the retained
-set be $\Omega_{\rm e}$ and define
-$\Omega_{\rm tr}=\Omega_{\rm n}\cup\Omega_{\rm e}$. For
-$x\in\Omega_{\rm tr}$,
+Source-supported samples within $1.5s$ seed $\Omega_{\rm tr}$; farther
+samples up to the truncation distance are retained only when sign-consistent
+with active neighbours and connected to this seed. Where source support is
+unavailable, non-boundary voxels within $1.5s$ form $\Omega_{\rm fb}$ and
+receive the unit finite-band prior
 \begin{equation}
-\Phi_{\rm tr}^+(x)=s_{\rm tr}(x)d^+(x),
-\qquad
-w_{\rm tr}^+(x)=w_{\rm src}^+(x).
-\label{eq:transported_tsdf}
+\Phi_{\rm tr}^+(x)=s_{\rm tr}(x)d^+(x),\qquad
+w_{\rm tr}^+(x)=w_{\rm src}^+(x),\qquad
+w_{\rm fb}(x)=\operatorname{clamp}_{[0,1]}
+\left(1.5-\frac{r(x)}{s}\right).
+\label{eq:local_tsdf_support}
 \end{equation}
+The fallback provides only finite support for serializing and continuing
+fusion into the corrected zero set; it is not treated as recovered
+observation count.
+
 To preserve observed free space beyond the surface-local bands, confidently
 positive source TSDF voxels are grouped locally and transported forward using
 the paired source and warped surface frames. For a local group $c$, let
@@ -331,39 +251,27 @@ a new zero crossing adjacent to retained occupied support. The accepted
 samples define $\Omega_{\rm fs}$ and retain positive, source-derived TSDF
 values and weights $(\Phi_{\rm fs}^+,w_{\rm fs}^+)$.
 
-Define
-$\Omega^+=\Omega_{\rm tr}\cup\Omega_{\rm fb}\cup\Omega_{\rm fs}$.
-The branches are disjoint because fallback and free-space transport write only
-to unsupported voxels. The reconstructed TSDF is
+Since fallback and free-space transport write only to unsupported voxels,
+the three support branches are disjoint. With
+$\Omega^+=\Omega_{\rm tr}\cup\Omega_{\rm fb}\cup\Omega_{\rm fs}$,
 \begin{equation}
-\Phi^+(x)=
+(\Phi^+(x),w^+(x))=
 \begin{cases}
-\Phi_{\rm tr}^+(x), & x\in\Omega_{\rm tr},\\
-s_f^+(x)d^+(x), & x\in\Omega_{\rm fb},\\
-\Phi_{\rm fs}^+(x), & x\in\Omega_{\rm fs},
+(\Phi_{\rm tr}^+(x),w_{\rm tr}^+(x)),
+&x\in\Omega_{\rm tr},\\
+(s_f^+(x)d^+(x),w_{\rm fb}(x)),
+&x\in\Omega_{\rm fb},\\
+(\Phi_{\rm fs}^+(x),w_{\rm fs}^+(x)),
+&x\in\Omega_{\rm fs}.
 \end{cases}
 \label{eq:hybrid_tsdf}
 \end{equation}
-with weights
-\begin{equation}
-w^+(x)=
-\begin{cases}
-w_{\rm tr}^+(x), & x\in\Omega_{\rm tr},\\
-w_{\rm fb}(x), & x\in\Omega_{\rm fb},\\
-w_{\rm fs}^+(x), & x\in\Omega_{\rm fs},\\
-0, & \text{otherwise}.
-\end{cases}
-\label{eq:hybrid_weight}
-\end{equation}
-Because each branch assigns positive weight on its support, by construction
-$\Omega^+=\{x\in\mathcal X^+:w^+(x)>0\}$.
+Voxels outside $\Omega^+$ have zero weight.
 
-When no source TSDF is available, the final Stage-3 surface is converted into
-a closest-triangle signed Euclidean distance field within $1.5$ voxel widths,
-using the same finite fallback prior. The resulting $(\Phi^+,w^+)$ is
-serialized in the native Voxblox TSDF format; its MC mesh is used for surface
-evaluation and visualization. The returned volume replaces the active Voxblox
-TSDF, so subsequent fusion and later correction events proceed from the
-corrected state.
+Without a source TSDF, WarpVox uses only the finite-band prior around the
+Stage-3 surface. The result is serialized as a native Voxblox TSDF and
+replaces the active volume, after which standard fusion and later corrections
+continue from the updated state. Its MC mesh is used only for evaluation and
+visualization.
 
 \subsection{Complexity and Scope} Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC yields a constant number of surface elements per active cell, so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the measurements and $O(A)$ for the per-vertex association state. With $\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source vertex, association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and $O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive index model, giving \begin{equation} C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F), \label{eq:complexity} \end{equation} where $C_{\rm vol}$ is the Stage-4 volumetric reconstruction cost. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint and transported source support rather than scene extent, and the proxy targets approximately 60K vertices. The retained association state per surface element is bounded by a constant, and each output voxel is written once rather than once per contributing measurement. Full reintegration instead re-fuses every historical measurement at $O(N|D|)$. The two costs are indexed by different quantities: the keyframes and the active map for WarpVox, the measurement history for reintegration.
