@@ -64,19 +64,18 @@ for LiDAR. For RGB-D, $\mathcal S_m$ samples the projected depth and
 back-projects it to the sensor frame. For LiDAR, it selects the closest valid
 return in a local neighbourhood of the projected spherical-image location.
 
-The sampled point is checked against the projected source vertex. Euclidean
-distance measures their complete three-dimensional agreement, while
-depth/range consistency compares $z$-depth for RGB-D and radial range for
-LiDAR. Viewing incidence is evaluated in the pre-correction world frame
-from the source normal $n_j^-$ and the sensor-to-vertex direction.
+Association quality is evaluated from the discrepancy between the projected
+source vertex and the sampled measurement. For RGB-D, this includes the
+three-dimensional point discrepancy and the projective depth difference.
+For LiDAR, the local spherical-image lookup evaluates radial-range and
+three-dimensional consistency. Viewing incidence is evaluated in the
+pre-correction world frame from the source normal $n_j^-$ and the
+sensor-to-vertex direction.
 
-A valid association receives reliability $\alpha_{rj}$ based on geometric
-proximity, viewing incidence, and range attenuation; RGB-D additionally
-accounts for projective depth consistency. This reliability ranks multiple
-observations of the same source vertex and enters the target aggregation in
-Stage~2. The verified tuples $(t_r,m_{rj},\alpha_{rj})$ form
-$\mathcal O_j$, and $\mathcal O=\{\mathcal O_j\}_j$ is passed to Stage~2.
-
+These cues determine whether a candidate is retained and, when retained,
+its reliability $\alpha_{rj}$. The verified tuples
+$(t_r,m_{rj},\alpha_{rj})$ form $\mathcal O_j$, and
+$\mathcal O=\{\mathcal O_j\}_j$ is passed to Stage~2.
 
 \subsection{Stage 2: Corrected Surface Targets}
 
