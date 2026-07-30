@@ -1,2 +1,9 @@
 \section{Conclusion}
-WarpVox corrects an active TSDF after trajectory revision without volumetric replay. Observation-derived targets drive a single surface deformation, from which the corrected volumetric state is reconstructed. Across RGB-D and LiDAR benchmarks, WarpVox remains close to full reintegration with mean core-time speedups of $48.43\times$ and $3.23\times$, respectively. On ten Kimera-Multi bags, it improves F@25/F@50 over Kimera-PGMO by $0.26/0.91$~pp while reducing corrected-surface time by $2.34\times$. The single-sequence Gaussian-centre case study suggests that the targets may transfer beyond voxel grids. The corrected volume remains directly usable by the mapper. Code and all configuration files will be released.
+WarpVox demonstrates that an active TSDF can be corrected after loop closure
+without replaying the complete measurement history. Across RGB-D and LiDAR
+benchmarks, it remains close to full reintegration; on RGB-D sequences it
+achieves a $48\times$ mean update-time speedup. The corrected output is a
+native Voxblox volume that immediately resumes fusion and can undergo later
+corrections. The Gaussian case study further suggests that the
+observation-derived targets are not tied to voxel grids. Code and
+configurations will be released.
