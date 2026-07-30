@@ -72,7 +72,7 @@ The effective association reliability is
 \exp\!\left(-\frac{|e^z_{rj}|}{0.08\,\mathrm{m}}\right)
 \frac{g_{rj}}{1+z_{rj}^{\rm proj}/8\,\mathrm{m}}.
 \label{eq:association_weight}
-\end{equation}  NO para ！！！！！！！！！！
+\end{equation}
 RGB-D candidates satisfy the depth-dependent geometric gate $e^g_{rj}\le 0.08\,\mathrm{m}+0.01\,z_{rj}^{\rm proj}$, and candidates with $\alpha_{rj}<0.05$ are rejected. LiDAR uses spherical projection with radial range $\rho$: candidates satisfy $e^g_{rj}\le 0.25\,\mathrm{m}+0.003\,\rho_{rj}^{\rm proj}$ and are scored by \begin{equation} \alpha_{rj}=\exp\!\left(-\frac{e^g_{rj}}{0.15\,\mathrm{m}}\right) \frac{g_{rj}}{1+\rho_{rj}^{\rm proj}/40\,\mathrm{m}}, \label{eq:association_weight_lidar} \end{equation} with no further $\alpha$ threshold. This establishes geometric support, not exact voxel-integration provenance. The attenuation in \eqref{eq:association_weight} ranks candidates during association; the separate factor in \eqref{eq:target_initial} models target reliability after association.
 
 \subsection{Stage 2: Corrected Surface Targets}
@@ -173,13 +173,13 @@ v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),
 \label{eq:proxy_transfer}
 \end{equation}
 Restricting $f_j$ to $\operatorname{star}(\pi(j))$ prevents displacement
-transfer across nearby disconnected sheets. Faces with excessive
-deformation-induced edge, area, or large-scale aspect distortion define a
-repair region. Their displacements are harmonically interpolated from
-surrounding non-risk vertices, and faces with unresolved edge or area
-expansion are removed. The pass creates no new connections and performs no
-retriangulation. Consequently, the retained source and warped meshes share
-the same indexed face subset: $\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
+transfer across nearby disconnected sheets. Faces with excessive edge
+stretch, area expansion, or aspect-ratio distortion define a repair region.
+Their displacements are harmonically interpolated from surrounding unflagged
+vertices, and faces with unresolved edge or area expansion are removed. The
+pass creates no new connections and performs no retriangulation. Consequently,
+the retained source and warped meshes share the same indexed face subset:
+$\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
 $\mathcal M^+=(\bar V^+,\bar F)$, with $\bar F\subseteq F$.
 
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
@@ -232,8 +232,8 @@ $s_{\rm tr}(x)$.
 
 Source-supported samples within $1.5s$ provide surface-local support; farther
 samples up to $\tau$ are retained only when sign-consistent with their active
-6-neighbours and 6-connected to the active surface-local band. Their accepted
-set is $\Omega_{\rm tr}$, where
+6-neighbours and connected to the surface-local band under 6-connectivity.
+Their accepted set is $\Omega_{\rm tr}$, where
 $(\Phi_{\rm tr}^+(x),w_{\rm tr}^+(x))=
 (s_{\rm tr}(x)d^+(x),w_{\rm src}^+(x))$.
 Where source support is unavailable, voxels within $1.5s$ whose closest
@@ -245,10 +245,9 @@ treated as recovered observation count.
 To preserve observed free space beyond the surface-local band, source voxels
 satisfying $w^-(y)>0$ and $\Phi^-(y)\ge\eta_{\rm fs}$ are partitioned into
 truncation-scale local groups and transported forward using the paired source
-and warped surface frames; $\eta_{\rm fs}=0.35\,\mathrm{m}$ in all
-experiments. For group $c$, let $q_c^-$ and $q_c^+$ be corresponding points
-on the paired triangles and let $R_c^-$ and $R_c^+$ be their local frames.
-The forward map is
+and warped surface frames. For group $c$, let $q_c^-$ and $q_c^+$ be
+corresponding points on the paired triangles and let $R_c^-$ and $R_c^+$ be
+their local frames. The forward map is
 \begin{equation}
 \Gamma_c(y)=q_c^+ + R_c^+(R_c^-)^\top(y-q_c^-).
 \label{eq:forward_free_space}
@@ -282,4 +281,31 @@ replaces the active volume, after which standard fusion and later corrections
 continue from the updated state. Its MC mesh is used only for evaluation and
 visualization.
 
-\subsection{Complexity and Scope} Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and $X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe range images, proxy vertices, and allocated output voxels. At fixed resolution, MC yields a constant number of surface elements per active cell, so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the measurements and $O(A)$ for the per-vertex association state. With $\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source vertex, association costs $O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and $O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive index model, giving \begin{equation} C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F), \label{eq:complexity} \end{equation} where $C_{\rm vol}$ is the Stage-4 volumetric reconstruction cost. The block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the warped-surface footprint and transported source support rather than scene extent, and the proxy targets approximately 60K vertices. The retained association state per surface element is bounded by a constant, and each output voxel is written once rather than once per contributing measurement. Full reintegration instead re-fuses every historical measurement at $O(N|D|)$. The two costs are indexed by different quantities: the keyframes and the active map for WarpVox, the measurement history for reintegration.
+\subsection{Complexity and Scope}
+Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and
+$X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe
+range images, proxy vertices, and allocated output voxels. At fixed
+resolution, MC yields a constant number of surface elements per active cell,
+so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the
+measurements and $O(A)$ for the per-vertex association state. With
+$\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source
+vertex, association costs
+$O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and
+$O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive
+index model.
+
+The total correction cost is
+\begin{equation}
+C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F),
+\label{eq:complexity}
+\end{equation}
+where $C_{\rm vol}$ is the Stage-4 volumetric reconstruction cost. The
+block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the
+warped-surface footprint and transported source support rather than scene
+extent, and the proxy contains approximately 60K vertices. The retained
+association state per surface element is bounded by a constant, and each
+output voxel is written once rather than once per contributing measurement.
+
+Full reintegration instead re-fuses every historical measurement at
+$O(N|D|)$. The two costs are indexed by different quantities: the keyframes
+and active map for WarpVox, and the measurement history for reintegration.
