@@ -121,12 +121,13 @@ Each vertex with at least one valid record yields a target; the resulting contro
 
 The deformation stage propagates observation-derived motion; it does not
 infer correction from shape alone. Let $d_j=v_j^*-v_j^-$ be a control
-displacement. A component-aware local filter removes isolated motion
-outliers. Fragments supported only by subsequently rejected controls are
-discarded; other components without a surviving control receive synthetic
-constraints carrying a robust local translation from nearby accepted
-controls. These constraints define otherwise unconstrained motion but are
-not treated as observations.
+displacement. A component-aware inverse-distance predictor estimates each
+control displacement from valid neighbours, and a fixed median--MAD test
+rejects isolated residuals. Small fragments retained only by controls that
+are subsequently rejected are discarded. Other components without a
+surviving control receive synthetic constraints carrying the coordinate-wise
+median displacement of nearby accepted controls; these constraints define
+otherwise unconstrained motion but are not treated as observations.
 
 Component-separated spatial clustering~\cite{rossignac1993vertexclustering}
 constructs a triangular proxy $\mathcal P^-=(P^-,F_P)$ of approximately
@@ -136,13 +137,14 @@ representatives. Controls mapped to proxy vertex $a$ are averaged as
 $p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$, where
 $\mathcal K_a=\{j:\pi(j)=a\}$.
 
-A robust local-rigid consensus
-~\cite{schoenemann1966procrustes,yao2020welsch} regularizes these proxy
-targets. An observation-derived target is replaced by the fitted motion only
-when a strict majority of the evaluated targets in the same connected
-component are inconsistent with that fit; isolated disagreements remain
-unchanged. Let $\mathcal C_P$ index the resulting measured or synthetic
-targets $p_a^*$.
+A Welsch-weighted rigid transform
+~\cite{schoenemann1966procrustes,yao2020welsch} is fitted to neighbouring
+proxy source--target pairs. An observation-derived target is replaced by its
+fitted prediction only when it is a gross residual and a strict majority of
+the evaluated observation-derived targets in the same connected component
+are also gross residuals; isolated disagreements remain unchanged. Synthetic
+targets are softly regularized by the same local field. Let $\mathcal C_P$
+index the resulting measured or synthetic targets $p_a^*$.
 
 WarpVox performs one proxy ARAP solve per correction~\cite{ARAP_modeling:2007, 10.1007/978-3-662-05105-4_2,libigl}:
 \begin{equation}
@@ -170,14 +172,14 @@ v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),
 \qquad \lambda_{jb}\ge0,\quad\sum_{b\in f_j}\lambda_{jb}=1.
 \label{eq:proxy_transfer}
 \end{equation}
-
 Restricting $f_j$ to $\operatorname{star}(\pi(j))$ prevents displacement
-transfer across nearby disconnected sheets. A subsequent safety pass
-harmonically relaxes severe deformation-induced distortion and removes only
-faces whose edge or area expansion remains unresolved. It creates no new
-connections and performs no retriangulation. Consequently, the retained
-source and warped meshes share the same indexed face subset:
-$\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
+transfer across nearby disconnected sheets. Faces with excessive
+deformation-induced edge, area, or large-scale aspect distortion define a
+repair region. Their displacements are harmonically interpolated from
+surrounding non-risk vertices, and faces with unresolved edge or area
+expansion are removed. The pass creates no new connections and performs no
+retriangulation. Consequently, the retained source and warped meshes share
+the same indexed face subset: $\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
 $\mathcal M^+=(\bar V^+,\bar F)$, with $\bar F\subseteq F$.
 
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
@@ -212,37 +214,43 @@ the source and warped meshes. The piecewise local-rigid pullback
 preserves tangential and normal offsets between the paired
 triangles~\cite{sumner2004deformationtransfer}.
 
+\noindent\textbf{Local field construction.}
+Let $x^-=\Psi_f(x)$, $r(x)=\|x-q^+\|$, and
+$d^+(x)=\min(\tau,r(x))$. The trilinear source sample
+$(\widetilde\Phi^-,\widetilde w^-)(x^-)$ is valid when every source voxel
+with a nonzero interpolation coefficient has positive weight. We define
+$w_{\rm src}^+(x)$ as its interpolated weight; if the complete sample is
+unavailable, the positive weight of the source voxel containing $x^-$ is
+used without copying its distance value.
 
+Let $s_f^+(x)=\operatorname{sgn}((x-q^+)^\top n_f^+)$ be the oriented
+warped-face sign. When valid source samples exist on both sides of the paired
+source face, their central difference orients $n_f^+$; otherwise, within the
+surface-local band, a sign-consistent trilinear sample selects the sign, with
+$s_f^+(x)$ as the final fallback. Denote the resulting sign by
+$s_{\rm tr}(x)$.
 
-Let $r(x)=\|x-q^+\|$ and $d^+(x)=\min(\tau,r(x))$. A valid pullback inherits
-observed source weight and uses the source TSDF, when available, to orient the
-sign of the warped surface. Where only local observed support is available,
-its weight is inherited while the corrected distance remains surface-based.
+Source-supported samples within $1.5s$ provide surface-local support; farther
+samples up to $\tau$ are retained only when sign-consistent with their active
+6-neighbours and 6-connected to this support. Their accepted set is
+$\Omega_{\rm tr}$, where
+$(\Phi_{\rm tr}^+(x),w_{\rm tr}^+(x))=
+(s_{\rm tr}(x)d^+(x),w_{\rm src}^+(x))$.
+Where source support is unavailable, voxels within $1.5s$ whose closest
+surface feature is not an open boundary form $\Omega_{\rm fb}$ and receive
+$w_{\rm fb}(x)=\operatorname{clamp}_{[0,1]}(1.5-r(x)/s)$.
+The fallback provides only finite support for continued fusion and is not
+treated as recovered observation count.
 
-Source-supported samples within $1.5s$ seed $\Omega_{\rm tr}$; farther
-samples up to the truncation distance are retained only when sign-consistent
-with active neighbours and connected to this seed. Where source support is
-unavailable, non-boundary voxels within $1.5s$ form $\Omega_{\rm fb}$ and
-receive the unit finite-band prior
+To preserve observed free space beyond the surface-local band, source voxels
+satisfying $w^-(y)>0$ and $\Phi^-(y)\ge\eta_{\rm fs}$ are partitioned into
+truncation-scale local groups and transported forward using the paired source
+and warped surface frames; $\eta_{\rm fs}=0.35\,\mathrm{m}$ in all
+experiments. For group $c$, let $q_c^-$ and $q_c^+$ be corresponding points
+on the paired triangles and let $R_c^-$ and $R_c^+$ be their local frames.
+The forward map is
 \begin{equation}
-\Phi_{\rm tr}^+(x)=s_{\rm tr}(x)d^+(x),\qquad
-w_{\rm tr}^+(x)=w_{\rm src}^+(x),\qquad
-w_{\rm fb}(x)=\operatorname{clamp}_{[0,1]}
-\left(1.5-\frac{r(x)}{s}\right).
-\label{eq:local_tsdf_support}
-\end{equation}
-The fallback provides only finite support for serializing and continuing
-fusion into the corrected zero set; it is not treated as recovered
-observation count.
-
-To preserve observed free space beyond the surface-local bands, confidently
-positive source TSDF voxels are grouped locally and transported forward using
-the paired source and warped surface frames. For a local group $c$, let
-$q_c^-$ and $q_c^+$ be corresponding points on the paired triangles and let
-$R_c^-$ and $R_c^+$ be their local frames. The forward map is
-\begin{equation}
-\Gamma_c(y)=
-q_c^+ + R_c^+(R_c^-)^\top(y-q_c^-).
+\Gamma_c(y)=q_c^+ + R_c^+(R_c^-)^\top(y-q_c^-).
 \label{eq:forward_free_space}
 \end{equation}
 Mapped samples may allocate additional output blocks. They are written only
