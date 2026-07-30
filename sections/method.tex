@@ -285,10 +285,9 @@ correspondence.
 
 Let $(\Phi^-,w^-)$ denote the source TSDF. The corrected volume uses the
 same voxel size $s$ and truncation distance $\tau$ as the source volume.
-We set $\rho=3s/2$, providing a one-voxel-scale margin around the zero set
-for local support and free-space separation. WarpVox first allocates the
-blocks intersected by the warped surface together with their immediate
-neighbours. Surface-local reconstruction is restricted to this
+We write $\rho=3s/2$ for the near-surface margin. WarpVox first allocates
+the blocks containing warped-surface vertices together with one layer of
+neighbouring blocks. Surface-local reconstruction is restricted to this
 neighbourhood, while transported free space may subsequently allocate
 additional blocks.
 
@@ -324,15 +323,13 @@ r(x)=\|x-q^+\|,
 d^+(x)=\min(\tau,r(x)).
 \label{eq:source_query}
 \end{equation}
-A trilinear source sample
-$(\widetilde\Phi^-,\widetilde w^-)(x^-)$ is valid when every source voxel
-with a nonzero interpolation coefficient has positive weight. When valid,
-its interpolated weight is transferred to the output. If complete
-interpolation is unavailable but the source voxel containing $x^-$ has
-positive weight, that weight may still provide support without copying its
-distance value. Let $w_{\rm src}^+(x)$ denote the resulting transferred
-weight. If neither form of source support is available, $x$ is left for the
-fallback branch.
+A trilinear source sample $(\widetilde\Phi^-,\widetilde w^-)(x^-)$ is valid
+when every source voxel with a nonzero interpolation coefficient has
+positive weight; its interpolated weight is then transferred. Otherwise, if
+the source voxel containing $x^-$ has positive weight, that weight is
+transferred without its distance value. Let $w_{\rm src}^+(x)$ denote the
+transferred weight. If neither form of source support is available, $x$ is
+left to the fallback branch.
 
 Let
 \begin{equation}
@@ -348,9 +345,9 @@ available, with $s_f^+(x)$ as the final fallback. Denote the resulting sign
 by $s_{\rm tr}(x)$.
 
 Source-supported samples satisfying $r(x)\leq\rho$ define the near-surface
-field. Source support farther from the surface, up to $\tau$, is retained
+support. Source support farther from the surface, up to $\tau$, is retained
 only when it forms a sign-consistent, face-connected continuation of this
-field. The accepted samples form $\Omega_{\rm tr}$, with
+support. The accepted samples form $\Omega_{\rm tr}$, with
 \begin{equation}
 \bigl(
 \Phi_{\rm tr}^+(x),
@@ -364,9 +361,9 @@ w_{\rm src}^+(x)
 \label{eq:transferred_tsdf}
 \end{equation}
 
-Where transferred source support is unavailable and the closest surface
-feature is not an open boundary, WarpVox assigns a finite surface prior
-within the near-surface band:
+Where transferred source support is unavailable, voxels satisfying
+$r(x)\leq\rho$ receive a finite surface prior, unless their closest surface
+feature is an open boundary:
 \begin{equation}
 w_{\rm fb}(x)
 =
@@ -376,22 +373,34 @@ w_{\rm fb}(x)
 \right).
 \label{eq:fallback_weight}
 \end{equation}
-The prior has bounded weight near the surface and tapers to zero at the
-band boundary. It provides compact support for continued fusion and is not
+This prior provides compact support for continued fusion and is not
 interpreted as recovered observation count. Its supported voxels form
 $\Omega_{\rm fb}$.
 
+Transferred and fallback support within $r(x)\leq\rho$ form the
+near-surface field. Transferred support farther from the surface, up to
+$\tau$, is retained only when it forms a sign-consistent, face-connected
+continuation of this field. The accepted transferred samples form
+$\Omega_{\rm tr}$, with
+\begin{equation}
+\bigl(
+\Phi_{\rm tr}^+(x),
+w_{\rm tr}^+(x)
+\bigr)
+=
+\bigl(
+s_{\rm tr}(x)d^+(x),
+w_{\rm src}^+(x)
+\bigr).
+\label{eq:transferred_tsdf}
+\end{equation}
 The surface-local reconstruction does not recover observed free space
 farther from the corrected zero set. Observed source voxels satisfying
-\begin{equation}
-w^-(y)>0,
-\qquad
-\Phi^-(y)\geq\rho
-\end{equation}
-are eligible for forward transport. They are partitioned into
-truncation-scale groups, and only groups admitting a valid paired-surface
-frame are transported. For group $c$, let $q_c^\pm$ and $R_c^\pm$ denote
-its corresponding source and warped points and frames. The forward map is
+$w^-(y)>0$ and $\Phi^-(y)\geq\rho$ are eligible for forward transport. They
+are partitioned into truncation-scale groups, and only groups admitting a
+valid paired-surface frame are transported. For group $c$, let $q_c^\pm$
+and $R_c^\pm$ denote its corresponding source and warped points and frames.
+The forward map is
 \begin{equation}
 \Gamma_c(y)
 =
@@ -400,28 +409,17 @@ q_c^+
 R_c^+(R_c^-)^\top(y-q_c^-).
 \label{eq:forward_free_space}
 \end{equation}
-
 Transported samples may allocate additional output blocks. They retain
 their positive source-derived values and weights, fill only voxels that
 remain unsupported after surface-local reconstruction, and are rejected
 when they would introduce a new zero crossing adjacent to retained
 negative support. The accepted samples form $\Omega_{\rm fs}$, with values
-and weights $(\Phi_{\rm fs}^+,w_{\rm fs}^+)$.
-
-Fallback is assigned only where transferred source support is unavailable,
+and weights $(\Phi_{\rm fs}^+,w_{\rm fs}^+)$. Fallback is assigned only where transferred source support is unavailable,
 and the subsequent free-space pass writes only to voxels that remain
 unsupported. Hence, $\Omega_{\rm tr}$, $\Omega_{\rm fb}$, and
 $\Omega_{\rm fs}$ are disjoint. With
-\begin{equation}
-\Omega^+
-=
-\Omega_{\rm tr}
-\cup
-\Omega_{\rm fb}
-\cup
-\Omega_{\rm fs},
-\end{equation}
-the corrected field is
+$\Omega^+=\Omega_{\rm tr}\cup\Omega_{\rm fb}\cup\Omega_{\rm fs}$, the
+corrected field is
 \begin{equation}
 (\Phi^+(x),w^+(x))
 =
@@ -431,21 +429,13 @@ the corrected field is
 (s_f^+(x)d^+(x),w_{\rm fb}(x)),
 &x\in\Omega_{\rm fb},\\
 (\Phi_{\rm fs}^+(x),w_{\rm fs}^+(x)),
-&x\in\Omega_{\rm fs},\\
-(0,0),
-&\text{otherwise}.
+&x\in\Omega_{\rm fs}.
 \end{cases}
 \label{eq:hybrid_tsdf}
 \end{equation}
-When the source TSDF is unavailable, reconstruction reduces to the finite
-surface prior.
-
-The resulting volume is serialized as a native Voxblox TSDF and replaces
-the active map. The correction therefore returns to the same mutable
-representation from which mapping continues: the zero set follows the
-corrected geometry, available observation state is inherited from the
-source volume, and subsequent fusion operates directly on the updated
-TSDF.
+Voxels outside $\Omega^+$ have zero weight. When the source TSDF is
+unavailable, reconstruction reduces to the finite surface prior.
+The resulting volume is serialized as a native Voxblox TSDF and replaces the active map. The correction therefore returns to the same mutable representation from which mapping continues: the zero set follows the corrected geometry, available observation state is inherited from the source volume, and subsequent fusion operates directly on the updated TSDF.
 
 
 \subsection{Complexity and Scope}
