@@ -131,17 +131,19 @@ cases in the bottom two rows; each row uses the same view across methods. Colors
 \subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Both correction methods operate on the same timestamped Kimera-VIO pre-mesh, compressed by Kimera's mesh frontend at $8\,\mathrm{cm}$, and use the same VIO pre-correction and final PGMO-optimized trajectories. Kimera-PGMO is evaluated using its official \texttt{mesh_trajectory_deformer} tool~\cite{kimera_pgmo}, whereas WarpVox applies Stages~1--3.
+Both correction methods operate on the same timestamped Kimera-VIO pre-mesh, compressed by Kimera's mesh frontend at $8\,\mathrm{cm}$, and use the same VIO pre-correction and final PGMO-optimized trajectories. Kimera-PGMO is evaluated using its official \texttt{mesh\_trajectory\_deformer} tool~\cite{kimera_pgmo}, whereas WarpVox applies Stages~1--3.
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Same-source corrected-surface comparison over ten Kimera-Multi bags.}}
+\caption{\textbf{Same-source corrected-surface comparison over ten
+Kimera-Multi bags.}}
 \label{tab:pgmo_full10}
 \scriptsize
 \setlength{\tabcolsep}{2.2pt}
 \begin{tabular}{lrrrr}
 \toprule
-Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
+Method & F@10 (\%) & F@25 (\%) & F@50 (\%) &
+Time (s) $\downarrow$ \\
 \midrule
 Kimera-VIO pre-mesh
 & 4.260 & 12.670 & 23.930 & -- \\
@@ -153,7 +155,7 @@ WarpVox Stage~1--3
 \end{tabular}
 \end{table}
 
-At F@10, which approaches the $8\,\mathrm{cm}$ frontend-mesh resolution, WarpVox remains within $0.20$ pp of Kimera-PGMO. It improves F@25/F@50 by $0.26/0.91$ pp while reducing corrected-mesh core time by $2.34\times$. WarpVox subsequently applies Stage~4 to reconstruct an $8\,\mathrm{cm}$ native TSDF, adding $1.277\,\mathrm{s}$ ($4.792\,\mathrm{s}$ for Stages~1--4) and yielding F@25/F@50 scores of 24.387\% / 43.098\%; the ablation reports the detailed Stage~3--4 comparison.
+At F@10, which approaches the $8\,\mathrm{cm}$ frontend-mesh resolution, WarpVox remains within $0.20$~pp of Kimera-PGMO. It improves F@25/F@50 by $0.26/0.91$~pp while reducing corrected-mesh core time by $2.34\times$. WarpVox subsequently applies Stage~4 to reconstruct an $8\,\mathrm{cm}$ native TSDF, adding $1.277\,\mathrm{s}$ ($4.792\,\mathrm{s}$ for Stages~1--4) and yielding F@25/F@50 scores of $24.387\%/43.098\%$; the ablation reports the detailed Stage~3--4 comparison.
 
 
 % two of the latter are marginally
