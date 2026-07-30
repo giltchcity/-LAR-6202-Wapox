@@ -41,14 +41,14 @@ Every method reconstructs the same temporal interval. For Kimera-Multi, the refe
 For KITTI, the reference is the Velodyne point cloud aggregated at ground-truth poses, within the mapper's 25 m ray range. 
 Predictions expressed outside the GT frame are aligned to it using only timestamp-matched trajectory positions; no mesh-to-GT registration is used. Voxgraph is aligned using the trajectory recovered from its jointly optimized submap-pose graph, whereas reconstructions built from the same corrected ORB-SLAM3 trajectory share one alignment per case.
 
-WarpVox runs alongside the standard Voxblox fusion pipeline and automatically caches the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. Event-specific associations, targets, and deformation state are discarded after each committed correction, whereas the keyframe cache and corrected active TSDF persist across events. For the eighteen RGB-D sequences, the cache holds 0.9--3.6\,GiB of uncompressed 16-bit keyframe depth images (mean 2.1 GiB over 1349–5707 keyframes).
+WarpVox runs alongside the standard Voxblox fusion pipeline and automatically caches the modality-native range image of each required SLAM keyframe as it arrives. Thus, no bag rewind or separate keyframe-image preprocessing is required at loop events. Event-specific associations, targets, and deformation state are discarded after each committed correction, whereas the keyframe cache and corrected active TSDF persist across events. For the eighteen RGB-D sequences, the cache holds 0.9 -- 3.6\,GiB of uncompressed 16-bit keyframe depth images (mean 2.1 GiB over 1349 -- 5707 keyframes).
 
 
 \noindent\textbf{Baselines.} Uncorrected Voxblox TSDF uses the pre-correction trajectory. Open3D~\cite{zhou2018open3dmodernlibrary3d} provides an independent corrected-pose TSDF rebuild; Wavemap~\cite{reijgwart2023wavemap} represents efficient occupancy mapping with a wavelet occupancy rebuild, and Voxgraph~\cite{reijgwart2020voxgraph}, the submap-based online correction baseline, optimizes rigid TSDF submaps. Voxblox reintegration~\cite{Oleynikova_2017} rebuilds the same TSDF representation from the corrected trajectory and is the representation-matched reference. WarpVox starts from the active uncorrected TSDF. At each loop event, WarpVox, Voxblox reintegration, Open3D, and Wavemap receive the same corrected keyframe trajectory; Voxgraph retains its independently optimized submap frame as described above. Voxblox reintegration, Open3D, and Wavemap re-fuse every range frame, interpolating the corrected trajectory to each frame timestamp; WarpVox uses keyframe measurements solely for target construction.
 
 We compute precision and recall by bidirectional nearest-neighbour tests and report F@10/25/50 at 0.10/0.25/0.50 m. All methods share each case's crop, spatial region, two-million-point sample, random seed, and thresholds. Main TSDF experiments use 0.25 m voxels and 1.0 m truncation; Wavemap uses a matched 0.25 m finest level. Lacking a surface extractor, Wavemap is evaluated on its official occupancy point cloud, one point per occupied cell. The 11-case high-resolution subset and ten-bag subset were each randomly selected once; the latter is shared by the PGMO comparison and ablation.
 
-\noindent\textbf{Timing protocol.} We report core map-update time from in-memory state on an AMD Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh optimization, or the complete WarpVox correction through Stages~1--4, as applicable. Disk I/O and processing outside correction, including PGMO MeshFrontend construction, are excluded.
+\noindent\textbf{Timing protocol.} We report core map-update time from in-memory state on an AMD Ryzen 7 9700X with 64\,GB RAM: TSDF/occupancy integration, submap or mesh optimization, or the complete WarpVox correction through Stages~1 -- 4, as applicable. Disk I/O and processing outside correction, including PGMO MeshFrontend construction, are excluded.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -56,7 +56,7 @@ Table~\ref{tab:broad_main} gives the uniform 0.25 m comparison. WarpVox is the c
 
 
 
-On Kimera-Multi, WarpVox differs from reintegration by $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. These sub-percentage-point differences indicate close agreement in the reported mean F-scores. WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller KITTI gain is consistent with lower-cost sparse-LiDAR replay and WarpVox's larger active surface and output volume. % Across multi-loop sequences, the mean first-to-last change in the WarpVox--reintegration F@25 gap remains within one percentage point.
+On Kimera-Multi, WarpVox differs from reintegration by $+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. These sub-percentage-point differences indicate close agreement in the reported mean F-scores. WarpVox is $48.43\times$ faster than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller KITTI gain is consistent with lower-cost sparse-LiDAR replay and WarpVox's larger active surface and output volume. % Across multi-loop sequences, the mean first-to-last change in the WarpVox -- reintegration F@25 gap remains within one percentage point.
 Voxgraph improves over uncorrected Voxblox at every threshold by aligning rigid SDF submaps, but stays $5.98$ and $12.08$ pp below WarpVox at F@25 on the two datasets, consistent with uncorrected intra-submap drift. Wavemap shows low F@10 but competitive KITTI F@50. This is consistent with a hierarchical occupancy representation whose 0.25 m setting is its finest level rather than a uniform map resolution; its grid-centred evaluation points can also sit up to 0.22\,m from the true surface.
 
 % Paired F@50 differences span $[-1.95,2.28]$ pp and $[-1.46,0.53]$ pp,
@@ -133,7 +133,9 @@ cases in the bottom two rows; each row uses the same view across methods. Colors
 \subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Both correction methods operate on the same timestamped Kimera-VIO pre-mesh, compressed by Kimera's mesh frontend at $8\,\mathrm{cm}$, and use the same VIO pre-correction and final PGMO-optimized trajectories. Kimera-PGMO is evaluated using its official \texttt{mesh\_trajectory\_deformer} tool~\cite{kimera_pgmo}, whereas WarpVox applies Stages~1--3.
+This experiment compares two ways of propagating trajectory correction to the surface: Kimera-PGMO's deformation-graph optimization and WarpVox's observation-derived targets followed by proxy ARAP.
+
+Both correction methods operate on the same timestamped Kimera-VIO pre-mesh, compressed by Kimera's mesh frontend at $8\,\mathrm{cm}$, and use the same VIO pre-correction and final PGMO-optimized trajectories. Kimera-PGMO is evaluated using its official \texttt{mesh\_trajectory\_deformer} tool~\cite{kimera_pgmo}, whereas WarpVox applies Stages~1 -- 3.
 
 \begin{table}[t]
 \centering
@@ -151,17 +153,17 @@ Kimera-VIO pre-mesh
 & 4.260 & 12.670 & 23.930 & -- \\
 Kimera-PGMO one-shot
 & \textbf{8.639} & 23.875 & 42.318 & 8.231 \\
-WarpVox Stage~1--3
+WarpVox Stage~1 -- 3
 & 8.440 & \textbf{24.134} & \textbf{43.231} & \textbf{3.515} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-At F@10, which approaches the $8\,\mathrm{cm}$ frontend-mesh resolution, WarpVox remains within $0.20$~pp of Kimera-PGMO. It improves F@25/F@50 by $0.26/0.91$~pp while reducing corrected-surface core time by $2.34\times$. WarpVox subsequently applies Stage~4 to reconstruct an $8\,\mathrm{cm}$ native TSDF, adding $1.277\,\mathrm{s}$ ($4.792\,\mathrm{s}$ for Stages~1--4) and yielding F@25/F@50 scores of $24.387\%/43.098\%$; the ablation reports the detailed Stage~3--4 comparison.
+At F@10, which approaches the $8\,\mathrm{cm}$ frontend-mesh resolution, WarpVox remains within $0.20$~pp of Kimera-PGMO. It improves F@25/F@50 by $0.26/0.91$~pp while reducing corrected-surface core time by $2.34\times$. WarpVox subsequently applies Stage~4 to reconstruct an $8\,\mathrm{cm}$ native TSDF, adding $1.277\,\mathrm{s}$ ($4.792\,\mathrm{s}$ for Stages~1 -- 4) and yielding F@25/F@50 scores of $24.387\%/43.098\%$; the ablation reports the detailed Stage~3 -- 4 comparison.
 
 
 % two of the latter are marginally
-% negative. The two negative cases exhibit opposite precision--recall tradeoffs:
+% negative. The two negative cases exhibit opposite precision -- recall tradeoffs:
 % one gains 6.51 pp recall while losing 3.26 pp precision, whereas the other gains 1.41 pp precision while losing 0.92 pp recall. 
 
 \subsection{Ablation Study} 
@@ -170,14 +172,14 @@ Table~\ref{tab:ablation} isolates one design choice at a time on one loop-closur
 \begin{table}[t]
 \centering
 
-\caption{\textbf{Ablation of Stages~1--4 on ten Kimera-Multi cases.}}
+\caption{\textbf{Ablation of Stages~1 -- 4 on ten Kimera-Multi cases.}}
 \label{tab:ablation}
 \scriptsize
 \setlength{\tabcolsep}{2pt}
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-Variant & F@10 (\%) & F@25 (\%) & F@50 (\%) & S1--2 (s) & S3 (s) & S4 (s) \\
+Variant & F@10 (\%) & F@25 (\%) & F@50 (\%) & S1 -- 2 (s) & S3 (s) & S4 (s) \\
 \midrule
 Full-mesh ARAP
   & 10.278 & 26.749 & 45.490 & - & 3.323 & -- \\
@@ -192,19 +194,35 @@ Source-supported TSDF (Final)
   & 10.155 & 26.616 & 45.392 & 0.480 & 1.408 & 0.160 \\
 \bottomrule
 \end{tabular}}
-\parbox{\columnwidth}{\vspace{2pt}\scriptsize Times are listed only for the stage under comparison. The upper block varies S3, stops before Stage~4, and is scored on the ARAP surface; the lower varies S1--2 and S4 against Final and is scored on meshes re-extracted from the output TSDF.}
+\parbox{\columnwidth}{\vspace{2pt}\scriptsize Times are listed only for the stage under comparison. The upper block varies S3, stops before Stage~4, and is scored on the ARAP surface; the lower varies S1 -- 2 and S4 against Final and is scored on meshes re-extracted from the output TSDF.}
 \end{table}
 
-Observation-derived targets recover a more accurate surface than naive nearest-keyframe transport---which moves each retained control using its spatially closest keyframe's pose correction---improving all three mean F-scores, including 0.637 pp at F@25. The robust 60K QEM proxy remains within 0.032 pp of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to 1.408 s. Stage~4 keeps the re-extracted mesh within 0.122 pp of the robust Stage-3 surface and improves F@25 by 0.216 pp over mesh-only conversion, at an additional cost of 0.062 s.
+Observation-derived targets recover a more accurate surface than naive nearest-keyframe transport --- which moves each retained control using its spatially closest keyframe's pose correction --- improving all three mean F-scores, including 0.637 pp at F@25. The robust 60K QEM proxy remains within 0.032 pp of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to 1.408 s. Stage~4 keeps the re-extracted mesh within 0.122 pp of the robust Stage-3 surface and improves F@25 by 0.216 pp over mesh-only conversion, at an additional cost of 0.062 s.
 
 Beyond the stage ablation, reintegrating only the cached keyframes on the same ten cases reaches $24.18/41.62$ at F@25/F@50 in $33.70$\,s and still takes over an order of magnitude longer than WarpVox, while remaining $2.44/3.78$ pp below it. The cache therefore supports target construction but not a complete volumetric rebuild.
 
 \noindent\textbf{TSDF consistency.} We compare WarpVox with corrected-pose Voxblox reintegration on a shared voxel grid, treating unallocated voxels as zero weight. We report positive-weight support IoU, weighted Jaccard similarity of voxel weights, reference-weighted free-space support recall for $\Phi_{\rm r}>0.5s$, and TSDF-sign accuracy on common support outside the $0.5s$ zero-level band. Averaged over ten $0.25$-m checkpoints, WarpVox achieves 86.19\%, 80.06\%, 98.50\%, and 96.29\%, respectively, showing substantial agreement in support, accumulated weight, and TSDF sign structure.
 
-% Additionally, With Stages~3--4 fixed, observation-derived targets improve mean F@10/F@25/F@50 by 0.62/0.99/1.38 pp over trajectory-delta targets and qualitatively produce more spatially coherent and geometrically faithful mesh corrections.
+% Additionally, With Stages~3 -- 4 fixed, observation-derived targets improve mean F@10/F@25/F@50 by 0.62/0.99/1.38 pp over trajectory-delta targets and qualitatively produce more spatially coherent and geometrically faithful mesh corrections.
 
 % Varying the per-vertex association cap $n_v \in \{1,4,8,15\}$ on the same ten cases changes mean F@25 by only $0.019$ pp, with a maximum per-checkpoint range of $0.085$ pp. At $n_v=15$, vertices retain only $2.91$ records on average and $1.90\%$ reach the cap; we therefore use $n_v=15$ to avoid truncating valid support while keeping per-vertex storage bounded.
 
+\begin{table}[t]
+\centering
+\caption{\textbf{Gaussian-centre target-transfer case study on one Kimera-Multi sequence.}}
+\label{tab:gaussian_case}
+\scriptsize
+\setlength{\tabcolsep}{2.3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Method & F@25 (\%) & F@50 (\%) & Depth L1 (cm) $\downarrow$ & Time \\
+\midrule
+SplaTAM pre-correction & 17.23 & 35.25 & 173.93 & -- \\
+WarpVox target update & 23.12 & 40.59 & 142.54 & 21 s \\
+Corrected-pose rebuild & 23.25 & 41.01 & 141.37 & $\approx 2$ h \\
+\bottomrule
+\end{tabular}}
+\end{table}
 
-
-\noindent\textbf{Cross-representation 3DGS~\cite{kerbl2023gaussians} case study.} Applying the same corrected surface targets to the Gaussian centres of one Kimera-Multi sequence reconstructed with SplaTAM~\cite{keetha2024splatam} improves F@25/F@50 from 17.23/35.25 to 23.12/40.59 and depth L1 from 173.93 to 142.54\,cm in 21\,s; a corrected-pose rebuild obtains 23.25/41.01 and 141.37\,cm in approximately 2\,h. This single-sequence result suggests the target construction can transfer beyond voxel grids; WarpVox itself remains targeted at TSDF mapping pipelines.
+\noindent\textbf{Cross-representation 3DGS~\cite{kerbl2023gaussians} case study.} Applying the same corrected surface targets to the Gaussian centres of a SplaTAM~\cite{keetha2024splatam} reconstruction approaches the corrected-pose rebuild in 21\,s, whereas the rebuild takes approximately 2\,h. This single-sequence result evaluates target transferability only; WarpVox remains targeted at TSDF mapping pipelines.
