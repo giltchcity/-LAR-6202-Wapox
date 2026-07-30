@@ -15,28 +15,7 @@ severely noisy or topologically corrupted source maps are outside its scope.
 \end{equation}
 where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D depth image or a spherical LiDAR range image. Together with $T^-$, these measurements form the observation input to Stage~1. The measurements remain available across correction events. Fig.~\ref{fig:pipeline} summarizes the four stages.
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{Figures/pipeline_v5.jpg}
-  \caption{WarpVox extracts the current source surface from the fused TSDF, re-establishes projective correspondences with keyframe measurements, propagates the resulting targets through one proxy deformation per correction, and reconstructs a source-supported TSDF.}
-  \label{fig:pipeline}
-\end{figure}
-
-\subsection{Stage 1: Keyframe -- Surface Association}
-
-Stage~1 projects the current surface into the keyframe range images and returns vertex-indexed observation records,
-\begin{equation}
-\begin{aligned}
-\mathcal O&=\mathcal R(\mathcal M^-,T^-,\mathcal C_{\rm KF}),\\
-\mathcal O_j&=\{(r,\alpha_{rj})\}.
-\end{aligned}
-\label{eq:resolved_records}
-\end{equation}
-where each record $r$ identifies a keyframe range image and a valid projected range sample, $t_r$ is its acquisition time, and $\alpha_{rj}\in[0,1]$ is the
-effective reliability of associating it with source vertex $v_j^-$. For target construction, each vertex retains at most 15 association records, giving fixed-size per-vertex state. RGB-D restricts candidates with a camera-centre KD-tree, LiDAR with a
-sensor-position grid and an 80\,m radius check. The correction
-backend therefore receives vertex-indexed records and never re-fuses
-measurements into the volume. Its contract is
+Its contract is
 \begin{equation}
 (\Phi^-,w^-,\mathcal M^-,T^+,\mathcal O)
 \longmapsto (\Phi^+,w^+),
@@ -45,77 +24,123 @@ measurements into the volume. Its contract is
 where the warped mesh is intermediate and $(\Phi^+,w^+)$ is a
 native Voxblox TSDF volume.
 
-For an RGB-D record $r$, pixel $\bar u_r=[u_r,v_r,1]^\top$ with measured
-z-depth $z_r$ defines the invariant sensor-frame sample
-\begin{equation}
-m_r=z_rK^{-1}\bar u_r,
-\qquad
-\widetilde m_r=[m_r^\top,1]^\top.
-\label{eq:sensor_sample}
-\end{equation}
-The inverse pre-correction pose projects source vertex $v_j^-$ into the record frame. Candidate agreement combines depth residual, three-dimensional position, and viewing direction. Let $n_j^-$ be the source normal, $\ell_{rj}^-$ the unit viewing direction in the pre-correction world frame, and $z_{rj}^{\rm proj}$ the projected vertex depth. We define
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{Figures/pipeline_v5.jpg}
+  \caption{WarpVox extracts the current source surface from the fused TSDF, re-establishes projective correspondences with keyframe measurements, propagates the resulting targets through one proxy deformation per correction, and reconstructs a source-supported TSDF.}
+  \label{fig:pipeline}
+\end{figure}
+
+
+\subsection{Stage 1: Correspondence Establishment}
+
+Stage~1 establishes projective correspondences between the current source
+surface and the keyframe range measurements under the pre-correction
+trajectory. For each queried source vertex $v_j^-$ with normal $n_j^-$, a
+spatial index over sensor positions retrieves candidate keyframes that may
+observe it.
+
+Let $r$ index a candidate measurement with timestamp $t_r$ and range image
+$D_r$. The source vertex is transformed into the corresponding sensor frame
+and sampled in the measurement domain:
 \begin{equation}
 \begin{aligned}
-e^g_{rj}
-&=\left\|[T^-(t_r)\widetilde m_r]_{1:3}-v_j^-\right\|,\\
-e^z_{rj}
-&=z_{rj}^{\rm proj}-z_r,\\
-g_{rj}
-&=\left|(n_j^-)^\top \ell_{rj}^-\right|.
+\hat v_{rj}^-
+&=
+\left[
+[T^-(t_r)]^{-1}\widetilde v_j^-
+\right]_{1:3},\\
+m_{rj}
+&=
+\mathcal S_m\!\left(
+D_r,\Pi_m(\hat v_{rj}^-)
+\right).
 \end{aligned}
-\label{eq:association_residuals}
+\label{eq:sensor_sample}
 \end{equation}
-The effective association reliability is
-\begin{equation}
-\alpha_{rj}=
-\exp\!\left(-\frac{e^g_{rj}}{0.048\,\mathrm{m}}\right)
-\exp\!\left(-\frac{|e^z_{rj}|}{0.08\,\mathrm{m}}\right)
-\frac{g_{rj}}{1+z_{rj}^{\rm proj}/8\,\mathrm{m}}.
-\label{eq:association_weight}
-\end{equation}
-RGB-D candidates satisfy the depth-dependent geometric gate $e^g_{rj}\le 0.08\,\mathrm{m}+0.01\,z_{rj}^{\rm proj}$, and candidates with $\alpha_{rj}<0.05$ are rejected. LiDAR uses spherical projection with radial range $\rho$: candidates satisfy $e^g_{rj}\le 0.25\,\mathrm{m}+0.003\,\rho_{rj}^{\rm proj}$ and are scored by \begin{equation} \alpha_{rj}=\exp\!\left(-\frac{e^g_{rj}}{0.15\,\mathrm{m}}\right) \frac{g_{rj}}{1+\rho_{rj}^{\rm proj}/40\,\mathrm{m}}, \label{eq:association_weight_lidar} \end{equation} with no further $\alpha$ threshold. This establishes geometric support, not exact voxel-integration provenance. The attenuation in \eqref{eq:association_weight} ranks candidates during association; the separate factor in \eqref{eq:target_initial} models target reliability after association.
+Here $\Pi_m$ is the pinhole projection for RGB-D or the spherical projection
+for LiDAR. For RGB-D, $\mathcal S_m$ samples the projected depth and
+back-projects it to the sensor frame. For LiDAR, it selects the closest valid
+return in a local neighbourhood of the projected spherical-image location.
+
+The sampled point is checked against the projected source vertex. Euclidean
+agreement limits the complete three-dimensional mismatch, while range
+agreement separately checks $z$-depth for RGB-D or radial distance for
+LiDAR. Viewing incidence is measured from the source normal $n_j^-$ and the
+corresponding viewing direction.
+
+A valid association receives reliability $\alpha_{rj}$ based on geometric
+proximity, viewing incidence, and range attenuation; RGB-D additionally
+accounts for projective depth consistency. This reliability ranks multiple
+observations of the same source vertex and enters the target aggregation in
+Stage~2. The verified tuples $(t_r,m_{rj},\alpha_{rj})$ form
+$\mathcal O_j$, and $\mathcal O=\{\mathcal O_j\}_j$ is passed to Stage~2.
+
 
 \subsection{Stage 2: Corrected Surface Targets}
 
-After loop closure, the timestamp $t_r$ selects the corresponding corrected pose. Missing interior poses use linear translation interpolation and SLERP rotation over gaps of at most three times the median trajectory spacing~\cite{shoemake1985slerp}. The invariant sample then defines the corrected candidate
+The sensor-frame sample $m_{rj}$ is unchanged by a later revision of the
+world-frame trajectory. Let $\widehat T_r^+$ denote the corrected pose
+associated with record $r$. RGB-D records are resolved by timestamp, while LiDAR records use
+the corresponding scan pose. The corrected candidate is
 \begin{equation}
-q_r^+=\left[T^+(t_r)\widetilde m_r\right]_{1:3}.
+q_{rj}^+
+=
+\left[
+\widehat T_r^+\widetilde m_{rj}
+\right]_{1:3}.
 \label{eq:corrected_target}
 \end{equation}
-This candidate is geometrically consistent when the static-scene association, calibration, and
-corrected pose are valid. Let
-$\mathcal J_j=\{r:(r,\alpha_{rj})\in\mathcal O_j\}$. We first compute
+
+Let
+$\mathcal J_j=\{r:(t_r,m_{rj},\alpha_{rj})\in\mathcal O_j\}$.
+The Stage~1 reliability gives the initial target estimate
 \begin{equation}
-\omega_{rj}=\frac{\alpha_{rj}}{1+z_r/3\,\mathrm{m}},
-\qquad
-\bar q_j=
-\frac{\sum_{r\in\mathcal J_j}\omega_{rj}q_r^+}
-     {\sum_{r\in\mathcal J_j}\omega_{rj}}.
+\bar q_j
+=
+\frac{
+\sum_{r\in\mathcal J_j}\alpha_{rj}q_{rj}^+
+}{
+\sum_{r\in\mathcal J_j}\alpha_{rj}
+}.
 \label{eq:target_initial}
 \end{equation}
-For LiDAR, $\omega_{rj}=\alpha_{rj}/(1+\|q_r^+-v_j^-\|/20\,\mathrm{m})$ and the floor in \eqref{eq:target_inliers} is $0.05\,\mathrm{m}$.
-The reliability-weighted center is paired with an unweighted median residual
-scale so that no single high-weight candidate controls both the estimate and
-its rejection threshold:
+
+A median-relative residual threshold selects a consistent subset:
 \begin{equation}
 \begin{aligned}
-\theta_j&=\max\!\left(
-0.02\,\mathrm{m},
-2.5\operatorname*{median}_{r\in\mathcal J_j}
-\|q_r^+-\bar q_j\|\right),\\
-I_j&=\left\{r\in\mathcal J_j:
-\|q_r^+-\bar q_j\|\le\theta_j\right\}.
+\theta_j
+&=
+\max\!\left(
+\epsilon_m,\,
+\kappa\operatorname*{median}_{r\in\mathcal J_j}
+\|q_{rj}^+-\bar q_j\|
+\right),\\
+I_j
+&=
+\left\{
+r\in\mathcal J_j:
+\|q_{rj}^+-\bar q_j\|\le\theta_j
+\right\}.
 \end{aligned}
 \label{eq:target_inliers}
 \end{equation}
-When fewer than three candidates are available, $I_j=\mathcal J_j$. The final target is
+Here $\epsilon_m$ reflects the modality's sampling resolution and $\kappa$
+is shared across modalities. When fewer than three candidates are available,
+no trimming is applied. The final observation-derived target is
 \begin{equation}
-v_j^*=
-\frac{\sum_{r\in I_j}\omega_{rj}q_r^+}
-     {\sum_{r\in I_j}\omega_{rj}}.
+v_j^*
+=
+\frac{
+\sum_{r\in I_j}\alpha_{rj}q_{rj}^+
+}{
+\sum_{r\in I_j}\alpha_{rj}
+}.
 \label{eq:target}
 \end{equation}
-Each vertex with at least one valid record yields a target; the resulting controls are screened by the robust spatial-consistency filter of Stage~3.
+
+Each supported source vertex yields one target displacement
+$v_j^*-v_j^-$ for Stage~3.
 
 \subsection{Stage 3: Surface Deformation}
 
