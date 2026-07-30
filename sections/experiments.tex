@@ -131,27 +131,31 @@ cases in the bottom two rows; each row uses the same view across methods. Colors
 \subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-Both methods operate on the same timestamped pre-mesh, compressed by Kimera's mesh frontend at $8,\text{cm}$ from a $5,\text{cm}$ Voxblox TSDF, and use the same VIO pre-correction and final PGMO-optimized trajectories. Official Kimera-PGMO applies its one-shot deformation-graph optimization and full-mesh deformation, whereas WarpVox applies Stages~1--3 to the same pre-mesh. This isolates a same-input, same-output corrected-mesh comparison.
+Both methods use the Kimera-VIO trajectory and corresponding $8\,\text{cm}$ frontend mesh produced by the same run. For each bag, the PGMO mesh is scored directly, while its corresponding optimized trajectory defines the VIO-to-PGMO correction applied by WarpVox to the VIO pre-mesh. Kimera-PGMO's cost is necessarily cumulative---its final mesh is the product of incremental deformation-graph optimization---whereas WarpVox corrects the corresponding VIO pre-mesh in one pass. Because this pre-mesh carries no source TSDF, WarpVox uses mesh-only Stage~4; this experiment compares surface correction without source-volume support transfer.
 
 \begin{table}[t]
 \centering
-\caption{\textbf{Same-source corrected-mesh comparison over ten Kimera-Multi bags.}}
+\caption{\textbf{Mean surface comparison over ten Kimera-Multi
+bags.}}
 \label{tab:pgmo_full10}
 \scriptsize
-\setlength{\tabcolsep}{2.5pt}
+\setlength{\tabcolsep}{2.2pt}
 \begin{tabular}{lrrrr}
 \toprule
 Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 \midrule
-Kimera-PGMO one-shot
-& \textbf{8.639} & 23.875 & 42.318 & 8.231 \\
-WarpVox Stage~1--3
-& 8.440 & \textbf{24.134} & \textbf{43.231} & \textbf{3.515} \\
+Kimera-VIO pre-mesh & 4.26 & 12.67 & 23.93 & -- \\
+Kimera-PGMO & 6.42 & 17.48 & 31.54 & 435.97 \\
+\textbf{WarpVox} & \textbf{6.53} & \textbf{18.72} & \textbf{34.57} & \textbf{28.61} \\
 \bottomrule
 \end{tabular}
+\parbox{\linewidth}{\vspace{2pt}\scriptsize The VIO pre-mesh is the shared input.
+Kimera-PGMO reports the mesh-deformation time required to produce the
+evaluated PGMO mesh; WarpVox reports one correction of the corresponding
+VIO pre-mesh.}
 \end{table}
-At F@10, which is close to the $8,\text{cm}$ frontend-mesh resolution, WarpVox remains within $0.20$ pp of PGMO; it improves F@25/F@50 by $0.26/0.91$ pp while reducing corrected-mesh core time by $2.34\times$. Stage~4 adds $1.28$,s to produce an $8,\text{cm}$ native TSDF while leaving F-scores essentially unchanged across thresholds; the ablation reports the detailed Stage~3--4 comparison. This isolated conversion is mesh-only because the PGMO export contains no source TSDF.
 
+Table~\ref{tab:pgmo_full10} shows that WarpVox achieves mean F@25/F@50 values 1.24/3.03 pp higher than Kimera-PGMO, using 28.61 s versus 435.97 s for the PGMO mesh deformation required to produce the evaluated mesh. Per-bag F@50 differences comprise four gains of 5.5--11.7 pp and six cases within $\pm0.5$ pp. Thus, WarpVox provides a lower-cost surface-correction result.
 
 
 % two of the latter are marginally
