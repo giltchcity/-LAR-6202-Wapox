@@ -140,9 +140,9 @@ $\mathcal K_a=\{j:\pi(j)=a\}$.
 A Welsch-weighted rigid transform
 ~\cite{schoenemann1966procrustes,yao2020welsch} is fitted to neighbouring
 proxy source--target pairs. An observation-derived target is replaced by its
-fitted prediction only when it is a gross residual and a strict majority of
-the evaluated observation-derived targets in the same connected component
-are also gross residuals; isolated disagreements remain unchanged. Synthetic
+fitted prediction only when its residual exceeds a fixed robust cutoff and a strict majority of the
+evaluated observation-derived targets in the same connected component exceed
+the same cutoff; isolated disagreements remain unchanged. Synthetic
 targets are softly regularized by the same local field. Let $\mathcal C_P$
 index the resulting measured or synthetic targets $p_a^*$.
 
@@ -232,8 +232,8 @@ $s_{\rm tr}(x)$.
 
 Source-supported samples within $1.5s$ provide surface-local support; farther
 samples up to $\tau$ are retained only when sign-consistent with their active
-6-neighbours and 6-connected to this support. Their accepted set is
-$\Omega_{\rm tr}$, where
+6-neighbours and 6-connected to the active surface-local band. Their accepted
+set is $\Omega_{\rm tr}$, where
 $(\Phi_{\rm tr}^+(x),w_{\rm tr}^+(x))=
 (s_{\rm tr}(x)d^+(x),w_{\rm src}^+(x))$.
 Where source support is unavailable, voxels within $1.5s$ whose closest
