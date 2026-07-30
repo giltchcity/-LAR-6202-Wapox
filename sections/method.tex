@@ -72,7 +72,7 @@ The effective association reliability is
 \exp\!\left(-\frac{|e^z_{rj}|}{0.08\,\mathrm{m}}\right)
 \frac{g_{rj}}{1+z_{rj}^{\rm proj}/8\,\mathrm{m}}.
 \label{eq:association_weight}
-\end{equation}
+\end{equation}  NO para ！！！！！！！！！！
 RGB-D candidates satisfy the depth-dependent geometric gate $e^g_{rj}\le 0.08\,\mathrm{m}+0.01\,z_{rj}^{\rm proj}$, and candidates with $\alpha_{rj}<0.05$ are rejected. LiDAR uses spherical projection with radial range $\rho$: candidates satisfy $e^g_{rj}\le 0.25\,\mathrm{m}+0.003\,\rho_{rj}^{\rm proj}$ and are scored by \begin{equation} \alpha_{rj}=\exp\!\left(-\frac{e^g_{rj}}{0.15\,\mathrm{m}}\right) \frac{g_{rj}}{1+\rho_{rj}^{\rm proj}/40\,\mathrm{m}}, \label{eq:association_weight_lidar} \end{equation} with no further $\alpha$ threshold. This establishes geometric support, not exact voxel-integration provenance. The attenuation in \eqref{eq:association_weight} ranks candidates during association; the separate factor in \eqref{eq:target_initial} models target reliability after association.
 
 \subsection{Stage 2: Corrected Surface Targets}
