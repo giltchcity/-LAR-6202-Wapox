@@ -22,7 +22,7 @@ where ${\rm KF}$ indexes the retained SLAM keyframes and $D_i$ is an RGB-D depth
   \label{fig:pipeline}
 \end{figure}
 
-\subsection{Stage 1: Keyframe--Surface Association}
+\subsection{Stage 1: Keyframe -- Surface Association}
 
 Stage~1 projects the current surface into the keyframe range images and returns vertex-indexed observation records,
 \begin{equation}
@@ -122,7 +122,7 @@ Each vertex with at least one valid record yields a target; the resulting contro
 The deformation stage propagates observation-derived motion; it does not
 infer correction from shape alone. Let $d_j=v_j^*-v_j^-$ be a control
 displacement. A component-aware inverse-distance predictor estimates each
-control displacement from valid neighbours, and a fixed median--MAD test
+control displacement from valid neighbours, and a fixed median -- MAD test
 rejects isolated residuals. Small fragments retained only by controls that
 are subsequently rejected are discarded. Other components without a
 surviving control receive synthetic constraints carrying the coordinate-wise
@@ -139,7 +139,7 @@ $\mathcal K_a=\{j:\pi(j)=a\}$.
 
 A Welsch-weighted rigid transform
 ~\cite{schoenemann1966procrustes,yao2020welsch} is fitted to neighbouring
-proxy source--target pairs. An observation-derived target is replaced by its
+proxy source -- target pairs. An observation-derived target is replaced by its
 fitted prediction only when its residual exceeds a fixed robust cutoff and a strict majority of the
 evaluated observation-derived targets in the same connected component exceed
 the same cutoff; isolated disagreements remain unchanged. Synthetic
@@ -160,7 +160,7 @@ WarpVox performs one proxy ARAP solve per correction~\cite{ARAP_modeling:2007, 1
 \end{equation}
 Here $\mathcal N_P(a)$ is the proxy one-ring and $c_{ab}$ are symmetric
 cotangent-derived weights. The accepted targets are imposed as exact
-constraints, and standard local--global iterations solve one deformation per
+constraints, and standard local -- global iterations solve one deformation per
 correction.
 
 Proxy displacement is transferred to $V^-$ by topology-local barycentric
