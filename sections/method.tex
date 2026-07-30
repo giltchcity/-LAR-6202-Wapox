@@ -171,7 +171,7 @@ controls.
 
 For large source meshes, component-aware spatial
 clustering~\cite{rossignac1993vertexclustering} constructs a triangular
-proxy $\mathcal P^-=(P^-,F_P)$ of approximately $60\,\mathrm{K}$ vertices.
+proxy $\mathcal P^-=(P^-,F_P)$ of approximately $60\,\mathrm{K}$ vertices budget.
 One QEM representative~\cite{garland1997qem} is selected per occupied cell,
 while different connected components remain separate during clustering.
 Let $\pi:V^-\rightarrow P^-$ map each source vertex to its proxy
@@ -376,24 +376,6 @@ w_{\rm fb}(x)
 This prior provides compact support for continued fusion and is not
 interpreted as recovered observation count. Its supported voxels form
 $\Omega_{\rm fb}$.
-
-Transferred and fallback support within $r(x)\leq\rho$ form the
-near-surface field. Transferred support farther from the surface, up to
-$\tau$, is retained only when it forms a sign-consistent, face-connected
-continuation of this field. The accepted transferred samples form
-$\Omega_{\rm tr}$, with
-\begin{equation}
-\bigl(
-\Phi_{\rm tr}^+(x),
-w_{\rm tr}^+(x)
-\bigr)
-=
-\bigl(
-s_{\rm tr}(x)d^+(x),
-w_{\rm src}^+(x)
-\bigr).
-\label{eq:transferred_tsdf}
-\end{equation}
 The surface-local reconstruction does not recover observed free space
 farther from the corrected zero set. Observed source voxels satisfying
 $w^-(y)>0$ and $\Phi^-(y)\geq\rho$ are eligible for forward transport. They
@@ -439,30 +421,39 @@ The resulting volume is serialized as a native Voxblox TSDF and replaces the act
 
 
 \subsection{Complexity and Scope}
-Let $A=|\mathcal A|$, $K_{\rm KF}=|\mathcal C_{\rm KF}|$, $P=|P^-|$, and
-$X^+=|\mathcal X^+|$ be the numbers of active source cells, stored keyframe
-range images, proxy vertices, and allocated output voxels. At fixed
-resolution, MC yields a constant number of surface elements per active cell,
-so $|V^-|=O(A)$; storage is $O(\sum_{i\in{\rm KF}}|D_i|)$ for the
-measurements and $O(A)$ for the per-vertex association state. With
-$\kappa\le K_{\rm KF}$ the maximum number of keyframes returned for one source
-vertex, association costs
-$O(K_{\rm KF}\log K_{\rm KF}+A(\log K_{\rm KF}+\kappa))$ for RGB-D and
-$O(K_{\rm KF}+A(1+\kappa))$ for LiDAR under the standard output-sensitive
-index model.
 
-The total correction cost is
+Let $Q$ be the number of surface -- keyframe candidate projections,
+$A=|\mathcal A|$ the number of active source cells, $P=|P^-|$ the proxy
+size, and $X^-$ and $X^+$ the source and output voxel slots processed in
+Stage~4. The per-correction cost is
 \begin{equation}
-C_{\rm corr}=C_{\rm assoc}+C_{\rm ARAP}(P,F_P)+C_{\rm vol}(X^+,\bar F),
+C_{\rm corr}
+=
+O(K_{\rm KF}+Q)
++
+C_{\rm def}(A,P)
++
+C_{\rm vol}(X^-,X^+).
 \label{eq:complexity}
 \end{equation}
-where $C_{\rm vol}$ is the Stage-4 volumetric reconstruction cost. The
-block-local allocation in \eqref{eq:allocation} makes $X^+$ follow the
-warped-surface footprint and transported source support rather than scene
-extent, and the proxy contains approximately 60K vertices. The retained
-association state per surface element is bounded by a constant, and each
-output voxel is written once rather than once per contributing measurement.
 
-Full reintegration instead re-fuses every historical measurement at
-$O(N|D|)$. The two costs are indexed by different quantities: the keyframes
-and active map for WarpVox, and the measurement history for reintegration.
+Let $V_q$ be the number of queried source vertices and
+$\bar k=Q/V_q$ the mean number of candidate keyframes examined per vertex.
+At fixed resolution, $V_q=O(A)$, so $Q=O(A\bar k)$, with the worst-case
+bound $Q=O(AK_{\rm KF})$. The standard configuration bounds the deformation
+proxy by $P\leq P_{\max}\approx60\,\mathrm K$. Session growth enters the
+association term through $K_{\rm KF}$ and $\bar k$, while map growth enters
+deformation and reconstruction through $A$, $X^-$, and $X^+$.
+
+Full reintegration costs
+\begin{equation}
+C_{\rm reint}
+=
+\Theta\!\left(
+\sum_{n=1}^{N}|D_n|
+\right)
+=
+\Theta(N|D|).
+\end{equation}
+WarpVox replaces this complete-history volumetric replay with sparse
+projective queries and one update of the active map.
