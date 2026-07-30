@@ -142,43 +142,39 @@ v_j^*
 Each supported source vertex yields one target displacement
 $v_j^*-v_j^-$ for Stage~3.
 
+
+
+
 \subsection{Stage 3: Surface Deformation}
 
 Stage~3 converts the sparse observation-derived targets of Stage~2 into a
 coherent, topology-aware surface deformation. It consolidates the control
 field within connected components, propagates the resulting motion through
-ARAP, and produces a geometrically valid source -- warped surface pair for
-Stage~4.
+ARAP, and produces paired source and warped surfaces for Stage~4.
 
-Let
-\begin{equation}
-d_j=v_j^*-v_j^-
-\end{equation}
-denote an observation-derived control displacement. A single
-component-aware robust pass first consolidates the full-resolution control
-field. For each control, an inverse-distance predictor is computed from
-neighbouring controls in the same connected component, and a median -- MAD
-residual test excludes isolated displacement outliers. Restricting this
-comparison by component prevents spatially adjacent but disconnected
-surfaces from influencing one another. Small components supported only by
-excluded controls are removed.
+Let $d_j=v_j^*-v_j^-$ denote an observation-derived control displacement.
+A single component-aware robust pass first consolidates the full-resolution
+control field. For each control, an inverse-distance predictor is computed
+from neighbouring controls in the same connected component, and a
+median -- MAD residual test removes sparse, statistically isolated
+displacement outliers. Restricting the comparison by component prevents
+spatially adjacent but disconnected surfaces from influencing one another.
+A small component retained solely by controls that are subsequently rejected
+as outliers is omitted from the paired output surfaces.
 
-A component without a surviving measured control receives a small set of
-spatially spread synthetic constraints carrying the robust local motion of
-nearby accepted controls. These constraints complete the deformation field
-over unobserved components and remove the gauge freedom of disconnected
-ARAP blocks, while remaining distinct from observation-derived controls.
+Each retained component without a surviving measured control receives up to
+three spatially separated synthetic constraints carrying the robust local
+motion of nearby accepted controls. These constraints complete the
+deformation field over unobserved components and remove the gauge freedom of
+disconnected ARAP blocks, while remaining distinct from observation-derived
+controls.
 
-To bound the deformation system, component-aware spatial
+For large source meshes, component-aware spatial
 clustering~\cite{rossignac1993vertexclustering} constructs a triangular
-proxy
-\begin{equation}
-\mathcal P^-=(P^-,F_P)
-\end{equation}
-of approximately 60K vertices. One QEM
-representative~\cite{garland1997qem} is selected per occupied cell, while
-different connected components remain separate during clustering. Let
-$\pi:V^-\rightarrow P^-$ map each source vertex to its proxy
+proxy $\mathcal P^-=(P^-,F_P)$ of approximately $60\,\mathrm{K}$ vertices.
+One QEM representative~\cite{garland1997qem} is selected per occupied cell,
+while different connected components remain separate during clustering.
+Let $\pi:V^-\rightarrow P^-$ map each source vertex to its proxy
 representative. Controls mapped to proxy vertex $a$ are combined as
 \begin{equation}
 p_a^{(0)}
@@ -192,40 +188,49 @@ p_a^-
 \label{eq:proxy_targets}
 \end{equation}
 
-The surviving proxy targets are further consolidated by a robust local
-rigid field. For each controlled proxy vertex, a local rigid transform is
-fitted to neighbouring source -- target pairs. A measured target is replaced
-by its rigid prediction only when it is a gross residual and more than half
-of the evaluated measured targets in its connected component are also gross
-residuals. Thus, the first robust pass excludes isolated control-field
-outliers, whereas this second stage modifies a surviving measured target
-only under component-level consensus. Synthetic targets are regularized by
-the same local field. Let $\mathcal C_P$ index the resulting proxy targets
-$p_a^*$.
+The proxy targets are further consolidated by a robust local rigid field.
+For each controlled proxy vertex, WarpVox fits a local rigid transform to
+neighbouring source -- target pairs using Welsch
+reweighting~\cite{schoenemann1966procrustes,yao2020welsch}. A measured target
+is replaced by its rigid prediction only if it is a gross residual and gross
+residuals form a strict majority among the measured targets in its connected
+component for which local rigid predictions are available. The first robust
+pass removes sparse local outliers before coarsening; this second rule
+modifies surviving measured targets only under component-level consensus.
+Synthetic targets are regularized by the same local field. Let
+$\mathcal C_P$ index the resulting proxy targets $p_a^*$.
 
-WarpVox performs one ARAP solve per correction:
+WarpVox then propagates the consolidated targets with
+ARAP~\cite{ARAP_modeling:2007}. Define
+$\Delta p_{ab}^{\pm}=p_a^{\pm}-p_b^{\pm}$. The deformation is obtained from
 \begin{equation}
 \begin{aligned}
-\min_{P^+,\{R_a\in SO(3)\}}\quad
+\min_{P^+,\{R_a\}}\quad
 &\frac{1}{2}
 \sum_{a=1}^{|P^-|}
 \sum_{b\in\mathcal N_P(a)}
-c_{ab}
+c_{ab}\\[-1mm]
+&\qquad\cdot
 \left\|
-(p_a^+-p_b^+)-R_a(p_a^--p_b^-)
+\Delta p_{ab}^+
+-
+R_a\Delta p_{ab}^-
 \right\|^2,\\
 \text{s.t.}\quad
+&R_a\in SO(3),\\
 &p_a^+=p_a^*,
 \qquad a\in\mathcal C_P .
 \end{aligned}
 \label{eq:arap}
 \end{equation}
 Here $\mathcal N_P(a)$ is the proxy one-ring and $c_{ab}$ are symmetric
-cotangent-derived weights. The accepted targets provide the positional
-constraints, while the ARAP term propagates their motion through locally
-rigid surface deformation. The same objective is evaluated directly on the
-full source mesh in the full-resolution ablation; the standard
-configuration uses the bounded proxy for large maps.
+cotangent-derived weights~\cite{10.1007/978-3-662-05105-4_2}. The
+consolidated targets provide positional constraints, while the ARAP energy
+propagates their motion through locally rigid surface deformation. The
+constrained system is solved using libigl~\cite{libigl}. The standard
+configuration solves this objective on the proxy, while the full-resolution
+ablation applies the same objective directly to the full-resolution source
+mesh.
 
 Proxy displacements are transferred to the source mesh by topology-local
 barycentric interpolation. Let $f_j$ be the closest proxy triangle to
@@ -247,12 +252,13 @@ v_j^-
 Restricting the interpolation to $\operatorname{star}(\pi(j))$ prevents
 motion transfer between spatially close but disconnected surfaces.
 
-After interpolation, deformation validity is evaluated through edge
-stretch, area change, and face aspect ratio. Regions exceeding these bounds
-are harmonically relaxed from their surrounding valid surface, and
-remaining deformation-induced edge or area distortions are removed. The
-same retained face subset is applied to the source and warped surfaces,
-without introducing new triangles or connections:
+After interpolation, faces exceeding edge-stretch, area-change, or
+aspect-ratio bounds define a repair region. Displacements at incident
+vertices are iteratively relaxed toward the mean displacement of their mesh
+one-ring, with the surrounding valid displacements held fixed. Faces that
+continue to violate the edge-stretch or area-change bounds are omitted from
+both paired surfaces. No new triangles or connections are introduced, so
+the retained source and warped surfaces share the same indexed face subset:
 \begin{equation}
 \bar{\mathcal M}^-=(\bar V^-,\bar F),
 \qquad
@@ -263,6 +269,9 @@ without introducing new triangles or connections:
 \end{equation}
 The shared face indexing provides the source -- warped correspondence used
 in Stage~4.
+
+
+
 
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
 
