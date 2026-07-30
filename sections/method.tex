@@ -58,13 +58,10 @@ for LiDAR. For RGB-D, $\mathcal S_m$ samples the projected depth and
 back-projects it to the sensor frame. For LiDAR, it selects the closest valid
 return in a local neighbourhood of the projected spherical-image location.
 
-Association quality is evaluated from the discrepancy between the projected
-source vertex and the sampled measurement. For RGB-D, this includes the
-three-dimensional point discrepancy and the projective depth difference.
-For LiDAR, the local spherical-image lookup evaluates radial-range and
-three-dimensional consistency. Viewing incidence is evaluated in the
-pre-correction world frame from the source normal $n_j^-$ and the
-sensor-to-vertex direction.
+Association quality combines three-dimensional and projective-depth
+discrepancies for RGB-D, and radial-range and three-dimensional consistency
+for LiDAR. Viewing incidence is evaluated in the pre-correction world frame
+from $n_j^-$ and the sensor-to-vertex direction.
 
 These cues determine whether a candidate is retained and, when retained,
 its reliability $\alpha_{rj}$. The verified tuples
@@ -141,32 +138,21 @@ $v_j^*-v_j^-$ for Stage~3.
 
 \subsection{Stage 3: Surface Deformation}
 
-Stage~3 converts the sparse observation-derived targets of Stage~2 into a
-coherent, topology-aware surface deformation. It consolidates the control
-field within connected components, propagates the resulting motion through
-ARAP, and produces paired source and warped surfaces for Stage~4.
+Stage~3 consolidates the sparse targets component-wise, propagates them
+through ARAP, and outputs paired source and warped surfaces for Stage~4.
 
-Let $d_j=v_j^*-v_j^-$ denote an observation-derived control displacement.
-A single component-aware robust pass first consolidates the full-resolution
-control field. For each control, an inverse-distance predictor is computed
-from neighbouring controls in the same connected component, and a
-median -- MAD residual test removes sparse, statistically isolated
-displacement outliers. Restricting the comparison by component prevents
-spatially adjacent but disconnected surfaces from influencing one another.
-A small component retained solely by controls that are subsequently rejected
-as outliers is omitted from the paired output surfaces.
-
-Each retained component without a surviving measured control receives up to
-three spatially separated synthetic constraints carrying the robust local
-motion of nearby accepted controls. These constraints complete the
-deformation field over unobserved components and remove the gauge freedom of
-disconnected ARAP blocks, while remaining distinct from observation-derived
-controls.
+Let $d_j=v_j^*-v_j^-$ denote a control displacement. A component-restricted
+inverse-distance predictor and median -- MAD residual test remove sparse
+displacement outliers without mixing disconnected surfaces. Small components
+supported only by rejected controls are omitted. Retained components without
+a surviving measured control receive up to three spatially separated synthetic
+constraints carrying robust motion from nearby accepted controls, removing
+the gauge freedom of disconnected ARAP blocks.
 
 For large source meshes, component-aware spatial
 clustering~\cite{rossignac1993vertexclustering} constructs a triangular
-proxy $\mathcal P^-=(P^-,F_P)$ with a budget of approximately
-$60\,\mathrm{K}$ vertices.
+proxy $\mathcal P^-=(P^-,F_P)$ of at most
+$P_{\max}\approx60\,\mathrm{K}$ vertices.
 One QEM representative~\cite{garland1997qem} is selected per occupied cell,
 while different connected components remain separate during clustering.
 Let $\pi:V^-\rightarrow P^-$ map each source vertex to its proxy
@@ -183,17 +169,12 @@ p_a^-
 \label{eq:proxy_targets}
 \end{equation}
 
-The proxy targets are further consolidated by a robust local rigid field.
-For each controlled proxy vertex, WarpVox fits a local rigid transform to
-neighbouring source -- target pairs using Welsch
-reweighting~\cite{schoenemann1966procrustes,yao2020welsch}. A measured target
-is replaced by its rigid prediction only if it is a gross residual and gross
-residuals form a strict majority among the measured targets in its connected
-component for which local rigid predictions are available. The first robust
-pass removes sparse local outliers before coarsening; this second rule
-modifies surviving measured targets only under component-level consensus.
-Synthetic targets are regularized by the same local field. Let
-$\mathcal C_P$ index the resulting proxy targets $p_a^*$.
+The proxy targets are further consolidated by a Welsch-reweighted local
+rigid fit~\cite{schoenemann1966procrustes,yao2020welsch}. A measured target
+is replaced by its rigid prediction only if it is a gross residual and such
+residuals form a strict majority among measured targets in its component
+with valid predictions. Synthetic targets are regularized by the same field;
+let $\mathcal C_P$ index the resulting targets $p_a^*$.
 
 WarpVox then propagates the consolidated targets with
 ARAP~\cite{ARAP_modeling:2007}. Define
@@ -219,13 +200,10 @@ R_a\Delta p_{ab}^-
 \label{eq:arap}
 \end{equation}
 Here $\mathcal N_P(a)$ is the proxy one-ring and $c_{ab}$ are symmetric
-cotangent-derived weights~\cite{10.1007/978-3-662-05105-4_2}. The
-consolidated targets provide positional constraints, while the ARAP energy
-propagates their motion through locally rigid surface deformation. The
-constrained system is solved using libigl~\cite{libigl}. The standard
-configuration solves this objective on the proxy, while the full-resolution
-ablation applies the same objective directly to the full-resolution source
-mesh.
+cotangent-derived weights~\cite{10.1007/978-3-662-05105-4_2}. The system is
+solved with libigl~\cite{libigl}. The standard configuration uses the proxy;
+the full-resolution ablation applies the same objective directly to the
+source mesh.
 
 Proxy displacements are transferred to the source mesh by topology-local
 barycentric interpolation. Let $f_j$ be the closest proxy triangle to
@@ -247,13 +225,11 @@ v_j^-
 Restricting the interpolation to $\operatorname{star}(\pi(j))$ prevents
 motion transfer between spatially close but disconnected surfaces.
 
-After interpolation, faces exceeding edge-stretch, area-change, or
-aspect-ratio bounds define a repair region. Displacements at incident
-vertices are iteratively relaxed toward the mean displacement of their mesh
-one-ring, with the surrounding valid displacements held fixed. Faces that
-continue to violate the edge-stretch or area-change bounds are omitted from
-both paired surfaces. No new triangles or connections are introduced, so
-the retained source and warped surfaces share the same indexed face subset:
+Faces violating edge-stretch, area-change, or aspect-ratio bounds define a
+repair region. Incident displacements are relaxed toward mesh one-ring
+means with valid boundary displacements fixed; faces still violating
+edge-stretch or area-change bounds are removed from both surfaces. No new
+connections are introduced, so
 \begin{equation}
 \bar{\mathcal M}^-=(\bar V^-,\bar F),
 \qquad
@@ -262,8 +238,6 @@ the retained source and warped surfaces share the same indexed face subset:
 \bar F\subseteq F.
 \label{eq:paired_surfaces}
 \end{equation}
-The shared face indexing provides the source -- warped correspondence used
-in Stage~4.
 
 
 
@@ -288,11 +262,9 @@ additional blocks.
 
 For each voxel $x$ in the surface-local domain, a closest-triangle
 query~\cite{10.1145/2601097.2601199} on $\mathcal M^+$ returns face $f$,
-closest point $q^+$, and barycentric coordinates $\beta$. Since the paired
-surfaces share face indices, the corresponding source point is
-\begin{equation}
-q^-=\sum_{k\in f}\beta_k\bar v_k^-.
-\end{equation}
+closest point $q^+$, and barycentric coordinates $\beta$. The shared face
+indices give the corresponding source point
+$q^-=\sum_{k\in f}\beta_k\bar v_k^-$.
 
 Let $R_f^\pm\in SO(3)$ be paired local frames formed from the same indexed
 triangle edge and the corresponding source and warped mesh normals. Their
@@ -312,32 +284,24 @@ triangles~\cite{sumner2004deformationtransfer}.
 Let
 \begin{equation}
 x^-=\Psi_f(x),
-\qquad
+\quad
 r(x)=\|x-q^+\|,
-\qquad
+\quad
 d^+(x)=\min(\tau,r(x)).
 \label{eq:source_query}
 \end{equation}
-A trilinear source sample $(\widetilde\Phi^-,\widetilde w^-)(x^-)$ is valid
-when every source voxel with a nonzero interpolation coefficient has
-positive weight; its interpolated weight is then transferred. Otherwise, if
-the source voxel containing $x^-$ has positive weight, that weight is
-transferred without its distance value. Let $w_{\rm src}^+(x)$ denote the
-transferred weight. If neither form of source support is available, $x$ is
-left to the fallback branch.
+A trilinear source sample is valid when all contributing voxels have
+positive weight, in which case its interpolated weight is transferred.
+Otherwise, a positive containing-voxel weight is used without its distance
+value; unsupported voxels enter the fallback branch. Denote the transferred
+weight by $w_{\rm src}^+(x)$.
 
-Let
-\begin{equation}
-s_f^+(x)
-=
-\operatorname{sgn}\!\left((x-q^+)^\top n_f^+\right)
-\end{equation}
-denote the geometric sign induced by the warped mesh normal. When source
-TSDF samples are available on both sides of the paired source face, their
-central difference determines whether this geometric sign is retained or
-flipped. Otherwise, the sign of a consistent source sample is used when
-available, with $s_f^+(x)$ as the final fallback. Denote the resulting sign
-by $s_{\rm tr}(x)$.
+The warped mesh normal induces the geometric sign
+$s_f^+(x)=\operatorname{sgn}((x-q^+)^\top n_f^+)$. When source TSDF
+samples are available on both sides of the paired source face, their
+central difference determines whether this sign is retained or flipped.
+Otherwise, a consistent source sample is used when available, with
+$s_f^+(x)$ as the final fallback. Denote the result by $s_{\rm tr}(x)$.
 
 Source-supported samples satisfying $r(x)\leq\rho$ define the near-surface
 support. Source support farther from the surface, up to $\tau$, is retained
@@ -371,8 +335,8 @@ w_{\rm fb}(x)
 This prior provides compact support for continued fusion and is not
 interpreted as recovered observation count. Its supported voxels form
 $\Omega_{\rm fb}$.
-The surface-local reconstruction does not recover observed free space
-farther from the corrected zero set. Observed source voxels satisfying
+
+Observed source voxels satisfying
 $w^-(y)>0$ and $\Phi^-(y)\geq\rho$ are eligible for forward transport. They
 are partitioned into truncation-scale groups, and only groups admitting a
 valid paired-surface frame are transported. For group $c$, let $q_c^\pm$
@@ -386,15 +350,15 @@ q_c^+
 R_c^+(R_c^-)^\top(y-q_c^-).
 \label{eq:forward_free_space}
 \end{equation}
-Transported samples may allocate additional output blocks. They retain
-their positive source-derived values and weights, fill only voxels that
-remain unsupported after surface-local reconstruction, and are rejected
-when they would introduce a new zero crossing adjacent to retained
-negative support. The accepted samples form $\Omega_{\rm fs}$, with values
-and weights $(\Phi_{\rm fs}^+,w_{\rm fs}^+)$. Fallback is assigned only where transferred source support is unavailable,
-and the subsequent free-space pass writes only to voxels that remain
-unsupported. Hence, $\Omega_{\rm tr}$, $\Omega_{\rm fb}$, and
-$\Omega_{\rm fs}$ are disjoint. With
+Transport may allocate additional blocks; it preserves positive source-derived
+values and weights, writes only to unsupported voxels, and rejects samples
+that introduce a new zero crossing adjacent to retained negative support.
+The accepted samples form $\Omega_{\rm fs}$, with values and weights
+$(\Phi_{\rm fs}^+,w_{\rm fs}^+)$.
+
+Because fallback applies only without transferred support and free-space
+transport writes only unsupported voxels, $\Omega_{\rm tr}$,
+$\Omega_{\rm fb}$, and $\Omega_{\rm fs}$ are disjoint. With
 $\Omega^+=\Omega_{\rm tr}\cup\Omega_{\rm fb}\cup\Omega_{\rm fs}$, the
 corrected field is
 \begin{equation}
@@ -433,10 +397,9 @@ C_{\rm def}(A,P)
 C_{\rm vol}(X^-,X^+).
 \label{eq:complexity}
 \end{equation}
-For $V_q=O(A)$ queried vertices and
-$\bar k=Q/V_q$ candidate keyframes per vertex,
-$Q=O(A\bar k)$, with worst case $O(AK_{\rm KF})$; the standard proxy is
-bounded by $P\leq P_{\max}\approx60\,\mathrm K$.
+With $\bar k$ the mean number of candidate keyframes examined per queried
+vertex, fixed resolution gives $Q=O(A\bar k)$, with worst case
+$O(AK_{\rm KF})$; by construction, $P\leq P_{\max}$.
 
 Full reintegration costs
 $C_{\rm reint}=\Theta(\sum_{n=1}^{N}|D_n|)=\Theta(N|D|)$.
