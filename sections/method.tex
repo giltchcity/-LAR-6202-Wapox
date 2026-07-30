@@ -9,7 +9,7 @@ connectivity are coherent in local neighborhoods although the map is globally
 inconsistent. WarpVox corrects this global inconsistency after loop closure;
 severely noisy or topologically corrupted source maps are outside its scope.
 
-\subsection{Problem and Correction Inputs} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF~\cite{10.1145/37402.37422}. On a trajectory correction, this mesh becomes the source surface. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. WarpVox stores the timestamped, modality-native range images of SLAM keyframes,
+\subsection{Stage 1: Keyframe -- Surface Correspondence Re-association} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF~\cite{10.1145/37402.37422}. On a trajectory correction, this mesh becomes the source surface. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. WarpVox stores the timestamped, modality-native range images of SLAM keyframes,
 \begin{equation}
 \mathcal C_{\rm KF}=\{k_i=(t_i,D_i):i\in{\rm KF}\},
 \end{equation}
