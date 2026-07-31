@@ -127,6 +127,10 @@ Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
 \qc{Figures/qualitative/40_voxgraph_post_sep.png} &
 \qc{Figures/qualitative/40_warped_tsdf.png} &
 \qc{Figures/qualitative/40_voxblox_post.png} \\[2pt]
+\qd{Figures/qualitative/35_voxblox_pre.png} &
+\qd{Figures/qualitative/35_voxgraph_post_sep.png} &
+\qd{Figures/qualitative/35_warped_tsdf.png} &
+\qd{Figures/qualitative/35_voxblox_post.png} \\[2pt]
 \qc{Figures/qualitative/76_voxblox_pre.png} &
 \qc{Figures/qualitative/76_voxgraph_post_sep.png} &
 \qc{Figures/qualitative/76_warped_tsdf.png} &
@@ -140,8 +144,8 @@ Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
 \small \textbf{WarpVox} &
 \small Voxblox reintegration
 \end{tabular}
-\caption{\textbf{Qualitative reconstruction comparison at 0.25 m.} Three
-Kimera-Multi loop-closure cases are shown in the top three rows and two KITTI
+\caption{\textbf{Qualitative reconstruction comparison at 0.25 m.} Four
+Kimera-Multi loop-closure cases are shown in the top four rows and two KITTI
 cases in the bottom two rows; each row uses the same view across methods.
 Colors encode vertex height.}
 \label{fig:qualitative_ral}
@@ -284,11 +288,12 @@ SplaTAM corrected-rebuild & 23.25 & 41.01 & 141.37 & $\approx 2$ h \\
 
 \noindent\textbf{Cross-representation 3DGS case study.}
 Table~\ref{tab:gaussian_case} evaluates whether the observation-derived
-correction transfers beyond TSDFs. We apply the deformation to a
-SplaTAM~\cite{keetha2024splatam} reconstruction based on 3D Gaussian
-Splatting~\cite{kerbl2023gaussians}. This is a geometry-only diagnostic:
-only Gaussian centres are moved, while colours, opacities, scales,
-covariances, densification, pruning, and rendering losses remain fixed.
+correction transfers beyond TSDFs. We apply the same observation-derived
+targets to a SplaTAM~\cite{keetha2024splatam} reconstruction based on 3D
+Gaussian Splatting~\cite{kerbl2023gaussians}. This is a geometry-only
+diagnostic: each Gaussian centre is displaced by the resulting ARAP
+deformation, while colours, opacities, scales, covariances, densification,
+pruning, and rendering losses remain fixed.
 
 The centre-only correction approaches the corrected-pose rebuild at both
 surface thresholds and in depth error, while taking 21\,s instead of
