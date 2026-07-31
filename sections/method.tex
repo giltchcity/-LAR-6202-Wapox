@@ -33,7 +33,6 @@ trajectory. For each queried source vertex $v_j^-$ with normal $n_j^-$, a
 spatial index over sensor positions retrieves candidate keyframes that may
 observe it.
 
-
 Let $r$ index a candidate measurement with timestamp $t_r$ and range image
 $D_r$. The source vertex is transformed into the corresponding sensor frame
 and sampled in the measurement domain:
@@ -57,10 +56,12 @@ for LiDAR. For RGB-D, $\mathcal S_m$ samples the projected depth and
 back-projects it to the sensor frame. For LiDAR, it selects the closest valid
 return in a local neighbourhood of the projected spherical-image location.
 
-Association quality combines three-dimensional and projective-depth
-discrepancies for RGB-D, and radial-range and three-dimensional consistency
-for LiDAR. Viewing incidence is evaluated in the pre-correction world frame
-from $n_j^-$ and the sensor-to-vertex direction.
+Association quality is evaluated from the discrepancy between the projected
+source vertex and the sampled measurement. For RGB-D, this includes the
+three-dimensional point discrepancy and projective depth difference. For
+LiDAR, the local spherical-image lookup evaluates radial-range and
+three-dimensional consistency. Viewing incidence is evaluated in the
+pre-correction world frame from $n_j^-$ and the sensor-to-vertex direction.
 
 These cues determine whether a candidate is retained and, when retained,
 its reliability $\alpha_{rj}$. The verified tuples
@@ -71,8 +72,8 @@ $\mathcal O=\{\mathcal O_j\}_j$ is passed to Stage~2.
 
 The sensor-frame sample $m_{rj}$ is unchanged by a later revision of the
 world-frame trajectory. Let $\widehat T_r^+$ denote the corrected pose
-associated with record $r$. RGB-D records are resolved by timestamp, while LiDAR records use
-the corresponding scan pose. The corrected candidate is
+associated with record $r$. RGB-D records are resolved by timestamp, while
+LiDAR records use the corresponding scan pose. The corrected candidate is
 \begin{equation}
 q_{rj}^+
 =
@@ -133,20 +134,21 @@ Each supported source vertex yields one target displacement
 $v_j^*-v_j^-$ for Stage~3.
 
 
-
-
 \subsection{Stage 3: Surface Deformation}
 
-Stage~3 consolidates the sparse targets component-wise, propagates them
-through ARAP, and outputs paired source and warped surfaces for Stage~4.
+Stage~3 converts the sparse observation-derived targets into a coherent,
+topology-aware surface deformation. It consolidates controls within connected
+components, propagates their motion through ARAP, and produces paired source
+and warped surfaces for Stage~4.
 
-Let $d_j=v_j^*-v_j^-$ denote a control displacement. A component-restricted
-inverse-distance predictor and median -- MAD residual test remove sparse
-displacement outliers without mixing disconnected surfaces. Small components
-supported only by rejected controls are omitted. Retained components without
-a surviving measured control receive up to three spatially separated synthetic
-constraints carrying robust motion from nearby accepted controls, removing
-the gauge freedom of disconnected ARAP blocks.
+Let $d_j=v_j^*-v_j^-$ denote a control displacement. Before coarsening, a
+component-restricted inverse-distance predictor and median -- MAD residual
+test remove statistically isolated controls without mixing disconnected
+surfaces. Components supported only by rejected controls are omitted.
+Retained components without a surviving measured control receive up to three
+spatially separated synthetic constraints carrying robust motion from nearby
+accepted controls. These constraints complete otherwise unconstrained ARAP
+blocks while remaining distinct from observation-derived controls.
 
 For large source meshes, component-aware spatial
 clustering~\cite{rossignac1993vertexclustering} constructs a triangular
@@ -168,9 +170,11 @@ p_a^-
 \label{eq:proxy_targets}
 \end{equation}
 
-The proxy targets are further consolidated by a Welsch-reweighted local
-rigid fit~\cite{schoenemann1966procrustes,yao2020welsch}. A measured target
-is replaced by its rigid prediction only if it is a gross residual and such
+The proxy targets are further consolidated by a robust local rigid field.
+For each controlled proxy vertex, WarpVox fits a local rigid transform to
+neighbouring source -- target pairs using Welsch
+reweighting~\cite{schoenemann1966procrustes,yao2020welsch}. A measured target
+is replaced by its rigid prediction only when it is a gross residual and such
 residuals form a strict majority among measured targets in its component
 with valid predictions. Synthetic targets are regularized by the same field;
 let $\mathcal C_P$ index the resulting targets $p_a^*$.
@@ -199,10 +203,12 @@ R_a\Delta p_{ab}^-
 \label{eq:arap}
 \end{equation}
 Here $\mathcal N_P(a)$ is the proxy one-ring and $c_{ab}$ are symmetric
-cotangent-derived weights~\cite{10.1007/978-3-662-05105-4_2}. The system is
-solved with libigl~\cite{libigl}. The standard configuration uses the proxy;
-the full-resolution ablation applies the same objective directly to the
-source mesh.
+cotangent-derived weights~\cite{10.1007/978-3-662-05105-4_2}. The targets
+provide positional constraints, while the ARAP energy propagates their
+motion through locally rigid surface deformation. The system is solved with
+libigl~\cite{libigl}. The standard configuration uses the proxy; the
+full-resolution ablation applies the same objective directly to the source
+mesh.
 
 Proxy displacements are transferred to the source mesh by topology-local
 barycentric interpolation. Let $f_j$ be the closest proxy triangle to
@@ -224,11 +230,12 @@ v_j^-
 Restricting the interpolation to $\operatorname{star}(\pi(j))$ prevents
 motion transfer between spatially close but disconnected surfaces.
 
-Faces violating edge-stretch, area-change, or aspect-ratio bounds define a
-repair region. Incident displacements are relaxed toward mesh one-ring
-means with valid boundary displacements fixed; faces still violating
-edge-stretch or area-change bounds are removed from both surfaces. No new
-connections are introduced, so
+After interpolation, faces violating edge-stretch, area-change, or
+aspect-ratio bounds define a repair region. Incident displacements are
+iteratively relaxed toward mesh one-ring means with surrounding valid
+displacements fixed. Faces still violating edge-stretch or area-change
+bounds are removed from both surfaces. No new triangles or connections are
+introduced, so
 \begin{equation}
 \bar{\mathcal M}^-=(\bar V^-,\bar F),
 \qquad
@@ -237,8 +244,8 @@ connections are introduced, so
 \bar F\subseteq F.
 \label{eq:paired_surfaces}
 \end{equation}
-
-
+The shared face indexing provides the source -- warped correspondence used
+in Stage~4.
 
 
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
@@ -253,8 +260,9 @@ correspondence.
 
 Let $(\Phi^-,w^-)$ denote the source TSDF. The corrected volume uses the
 same voxel size $s$ and truncation distance $\tau$ as the source volume.
-We write $\rho=3s/2$ for the near-surface margin. WarpVox first allocates
-the blocks containing warped-surface vertices together with one layer of
+We write $\rho=3s/2$, providing a one-voxel-scale margin around the zero set
+for local support and free-space separation. WarpVox first allocates the
+blocks containing warped-surface vertices together with one layer of
 neighbouring blocks. Surface-local reconstruction is restricted to this
 neighbourhood, while transported free space may subsequently allocate
 additional blocks.
@@ -285,10 +293,12 @@ r(x)=\|x-q^+\|,
 d^+(x)=\min(\tau,r(x)).
 \label{eq:source_query}
 \end{equation}
-A trilinear source sample is valid when all contributing voxels have
-positive weight, in which case its interpolated weight is transferred.
-Otherwise, a positive containing-voxel weight is used without its distance
-value; unsupported voxels enter the fallback branch. Denote the transferred
+A trilinear source sample is valid only when every source voxel with a
+nonzero interpolation coefficient has positive weight; its interpolated
+weight is then transferred. If complete interpolation is unavailable but the
+source voxel containing $x^-$ has positive weight, that weight provides
+support without copying its distance value. If neither form of source
+support exists, $x$ enters the fallback branch. Denote the transferred
 weight by $w_{\rm src}^+(x)$.
 
 The warped mesh normal induces the geometric sign
@@ -336,7 +346,8 @@ those touching narrow transferred or fallback support and ends when no new
 candidate is reached. The narrow samples and reached candidates form
 $\Omega_{\rm tr}$.
 
-Observed source voxels satisfying
+Surface-local reconstruction does not recover observed free space farther
+from the corrected zero set. Observed source voxels satisfying
 $w^-(y)>0$ and $\Phi^-(y)\geq\rho$ are eligible for forward transport.
 Within each source TSDF block, they are binned into axis-aligned cells of
 $\operatorname{round}(\tau/s)$ voxels per side, clipped to the block extent;
@@ -382,10 +393,11 @@ corrected field is
 \label{eq:hybrid_tsdf}
 \end{equation}
 Voxels outside $\Omega^+$ have zero weight. When the source TSDF is
-unavailable, reconstruction reduces to the finite surface prior.
-The resulting native Voxblox volume replaces the active map, allowing
-subsequent fusion and later corrections to operate directly on the updated
-TSDF.
+unavailable, reconstruction reduces to the finite surface prior. The
+resulting volume is serialized as a native Voxblox TSDF and replaces the
+active map. Its zero set follows the corrected geometry, available
+observation state is inherited from the source volume, and subsequent fusion
+and later corrections operate directly on the updated TSDF.
 
 
 \subsection{Complexity and Scope}
@@ -404,9 +416,12 @@ C_{\rm def}(A,P)
 C_{\rm vol}(X^-,X^+).
 \label{eq:complexity}
 \end{equation}
-With $\bar k$ the mean number of candidate keyframes examined per queried
-vertex, fixed resolution gives $Q=O(A\bar k)$, with worst case
-$O(AK_{\rm KF})$; by construction, $P\leq P_{\max}$.
+Let $V_q$ be the number of queried source vertices and
+$\bar k=Q/V_q$ the mean number of candidate keyframes examined per vertex.
+At fixed resolution, $V_q=O(A)$, so $Q=O(A\bar k)$, with worst case
+$O(AK_{\rm KF})$; by construction, $P\leq P_{\max}$. Session growth enters
+the association term through $K_{\rm KF}$ and $\bar k$, while map growth
+enters deformation and reconstruction through $A$, $X^-$, and $X^+$.
 
 Full reintegration costs
 $C_{\rm reint}=\Theta(\sum_{n=1}^{N}|D_n|)=\Theta(N|D|)$.
