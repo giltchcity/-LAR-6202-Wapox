@@ -109,7 +109,6 @@ The Stage~1 reliability gives the initial target estimate
 }.
 \label{eq:target_initial}
 \end{equation}
-
 A median-relative test selects a consistent subset:
 \begin{equation}
 \begin{aligned}
@@ -142,7 +141,6 @@ v_j^*
 }.
 \label{eq:target}
 \end{equation}
-
 Each supported source vertex yields one target displacement
 $v_j^*-v_j^-$ for Stage~3.
 
@@ -416,11 +414,11 @@ and later corrections operate directly on the updated TSDF.
 \subsection{Complexity}
 
 Let $V_q$ be the number of queried source vertices, $Q$ the number of
-returned surface -- keyframe candidates,
+returned surface--keyframe candidates,
 $K_{\rm KF}=|\mathcal C_{\rm KF}|$ the number of cached keyframes,
 $A=|\mathcal A|$ the number of active source cells, $P=|P^-|$ the proxy
-size, and $X^-$ and $X^+$ the source and output voxel slots processed in
-Stage~4. The per-correction cost is
+size, and $X^-,X^+$ the source/output voxel slots in Stage~4. The
+per-correction cost is
 \begin{equation}
 C_{\rm corr}
 =
@@ -431,16 +429,17 @@ C_{\rm def}(A,P)
 C_{\rm vol}(X^-,X^+).
 \label{eq:complexity}
 \end{equation}
-The sensor-position indices are maintained during online mapping and are not
-rebuilt at correction time, so
+Sensor-position indices are maintained online rather than rebuilt at
+correction time, giving
 $C_{\rm assoc}=O(V_q\log K_{\rm KF}+Q)$ for RGB-D KD-tree queries and
-$O(V_q+Q)$ for LiDAR grid queries. At fixed resolution, $V_q=O(A)$; writing
-$\bar k=Q/V_q$, session length affects association through $K_{\rm KF}$ and
-$\bar k$, while map size affects deformation and reconstruction through
-$A$, $X^-$, and $X^+$. By construction, $P\leq P_{\max}$.
+$O(V_q+Q)$ for LiDAR grid queries. At fixed resolution, $V_q=O(A)$.
+With $\bar k=Q/V_q$, session length affects association through
+$K_{\rm KF}$ and $\bar k$, whereas map size affects deformation and
+reconstruction through $A$, $X^-$, and $X^+$. By construction,
+$P\leq P_{\max}$.
 
 Full reintegration costs
 $C_{\rm reint}=\Theta(\sum_{n=1}^{N}|D_n|)=\Theta(N|D|)$.
-When $K_{\rm KF}=\Theta(N)$, the frame-count order is unchanged, but
-WarpVox avoids volumetric integration of the $|D|$ range samples in each
-historical frame.
+When $K_{\rm KF}=\Theta(N)$, both retain the same frame-count order, but
+WarpVox avoids integrating the $|D|$ range samples from every historical
+frame.

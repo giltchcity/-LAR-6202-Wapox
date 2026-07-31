@@ -8,7 +8,9 @@ TSDF fusion~\cite{10.1145/237170.237269,newcombe2011kinectfusion} and sparse vol
 mesh, producing only a corrected surface, not a volume.
 
 \vspace{1mm}\noindent\textit{Surface deformation.}
-ARAP~\cite{ARAP_modeling:2007} and embedded deformation~\cite{10.1145/1276377.1276478} preserve local shape while satisfying sparse controls. DynamicFusion~\cite{7298631}, KillingFusion~\cite{slavcheva2017killingfusion}, and VolumeDeform~\cite{innmann2016volumedeform} estimate continuous non-rigid scene motion. WarpVox addresses a static scene with a discrete trajectory revision: corrected poses generate the controls, and one QEM-proxy deformation propagates them over the surface.
+ARAP~\cite{ARAP_modeling:2007} and embedded deformation~\cite{10.1145/1276377.1276478} preserve local shape while satisfying sparse controls. DynamicFusion~\cite{7298631}, KillingFusion~\cite{slavcheva2017killingfusion}, and VolumeDeform~\cite{innmann2016volumedeform} estimate continuous non-rigid scene motion. WarpVox addresses a static scene with a discrete trajectory revision:
+corrected poses provide controls, propagated by a single QEM-proxy
+surface deformation.
 
 \vspace{1mm}\noindent\textit{Neural and Gaussian maps.}
 Neural SLAM systems~\cite{sucar2021imap,zhu2022niceslam,cui2023ngelslam} optimize implicit scene representations; Loopy-SLAM~\cite{liso2024loopyslam} revisits that optimization after loop closure, while Neural Graph Map~\cite{bruns2024neuralgraphmap} anchors local fields to pose-graph nodes. SplaTAM~\cite{keetha2024splatam} maps with 3D Gaussians~\cite{kerbl2023gaussians}, and LoopSplat~\cite{zhu2025_loopsplat} aligns Gaussian submaps. These representations do not generally provide the explicit volumetric state

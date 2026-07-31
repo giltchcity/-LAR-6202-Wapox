@@ -36,15 +36,15 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
 
 \noindent\textbf{Data and execution.}
 Each bag is processed once end-to-end; loop-closure checkpoints are not
-replayed independently. ORB-SLAM3 and Voxblox run from the start, and each
-WarpVox correction replaces the active volume before fusion continues.
-Required keyframe range images are cached online, so loop events require no
-bag rewind or separate preprocessing. Associations, targets, and deformation
-state are discarded after each correction; the cache and corrected TSDF
-persist. We evaluate 39 RGB-D loop closures from 18 Kimera-Multi
+replayed. ORB-SLAM3 and Voxblox run from the start, and each WarpVox
+correction replaces the active volume before fusion resumes. Keyframe range
+images are cached online, eliminating bag rewind and separate preprocessing
+at loop events. Associations, targets, and deformation state are discarded
+after each correction, while the cache and corrected TSDF persist. We
+evaluate 39 RGB-D loop closures from 18 Kimera-Multi
 sequences~\cite{tian23arxiv_kimeramultiexperiments} and 12 LiDAR cases from
 six KITTI sequences~\cite{Geiger2013IJRR}. The uncompressed 16-bit RGB-D
-cache occupies 0.9 -- 3.6\,GiB (mean 2.1\,GiB over 1349 -- 5707 keyframes).
+cache occupies 0.9--3.6\,GiB (mean 2.1\,GiB; 1349 -- 5707 keyframes).
 
 \noindent\textbf{Reference and alignment.}
 All methods reconstruct the same temporal interval. Kimera-Multi uses the
