@@ -301,10 +301,8 @@ central difference determines whether this sign is retained or flipped.
 Otherwise, a consistent source sample is used when available, with
 $s_f^+(x)$ as the final fallback. Denote the result by $s_{\rm tr}(x)$.
 
-Source-supported samples satisfying $r(x)\leq\rho$ define the near-surface
-support. Source support farther from the surface, up to $\tau$, is retained
-only when it forms a sign-consistent, face-connected continuation of this
-support. The accepted samples form $\Omega_{\rm tr}$, with
+Valid source samples with $r(x)\leq\rho$ form narrow transferred support;
+those with $\rho<r(x)\leq\tau$ form candidate extended support. Both receive
 \begin{equation}
 \bigl(
 \Phi_{\rm tr}^+(x),
@@ -334,12 +332,25 @@ This prior provides compact support for continued fusion and is not
 interpreted as recovered observation count. Its supported voxels form
 $\Omega_{\rm fb}$.
 
+Candidate extended support is filtered on the output voxel grid. Using
+6-neighbour adjacency, a candidate with an opposite-sign positive-weight
+neighbour is removed. A flood fill over the remaining candidates starts from
+those touching narrow transferred or fallback support and ends when no new
+candidate is reached. The narrow samples and reached candidates form
+$\Omega_{\rm tr}$.
+
 Observed source voxels satisfying
-$w^-(y)>0$ and $\Phi^-(y)\geq\rho$ are eligible for forward transport. They
-are partitioned into truncation-scale groups, and only groups admitting a
-valid paired-surface frame are transported. For group $c$, let $q_c^\pm$
-and $R_c^\pm$ denote its corresponding source and warped points and frames.
-The forward map is
+$w^-(y)>0$ and $\Phi^-(y)\geq\rho$ are eligible for forward transport.
+Within each source TSDF block, they are binned into axis-aligned cells of
+$\operatorname{round}(\tau/s)$ voxels per side, clipped to the block extent;
+the mean voxel-centre position represents each nonempty group. Group
+membership is purely spatial and does not require voxel connectivity.
+
+For group $c$, the closest valid source face to its representative supplies
+$q_c^-$ and barycentric coordinates; the same face index and coordinates
+supply $q_c^+$ on the warped surface. The corresponding triangle-frame
+construction gives $R_c^\pm$. A group is discarded when no admissible face
+match is found or either paired frame is degenerate. The forward map is
 \begin{equation}
 \Gamma_c(y)
 =
@@ -348,11 +359,12 @@ q_c^+
 R_c^+(R_c^-)^\top(y-q_c^-).
 \label{eq:forward_free_space}
 \end{equation}
-Transport may allocate additional blocks; it preserves positive source-derived
-values and weights, writes only to unsupported voxels, and rejects samples
-that introduce a new zero crossing adjacent to retained negative support.
-The accepted samples form $\Omega_{\rm fs}$, with values and weights
-$(\Phi_{\rm fs}^+,w_{\rm fs}^+)$.
+Each $\Gamma_c(y)$ is assigned to its containing output voxel. Insertion is
+fill-only: a target with positive weight is left unchanged, so collisions
+retain the first accepted sample. Before insertion, a target in the
+26-neighbourhood of retained negative support is rejected. Accepted samples
+retain positive source-derived values and weights and form
+$\Omega_{\rm fs}$, with $(\Phi_{\rm fs}^+,w_{\rm fs}^+)$.
 
 Because fallback applies only without transferred support and free-space
 transport writes only unsupported voxels, $\Omega_{\rm tr}$,
