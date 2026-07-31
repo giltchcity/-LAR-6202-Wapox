@@ -88,6 +88,24 @@ MeshFrontend construction are excluded.
 At 0.25\,m, WarpVox is the closest method to reintegration at every
 threshold (Table~\ref{tab:broad_main}).
 
+\begin{table}[!t]
+\centering
+\caption{\textbf{Mean WarpVox core-time breakdown in seconds.}}
+\label{tab:runtime_breakdown}
+\scriptsize
+\setlength{\tabcolsep}{1.25pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Setting & Assoc. & Target & ARAP & Topol. & TSDF & Total \\
+\midrule
+Kimera, 25 cm (39) & 0.199 & 0.399 & 1.419 & 0.008 & 0.231 & 2.256 \\
+KITTI, 25 cm (12)   & 0.310 & 0.069 & 2.457 & 0.147 & 1.888 & 4.872 \\
+Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
+\bottomrule
+\end{tabular}
+\vspace{1pt}
+\end{table}
+
 \begin{figure*}[!t]
 \centering
 \setlength{\tabcolsep}{0pt}
@@ -149,24 +167,6 @@ Table~\ref{tab:runtime_breakdown} separates association, target estimation,
 deformation, topology processing, and TSDF reconstruction at both
 resolutions. Figure~\ref{fig:qualitative_ral} complements the quantitative
 comparison.
-
-\begin{table}[t]
-\centering
-\caption{\textbf{Mean WarpVox core-time breakdown in seconds.}}
-\label{tab:runtime_breakdown}
-\scriptsize
-\setlength{\tabcolsep}{1.25pt}
-\begin{tabular}{lrrrrrr}
-\toprule
-Setting & Assoc. & Target & ARAP & Topol. & TSDF & Total \\
-\midrule
-Kimera, 25 cm (39) & 0.199 & 0.399 & 1.419 & 0.008 & 0.231 & 2.256 \\
-KITTI, 25 cm (12)   & 0.310 & 0.069 & 2.457 & 0.147 & 1.888 & 4.872 \\
-Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
-\bottomrule
-\end{tabular}
-\vspace{1pt}
-\end{table}
 
 \subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
