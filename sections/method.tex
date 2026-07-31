@@ -3,11 +3,10 @@
 
 \noindent\textbf{Assumptions.}
 Following the local-consistency assumption of
-Voxgraph~\cite{reijgwart2020voxgraph}, we assume that TSDF fusion under the
-drifted pre-correction trajectory remains locally valid: surface geometry and
-connectivity are coherent in local neighborhoods although the map is globally
-inconsistent. WarpVox corrects this global inconsistency after loop closure;
-severely noisy or topologically corrupted source maps are outside its scope.
+Voxgraph~\cite{reijgwart2020voxgraph}, we assume that the pre-correction
+TSDF remains locally valid: surface geometry and connectivity remain coherent
+in local neighbourhoods despite global inconsistency. Severely noisy or
+topologically corrupted source maps are outside our scope.
 
 \subsection{Problem and Correction Inputs} Let $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the world frame before and after trajectory correction. The map built with $T^-$ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and truncation distance $\tau$. During online fusion, Voxblox continuously maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active TSDF~\cite{10.1145/37402.37422}. On a trajectory correction, this mesh becomes the source surface. Let $\mathcal A$ denote the active TSDF cells that contribute triangles to $\mathcal M^-$. WarpVox stores the timestamped, modality-native range images of SLAM keyframes,
 \begin{equation}
@@ -266,20 +265,19 @@ closest point $q^+$, and barycentric coordinates $\beta$. The shared face
 indices give the corresponding source point
 $q^-=\sum_{k\in f}\beta_k\bar v_k^-$.
 
-Let $R_f^\pm\in SO(3)$ be paired local frames formed from the same indexed
-triangle edge and the corresponding source and warped mesh normals. Their
-relative rotation defines the geometric pullback, while absolute TSDF sign
-orientation is determined separately from the source field. The
-local-rigid pullback
+Let $R_f^\pm\in SO(3)$ be paired local frames built from the same indexed
+triangle edge and corresponding source and warped mesh normals. Their
+relative rotation defines the local-rigid pullback
 \begin{equation}
 \Psi_f(x)
 =
 q^-+R_f^-(R_f^+)^\top(x-q^+)
 \label{eq:inverse_map}
 \end{equation}
-maps an output voxel to its corresponding source neighbourhood while
-preserving tangential and normal offsets relative to the paired
-triangles~\cite{sumner2004deformationtransfer}. Let
+Absolute TSDF sign orientation is determined separately from the source
+field. This map sends an output voxel to its corresponding source
+neighbourhood while preserving tangential and normal offsets relative to
+the paired triangles~\cite{sumner2004deformationtransfer}. Let
 \begin{equation}
 x^-=\Psi_f(x),
 \quad
