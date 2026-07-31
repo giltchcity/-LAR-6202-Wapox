@@ -417,10 +417,11 @@ and later corrections operate directly on the updated TSDF.
 \subsection{Complexity and Scope}
 
 Let $V_q$ be the number of queried source vertices, $Q$ the number of
-returned surface -- keyframe candidates, $A=|\mathcal A|$ the number of
-active source cells, $P=|P^-|$ the proxy size, and $X^-$ and $X^+$ the
-source and output voxel slots processed in Stage~4. The per-correction cost
-is
+returned surface -- keyframe candidates,
+$K_{\rm KF}=|\mathcal C_{\rm KF}|$ the number of cached keyframes,
+$A=|\mathcal A|$ the number of active source cells, $P=|P^-|$ the proxy
+size, and $X^-$ and $X^+$ the source and output voxel slots processed in
+Stage~4. The per-correction cost is
 \begin{equation}
 C_{\rm corr}
 =
