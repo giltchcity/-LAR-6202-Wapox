@@ -115,30 +115,30 @@ Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
 \newcommand{\qc}[1]{\includegraphics[width=.245\linewidth,trim=200 20 200 20,clip]{#1}}
 \newcommand{\qd}[1]{\includegraphics[width=.245\linewidth,trim=100 20 100 20,clip]{#1}}
 \begin{tabular}{cccc}
-\qa{Figures/qualitative/5_voxblox_pre.png} &
-\qa{Figures/qualitative/5_voxgraph_post_sep.png} &
-\qa{Figures/qualitative/5_warped_tsdf.png} &
-\qa{Figures/qualitative/5_voxblox_post.png} \\[2pt]
-\qb{Figures/qualitative/28_voxblox_pre.png} &
-\qb{Figures/qualitative/28_voxgraph_post_sep.png} &
-\qb{Figures/qualitative/28_warped_tsdf.png} &
-\qb{Figures/qualitative/28_voxblox_post.png} \\[2pt]
-\qc{Figures/qualitative/40_voxblox_pre.png} &
-\qc{Figures/qualitative/40_voxgraph_post_sep.png} &
-\qc{Figures/qualitative/40_warped_tsdf.png} &
-\qc{Figures/qualitative/40_voxblox_post.png} \\[2pt]
-\qd{Figures/qualitative/35_voxblox_pre.png} &
-\qd{Figures/qualitative/35_voxgraph_post_sep.png} &
-\qd{Figures/qualitative/35_warped_tsdf.png} &
-\qd{Figures/qualitative/35_voxblox_post.png} \\[2pt]
-\qc{Figures/qualitative/76_voxblox_pre.png} &
-\qc{Figures/qualitative/76_voxgraph_post_sep.png} &
-\qc{Figures/qualitative/76_warped_tsdf.png} &
-\qc{Figures/qualitative/76_voxblox_post.png} \\[2pt]
-\qd{Figures/qualitative/77_voxblox_pre.png} &
-\qd{Figures/qualitative/77_voxgraph_post_sep.png} &
-\qd{Figures/qualitative/77_warped_tsdf.png} &
-\qd{Figures/qualitative/77_voxblox_post.png} \\[2pt]
+\qa{Figures/compressed_images/5_voxblox_pre_450dpi.png} &
+\qa{Figures/compressed_images/5_voxgraph_post_sep_450dpi.png} &
+\qa{Figures/compressed_images/5_warped_tsdf_450dpi.png} &
+\qa{Figures/compressed_images/5_voxblox_post_450dpi.png} \\[2pt]
+\qb{Figures/compressed_images/28_voxblox_pre_450dpi.png} &
+\qb{Figures/compressed_images/28_voxgraph_post_sep_450dpi.png} &
+\qb{Figures/compressed_images/28_warped_tsdf_450dpi.png} &
+\qb{Figures/compressed_images/28_voxblox_post_450dpi.png} \\[2pt]
+\qc{Figures/compressed_images/40_voxblox_pre_450dpi.png} &
+\qc{Figures/compressed_images/40_voxgraph_post_sep_450dpi.png} &
+\qc{Figures/compressed_images/40_warped_tsdf_450dpi.png} &
+\qc{Figures/compressed_images/40_voxblox_post_450dpi.png} \\[2pt]
+\qd{Figures/compressed_images/35_voxblox_pre_450dpi.png} &
+\qd{Figures/compressed_images/35_voxgraph_post_sep_450dpi.png} &
+\qd{Figures/compressed_images/35_warped_tsdf_450dpi.png} &
+\qd{Figures/compressed_images/35_voxblox_post_450dpi.png} \\[2pt]
+\qc{Figures/compressed_images/76_voxblox_pre_450dpi.png} &
+\qc{Figures/compressed_images/76_voxgraph_post_sep_450dpi.png} &
+\qc{Figures/compressed_images/76_warped_tsdf_450dpi.png} &
+\qc{Figures/compressed_images/76_voxblox_post_450dpi.png} \\[2pt]
+\qd{Figures/compressed_images/77_voxblox_pre_450dpi.png} &
+\qd{Figures/compressed_images/77_voxgraph_post_sep_450dpi.png} &
+\qd{Figures/compressed_images/77_warped_tsdf_450dpi.png} &
+\qd{Figures/compressed_images/77_voxblox_post_450dpi.png} \\[2pt]
 \small Voxblox$_{\mathrm{Pre}}$ &
 \small Voxgraph &
 \small \textbf{WarpVox} &
@@ -268,23 +268,7 @@ Averaged over ten $0.25$-m checkpoints, WarpVox achieves 86.19\%, 80.06\%,
 98.50\%, and 96.29\%, respectively, showing substantial agreement in
 support, accumulated weight, and TSDF sign structure.
 
-\begin{table}[t]
-\centering
-\caption{\textbf{Gaussian-centre target-transfer case study on one Kimera-Multi sequence.}}
-\label{tab:gaussian_case}
-\scriptsize
-\setlength{\tabcolsep}{2.3pt}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lrrrr}
-\toprule
-Method & F@25 (\%) & F@50 (\%) & Depth L1 (cm) $\downarrow$ & Time \\
-\midrule
-SplaTAM pre-correction & 17.23 & 35.25 & 173.93 & -- \\
-WarpVox & 23.12 & 40.59 & 142.54 & 21 s \\
-SplaTAM corrected-rebuild & 23.25 & 41.01 & 141.37 & $\approx 2$ h \\
-\bottomrule
-\end{tabular}}
-\end{table}
+
 
 \noindent\textbf{Cross-representation 3DGS case study.}
 Table~\ref{tab:gaussian_case} evaluates whether the observation-derived
@@ -302,3 +286,21 @@ increase from 11.96 to 12.59 and from 0.512 to 0.526, while LPIPS decreases
 from 0.430 to 0.411. This single-sequence case study tests target
 transferability only; WarpVox's implementation and primary evaluation remain
 focused on native TSDF correction for continued robotic mapping.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Gaussian-centre target-transfer case study on one Kimera-Multi sequence.}}
+\label{tab:gaussian_case}
+\scriptsize
+\setlength{\tabcolsep}{2.3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Method & F@25 (\%) & F@50 (\%) & Depth L1 (cm) $\downarrow$ & Time \\
+\midrule
+SplaTAM pre-correction & 17.23 & 35.25 & 173.93 & -- \\
+WarpVox & 23.12 & 40.59 & 142.54 & 21 s \\
+SplaTAM corrected-rebuild & 23.25 & 41.01 & 141.37 & $\approx 2$ h \\
+\bottomrule
+\end{tabular}}
+\end{table}
