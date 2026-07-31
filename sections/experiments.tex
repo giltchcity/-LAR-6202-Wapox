@@ -88,27 +88,6 @@ MeshFrontend construction are excluded.
 At 0.25\,m, WarpVox is the closest method to reintegration at every
 threshold (Table~\ref{tab:broad_main}).
 
-On Kimera-Multi, WarpVox differs from reintegration by
-$+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. WarpVox is $48.43\times$ faster
-than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller
-KITTI gain is consistent with lower-cost sparse-LiDAR replay and WarpVox's
-larger active surface and output volume. Voxgraph improves over uncorrected
-Voxblox at every threshold by aligning rigid SDF submaps, but stays $5.98$
-and $12.08$ pp below WarpVox at F@25 on the two datasets, consistent with
-uncorrected intra-submap drift. Wavemap shows low F@10 but competitive KITTI
-F@50. This is consistent with a hierarchical occupancy representation whose
-0.25\,m setting is its finest level rather than a uniform map resolution;
-its grid-centred evaluation points can also sit up to 0.22\,m from the true
-surface.
-
-At 0.10\,m on 11 Kimera-Multi cases, WarpVox obtains 17.13/39.77/57.83 at
-F@10/25/50 versus 17.21/39.68/57.12 for reintegration, while reducing core
-time from 192.548 to 9.207\,s ($20.91\times$).
-Table~\ref{tab:runtime_breakdown} separates association, target estimation,
-deformation, topology processing, and TSDF reconstruction at both
-resolutions. Figure~\ref{fig:qualitative_ral} complements the quantitative
-comparison.
-
 \begin{figure*}[!t]
 \centering
 \setlength{\tabcolsep}{0pt}
@@ -149,6 +128,27 @@ cases in the bottom two rows; each row uses the same view across methods.
 Colors encode vertex height.}
 \label{fig:qualitative_ral}
 \end{figure*}
+
+On Kimera-Multi, WarpVox differs from reintegration by
+$+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. WarpVox is $48.43\times$ faster
+than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller
+KITTI gain is consistent with lower-cost sparse-LiDAR replay and WarpVox's
+larger active surface and output volume. Voxgraph improves over uncorrected
+Voxblox at every threshold by aligning rigid SDF submaps, but stays $5.98$
+and $12.08$ pp below WarpVox at F@25 on the two datasets, consistent with
+uncorrected intra-submap drift. Wavemap shows low F@10 but competitive KITTI
+F@50. This is consistent with a hierarchical occupancy representation whose
+0.25\,m setting is its finest level rather than a uniform map resolution;
+its grid-centred evaluation points can also sit up to 0.22\,m from the true
+surface.
+
+At 0.10\,m on 11 Kimera-Multi cases, WarpVox obtains 17.13/39.77/57.83 at
+F@10/25/50 versus 17.21/39.68/57.12 for reintegration, while reducing core
+time from 192.548 to 9.207\,s ($20.91\times$).
+Table~\ref{tab:runtime_breakdown} separates association, target estimation,
+deformation, topology processing, and TSDF reconstruction at both
+resolutions. Figure~\ref{fig:qualitative_ral} complements the quantitative
+comparison.
 
 \begin{table}[t]
 \centering
