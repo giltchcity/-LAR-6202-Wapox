@@ -282,9 +282,18 @@ SplaTAM corrected-rebuild & 23.25 & 41.01 & 141.37 & $\approx 2$ h \\
 \end{tabular}}
 \end{table}
 
-\noindent\textbf{Cross-representation 3DGS~\cite{kerbl2023gaussians} case study.}
-Applying the same corrected surface targets to the Gaussian centres of a
-SplaTAM~\cite{keetha2024splatam} reconstruction approaches the corrected-pose
-rebuild in 21\,s, whereas the rebuild takes approximately 2\,h. This
-single-sequence result evaluates target transferability only; WarpVox
-remains targeted at TSDF mapping pipelines.
+\noindent\textbf{Cross-representation 3DGS case study.}
+Table~\ref{tab:gaussian_case} evaluates whether the observation-derived
+correction transfers beyond TSDFs. We apply the deformation to a
+SplaTAM~\cite{keetha2024splatam} reconstruction based on 3D Gaussian
+Splatting~\cite{kerbl2023gaussians}. This is a geometry-only diagnostic:
+only Gaussian centres are moved, while colours, opacities, scales,
+covariances, densification, pruning, and rendering losses remain fixed.
+
+The centre-only correction approaches the corrected-pose rebuild at both
+surface thresholds and in depth error, while taking 21\,s instead of
+approximately 2\,h. With appearance parameters fixed, PSNR and MS-SSIM
+increase from 11.96 to 12.59 and from 0.512 to 0.526, while LPIPS decreases
+from 0.430 to 0.411. This single-sequence case study tests target
+transferability only; WarpVox's implementation and primary evaluation remain
+focused on native TSDF correction for continued robotic mapping.
