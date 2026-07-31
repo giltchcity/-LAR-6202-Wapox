@@ -18,7 +18,8 @@ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and
 truncation distance $\tau$. During online fusion, Voxblox continuously
 maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active
 TSDF~\cite{10.1145/37402.37422}. Upon trajectory correction, this mesh
-becomes the source surface. Let $\mathcal A$ denote the active TSDF cells contribute triangles to $\mathcal M^-$. WarpVox stores the timestamped,
+becomes the source surface. Let $\mathcal A$ denote the active TSDF cells contributing triangles to
+$\mathcal M^-$. WarpVox stores the timestamped,
 modality-native range images of SLAM keyframes,
 
 \begin{equation}
