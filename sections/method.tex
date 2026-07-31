@@ -96,7 +96,7 @@ The Stage~1 reliability gives the initial target estimate
 \label{eq:target_initial}
 \end{equation}
 
-A median-relative residual threshold selects a consistent subset:
+A median-relative test selects a consistent subset:
 \begin{equation}
 \begin{aligned}
 \theta_j
@@ -274,10 +274,9 @@ relative rotation defines the local-rigid pullback
 q^-+R_f^-(R_f^+)^\top(x-q^+)
 \label{eq:inverse_map}
 \end{equation}
-Absolute TSDF sign orientation is determined separately from the source
-field. This map sends an output voxel to its corresponding source
-neighbourhood while preserving tangential and normal offsets relative to
-the paired triangles~\cite{sumner2004deformationtransfer}. Let
+Absolute TSDF sign is determined separately from the source field. The map
+preserves tangential and normal offsets relative to the paired
+triangles~\cite{sumner2004deformationtransfer}. Let
 \begin{equation}
 x^-=\Psi_f(x),
 \quad
@@ -358,11 +357,11 @@ R_c^+(R_c^-)^\top(y-q_c^-).
 \label{eq:forward_free_space}
 \end{equation}
 Each $\Gamma_c(y)$ is assigned to its containing output voxel. Insertion is
-fill-only: a target with positive weight is left unchanged, so collisions
-retain the first accepted sample. Before insertion, a target in the
-26-neighbourhood of retained negative support is rejected. Accepted samples
-retain positive source-derived values and weights and form
-$\Omega_{\rm fs}$, with $(\Phi_{\rm fs}^+,w_{\rm fs}^+)$.
+fill-only: a positive-weight target is unchanged, so collisions retain the
+first accepted sample. Targets in the 26-neighbourhood of retained negative
+support are rejected. Accepted samples retain their source-derived positive
+values and weights, defining $\Omega_{\rm fs}$ and
+$(\Phi_{\rm fs}^+,w_{\rm fs}^+)$.
 
 Because fallback applies only without transferred support and free-space
 transport writes only unsupported voxels, $\Omega_{\rm tr}$,
