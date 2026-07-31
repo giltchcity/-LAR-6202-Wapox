@@ -79,9 +79,9 @@ is shared by the PGMO comparison and ablation.
 
 \noindent\textbf{Timing.}
 We report in-memory core map-update time on an AMD Ryzen 7 9700X with
-64\,GB RAM. Depending on the method, this includes TSDF or occupancy
-integration, submap or mesh optimization, or the applicable WarpVox stages.
-Disk I/O and PGMO MeshFrontend construction are excluded.
+64\,GB RAM, including TSDF or occupancy integration, submap or mesh
+optimization, or the applicable WarpVox stages; disk I/O and PGMO
+MeshFrontend construction are excluded.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -108,24 +108,6 @@ Table~\ref{tab:runtime_breakdown} separates association, target estimation,
 deformation, topology processing, and TSDF reconstruction at both
 resolutions. Figure~\ref{fig:qualitative_ral} complements the quantitative
 comparison.
-
-\begin{table}[t]
-\centering
-\caption{\textbf{Mean WarpVox core-time breakdown in seconds.}}
-\label{tab:runtime_breakdown}
-\scriptsize
-\setlength{\tabcolsep}{1.25pt}
-\begin{tabular}{lrrrrrr}
-\toprule
-Setting & Assoc. & Target & ARAP & Topol. & TSDF & Total \\
-\midrule
-Kimera, 25 cm (39) & 0.199 & 0.399 & 1.419 & 0.008 & 0.231 & 2.256 \\
-KITTI, 25 cm (12)   & 0.310 & 0.069 & 2.457 & 0.147 & 1.888 & 4.872 \\
-Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
-\bottomrule
-\end{tabular}
-\vspace{1pt}
-\end{table}
 
 \begin{figure*}[!t]
 \centering
@@ -167,6 +149,24 @@ cases in the bottom two rows; each row uses the same view across methods.
 Colors encode vertex height.}
 \label{fig:qualitative_ral}
 \end{figure*}
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Mean WarpVox core-time breakdown in seconds.}}
+\label{tab:runtime_breakdown}
+\scriptsize
+\setlength{\tabcolsep}{1.25pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Setting & Assoc. & Target & ARAP & Topol. & TSDF & Total \\
+\midrule
+Kimera, 25 cm (39) & 0.199 & 0.399 & 1.419 & 0.008 & 0.231 & 2.256 \\
+KITTI, 25 cm (12)   & 0.310 & 0.069 & 2.457 & 0.147 & 1.888 & 4.872 \\
+Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
+\bottomrule
+\end{tabular}
+\vspace{1pt}
+\end{table}
 
 \subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
@@ -222,14 +222,14 @@ loop-closure case from each of the ten bags, at 0.25\,m.
 Variant & F@10 (\%) & F@25 (\%) & F@50 (\%) & S1 -- 2 (s) & S3 (s) & S4 (s) \\
 \midrule
 Full-mesh ARAP
-  & 10.278 & 26.749 & 45.490 & - & 3.323 & -- \\
+  & 10.278 & 26.749 & 45.490 & -- & 3.323 & -- \\
 Robust 60K QEM proxy
-  & 10.277 & 26.717 & 45.436 & - & 1.408 & -- \\
+  & 10.277 & 26.717 & 45.436 & -- & 1.408 & -- \\
 \addlinespace
 Nearest-KF pose transport
-  & 9.872 & 25.979 & 44.546 & 0.044 & - & - \\
+  & 9.872 & 25.979 & 44.546 & 0.044 & -- & -- \\
 Mesh-only TSDF
-  & 9.982 & 26.400 & 45.068 & - & - & 0.098 \\
+  & 9.982 & 26.400 & 45.068 & -- & -- & 0.098 \\
 Source-supported TSDF (Final)
   & 10.155 & 26.616 & 45.392 & 0.480 & 1.408 & 0.160 \\
 \bottomrule
