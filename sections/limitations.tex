@@ -1,4 +1,12 @@
 \section{Limitations}
 \label{sec:limitations}
 
-WarpVox assumes a static scene, valid geometry, and a locally coherent pre-correction TSDF. It cannot recover geometry absent from the source map or repair incorrectly fused topology, and repeated or nearly overlapping surfaces may still produce an internally consistent but incorrect association. The keyframe-cache memory grows with session length. Finite-resolution TSDF reconstruction cannot exactly reproduce the reintegrated map. The topology-processing stage may remove a small number of faces with unresolved deformation-induced distortion. The attainable accuracy remains limited by residual error in the corrected trajectory, and severe failures require reintegration from the original measurements.
+WarpVox assumes a static scene, valid geometry, and a locally coherent
+pre-correction TSDF. It cannot recover geometry absent from the source map
+or repair incorrectly fused topology, and repeated or nearly overlapping
+surfaces may still produce an internally consistent but incorrect
+association. Keyframe-cache memory grows with session length.
+Finite-resolution reconstruction cannot exactly match the reintegrated map.
+Topology processing may remove a few faces with unresolved
+deformation-induced distortion. Residual trajectory error limits accuracy;
+severe failures require reintegration from the original measurements.
