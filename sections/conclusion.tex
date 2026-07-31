@@ -1,11 +1,9 @@
 \section{Conclusion}
-WarpVox demonstrates that an active TSDF can be corrected after loop closure
-without replaying the complete measurement history. Across RGB-D and LiDAR
-benchmarks, it remains close to full reintegration; on RGB-D sequences it
-achieves a $48\times$ mean update-time speedup. The corrected output is a
-native Voxblox volume that resumes fusion after a seconds-scale update and
-supports later corrections; its historical measurement storage is limited to
-a keyframe range cache, while full replay requires access to the complete
-frame history. The Gaussian case study suggests that observation-derived
-targets may extend beyond voxel grids; code and configurations will be
-released.
+WarpVox corrects an active TSDF after loop closure without replaying the
+complete frame history. Across RGB-D and LiDAR benchmarks, it remains close
+to full reintegration and reaches a $48\times$ mean speedup on RGB-D. The
+resulting native Voxblox volume resumes fusion after a seconds-scale update,
+supports later corrections, and retains only a keyframe range cache for
+historical measurements. The Gaussian case study suggests that
+observation-derived targets may extend beyond voxel grids; code and
+configurations will be released.

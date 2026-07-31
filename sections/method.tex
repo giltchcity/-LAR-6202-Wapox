@@ -18,8 +18,7 @@ consists of a TSDF $\Phi^-$, its weight field $w^-$, voxel size $s$, and
 truncation distance $\tau$. During online fusion, Voxblox continuously
 maintains the Marching-Cubes surface $\mathcal M^-=(V^-,F)$ of the active
 TSDF~\cite{10.1145/37402.37422}. Upon trajectory correction, this mesh
-becomes the source surface. Let $\mathcal A$ denote the active TSDF cells
-that contribute triangles to $\mathcal M^-$. WarpVox stores the timestamped,
+becomes the source surface. Let $\mathcal A$ denote the active TSDF cells contribute triangles to $\mathcal M^-$. WarpVox stores the timestamped,
 modality-native range images of SLAM keyframes,
 
 \begin{equation}
@@ -192,9 +191,9 @@ residuals form a strict majority among measured targets in its component
 with valid predictions. Synthetic targets are regularized by the same field;
 let $\mathcal C_P$ index the resulting targets $p_a^*$.
 
-WarpVox then propagates the consolidated targets with
-ARAP~\cite{ARAP_modeling:2007}. Define
-$\Delta p_{ab}^{\pm}=p_a^{\pm}-p_b^{\pm}$. The deformation is obtained from
+WarpVox propagates the consolidated targets with
+ARAP~\cite{ARAP_modeling:2007}. Let
+$\Delta p_{ab}^{\pm}=p_a^{\pm}-p_b^{\pm}$. We solve
 \begin{equation}
 \begin{aligned}
 \min_{P^+,\{R_a\}}\quad
@@ -317,8 +316,7 @@ The warped mesh normal induces the geometric sign
 $s_f^+(x)=\operatorname{sgn}((x-q^+)^\top n_f^+)$. When source TSDF
 samples are available on both sides of the paired source face, their
 central difference determines whether this sign is retained or flipped.
-Otherwise, a consistent source sample is used when available, with
-$s_f^+(x)$ as the final fallback. Denote the result by $s_{\rm tr}(x)$.
+Otherwise, a consistent source sample is used when available, with $s_f^+(x)$ as fallback. Denote the result by $s_{\rm tr}(x)$.
 
 Valid source samples with $r(x)\leq\rho$ form narrow transferred support;
 those with $\rho<r(x)\leq\tau$ form candidate extended support. Both receive
