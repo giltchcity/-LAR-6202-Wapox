@@ -43,8 +43,8 @@ WarpVox stores, per keyframe (KF), one timestamped range image in its sensor
 frame, $\mathcal C_{\rm KF}=\{(t_i,D_i)\}$: the depth image of each SLAM
 keyframe (RGB-D), or the spherical range image of each posed scan (LiDAR).
 Fig.~\ref{fig:pipeline} summarizes the four stages, and
-Table~\ref{tab:params} lists all parameters. Fig.~\ref{fig:mechanisms}
-illustrates association, clustering, and reconstructed support.
+Table~\ref{tab:params} lists all parameters. Figs.~\ref{fig:mech_assoc}--\ref{fig:mech_recon}
+illustrate association, clustering, and reconstructed support.
 
 \begin{figure}[t]
   \centering
@@ -52,13 +52,6 @@ illustrates association, clustering, and reconstructed support.
   \caption{WarpVox extracts the current source surface from the fused TSDF, establishes projective correspondences with keyframe measurements, propagates the resulting targets through one ARAP solve per correction, and reconstructs a source-supported TSDF for continued fusion.}
   \label{fig:pipeline}
 \end{figure}
-
-\begin{figure*}[t]
-  \centering
-  \includegraphics[width=\textwidth]{Figures/method_mechanisms.png}
-  \caption{(a) Geometric verification associates a surface vertex with keyframe measurements. (b) Component-aware clustering keeps disconnected surfaces separate in the proxy. (c) Paired surface frames transfer source TSDF state to the corrected geometry; surface-band reconstruction and transport of observed volume, illustrated here by free space, supply the state for continued fusion.}
-  \label{fig:mechanisms}
-\end{figure*}
 
 \begin{table}[t]
 \centering
@@ -97,6 +90,13 @@ Source transport cell width & \multicolumn{2}{l}{$\tau$} \\
 
 \subsection{Stage 1: Correspondence Establishment}
 \label{sec:stage1}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{Figures/mech_assoc.pdf}
+  \caption{Stage~1: geometric verification associates a surface vertex with the measurements of several keyframes.}
+  \label{fig:mech_assoc}
+\end{figure}
 
 Stage~1 recovers the measurements that formed the surface: it associates source vertices with
 geometrically consistent keyframe measurements under $T^-$, the poses used
@@ -176,16 +176,21 @@ the displacement $d_j=v_j^*-v_j^-$ to Stage~3.
 \subsection{Stage 3: Surface Deformation}
 \label{sec:stage3}
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{Figures/mech_cluster.pdf}
+  \caption{Stage~3: component-aware clustering keeps disconnected surfaces separate in the proxy.}
+  \label{fig:mech_cluster}
+\end{figure}
+
 Stage~3 uses a compact, component-aware proxy for efficient deformation of
 large meshes and transfers its motion to the source surface. The resulting
 source and warped meshes retain shared triangles. The as-rigid-as-possible
 (ARAP) energy~\cite{ARAP_modeling:2007} penalizes local shape distortion
 while enforcing prescribed positions at \emph{controls}; observed vertices
 provide \emph{measured controls}. Mesh edges define the connected components,
-which are relabelled at each correction.
-Degenerate faces and control-free \emph{fragments}, i.e.,
-components with fewer than $N_{\rm f}$ faces, are removed first.
-Algorithm~\ref{alg:stage3} gives the order of steps (a)--(f).
+which are relabelled at each correction; \emph{fragments} are components with
+fewer than $N_{\rm f}$ faces. Algorithm~\ref{alg:stage3} orders steps (a)--(f).
 
 \begin{algorithm}[t]
 \caption{Stage~3 of one correction}
@@ -194,21 +199,19 @@ Algorithm~\ref{alg:stage3} gives the order of steps (a)--(f).
 \begin{algorithmic}[1]
 \Require source mesh $(V^-,F)$; measured controls $d_j$
 \Ensure paired surfaces $\bar{\mathcal M}^-,\mathcal M^+$
-\State label components; remove degenerate faces and fragments without controls
-\State (a) predict $\hat d_j$ from neighbouring controls; remove outliers once by the MAD test
-\State (b) omit fragments that lost all controls; give every other component without controls three synthetic controls
+\State label components; remove degenerate faces and control-free fragments
+\State (a) remove outlier controls once
+\State (b) omit fragments without controls; add synthetic controls
 \If{$|V^-|>1.3P_{\max}$}
-  \State (c) cluster per (cell, component); place QEM vertices: $\mathcal P^-$, $\pi$
-  \State (d) average controls per proxy vertex; revise the targets by Eq.~\eqref{eq:welsch}
-  \State (e) solve Eq.~\eqref{eq:arap} on $\mathcal P^-$
-  \State (f) transfer the proxy motion to the source mesh
+  \State (c) build proxy $\mathcal P^-$; (d) proxy targets, Eq.~\eqref{eq:welsch}
+  \State (e) solve Eq.~\eqref{eq:arap} on $\mathcal P^-$; (f) transfer to source
 \Else
-  \State (e) solve Eq.~\eqref{eq:arap} on the source mesh with all controls
+  \State (e) solve Eq.~\eqref{eq:arap} on the source mesh
 \EndIf
 \For{at most $n_{\rm rep}$ passes} \Comment{(f)}
-  \State flag invalid faces by the distortion bounds; stop if none or no progress; Jacobi-relax the displacements of their vertices
+  \State relax invalid faces; stop if none or no progress
 \EndFor
-\State remove faces still violating $\tau_{\rm e}$ or $\tau_{\rm A}$, and omitted components, from both surfaces
+\State remove faces violating $\tau_{\rm e}$ or $\tau_{\rm A}$ and omitted components
 \end{algorithmic}
 \end{algorithm}
 
@@ -295,16 +298,15 @@ $\vartheta^f_{bc}$ opposite edge $(b,c)$ in rest triangle $f$. Summing over
 incident faces gives the symmetric cotangent weight
 $c_{bc}=\sum_{f\supset(b,c)}c^f_{bc}$~\cite{10.1007/978-3-662-05105-4_2}.
 Eq.~\eqref{eq:arap} is solved with
-libigl~\cite{libigl} by a fixed number of local--global iterations. Smaller
-meshes are solved directly on the source mesh and skip the transfer.
+libigl~\cite{libigl} by a fixed number of local--global iterations.
 
 \textit{(f) Transfer and repair.}
 Each source vertex takes the proxy motion \emph{topology-locally}: $f_j$ is
 the rest triangle of $\operatorname{star}_P(\pi(j))$ closest to $v_j^-$, and
 $\lambda_{jb}$ are the barycentric coordinates of the closest point, so
-$v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-)$. This transfer uses triangles within the vertex's own component and adds
-their interpolated motion to the original fine surface. Local repair
-regularizes distorted triangles. For a face
+$v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-)$, using triangles
+within the vertex's own component. Local repair regularizes distorted
+triangles. For a face
 with source and warped edge lengths $\ell_e^\pm$, longest warped edge
 $\ell^+_{\max}$, and areas $A^\pm$, the edge stretch
 $\xi^{\rm e}=\max_e\ell^+_e/\ell^-_e$, area growth $\xi^{\rm A}=A^+/A^-$, and
@@ -312,15 +314,20 @@ aspect ratio $\xi^{\rm asp}=(\ell^+_{\max})^2/(2A^+)$ measure its distortion. A 
 \emph{invalid} if $\xi^{\rm e}\ge\tau_{\rm e}$, $\xi^{\rm A}\ge\tau_{\rm A}$, or
 $\xi^{\rm asp}\ge\tau_{\rm asp}$ with $\ell^+_{\max}\ge\ell_{\min}$.
 Jacobi relaxation smooths the displacements of their vertices with all
-other vertices fixed. Faces that still violate
-$\tau_{\rm e}$ or $\tau_{\rm A}$ are then removed from both surfaces,
-together with omitted components. The retained triangles $\bar F\subseteq F$
-define the paired surfaces $\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
+other vertices fixed. The triangles retained by Algorithm~\ref{alg:stage3},
+$\bar F\subseteq F$, define the paired surfaces $\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
 $\mathcal M^+=(\bar V^+,\bar F)$, which the shared face indices pair.
 
 
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
 \label{sec:stage4}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{Figures/mech_recon.pdf}
+  \caption{Stage~4: paired surface frames transfer source TSDF state to the corrected geometry, and a geometric fallback covers near-surface voxels without source weight. Together with transport of observed volume, illustrated here by free space, they supply the state for continued fusion.}
+  \label{fig:mech_recon}
+\end{figure}
 
 Stage~4 restores the volumetric state needed for continued fusion, using
 the source grid resolution. The warped surface $\mathcal M^+$ provides the
