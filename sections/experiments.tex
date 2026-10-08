@@ -64,9 +64,8 @@ starts from the active uncorrected TSDF and uses keyframe measurements only
 for its targets.
 
 \noindent\textbf{Metrics and timing.}
-F@10/25/50 is $100\cdot2PR/(P+R)$, with $P$ and $R$ the fractions of
-predicted and reference points within 0.10/0.25/0.50\,m of the other
-surface, and CD is the symmetric mean nearest-neighbour distance; all
+F@10/25/50 is the F1 score of bidirectional nearest-neighbour tests at
+0.10/0.25/0.50\,m, and CD the symmetric mean nearest-neighbour distance; all
 methods share each case's crop, two-million-point sample, and seed. TSDFs
 use 0.25\,m voxels and 1.0\,m truncation, and Wavemap a matched 0.25\,m
 finest level evaluated on its occupancy point cloud. The 11 cases at
