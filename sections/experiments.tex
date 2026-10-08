@@ -31,7 +31,7 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & Time (s) $\downarrow$ \\
  & \textbf{WarpVox} & 13.00 & 43.97 & 67.07 & 4.87 \\
 \bottomrule
 \end{tabular}
-\parbox{\columnwidth}{\vspace{2pt}\scriptsize A dash marks an untimed update: the uncorrected map applies no correction, and Open3D was not timed.}
+\parbox{\columnwidth}{\vspace{2pt}\scriptsize A dash: no correction (Uncorrected) or not timed (Open3D).}
 \end{table}
 
 \noindent\textbf{Data and execution.}
@@ -74,8 +74,8 @@ We report F@10/25/50 from bidirectional nearest-neighbour tests at
 sample, random seed, and thresholds. Main TSDF experiments use 0.25\,m
 voxels and 1.0\,m truncation; Wavemap uses a matched 0.25\,m finest level
 and is evaluated on its official occupancy point cloud. The 11-case
-high-resolution subset and ten-bag subset were each sampled once; the latter
-is shared by the PGMO comparison and ablation.
+0.10\,m and ten-bag subsets were sampled once; the latter serves the
+PGMO comparison and ablation.
 
 \noindent\textbf{Timing.}
 We report in-memory core map-update time on an AMD Ryzen 7 9700X with
@@ -165,22 +165,18 @@ its grid-centred evaluation points can also sit up to 0.22\,m from the true
 surface.
 
 At 0.10\,m on 11 Kimera-Multi cases, WarpVox obtains 17.13/39.77/57.83 at
-F@10/25/50 versus 17.21/39.68/57.12 for reintegration, while reducing core
-time from 192.548 to 9.207\,s ($20.91\times$).
-Table~\ref{tab:runtime_breakdown} separates association, target estimation,
+F@10/25/50 versus 17.21/39.68/57.12 for reintegration, and reduces core time from 192.548 to 9.207\,s ($20.91\times$).
+Table~\ref{tab:runtime_breakdown} splits association, target estimation,
 deformation, topology processing, and TSDF reconstruction at both
-resolutions. Figure~\ref{fig:qualitative_ral} complements the quantitative
-comparison.
+resolutions. Figure~\ref{fig:qualitative_ral} compares the maps.
 
 \subsection{Comparison with Kimera-PGMO}
 \label{sec:pgmo}
 
-This experiment compares Kimera-PGMO's deformation-graph correction with
+We compare PGMO's deformation-graph correction with
 WarpVox's observation-derived targets and proxy ARAP. Both use the same
-timestamped $8\,\mathrm{cm}$ Kimera-VIO pre-mesh and the same VIO
-pre-correction and PGMO-optimized trajectories; PGMO uses the official
-\texttt{mesh\_trajectory\_deformer} tool~\cite{kimera_pgmo}, whereas
-WarpVox applies Stages~1 -- 3.
+timestamped $8\,\mathrm{cm}$ Kimera-VIO pre-mesh and the VIO pre-correction and PGMO-optimized trajectories; PGMO runs its official \texttt{mesh\_\allowbreak trajectory\_\allowbreak deformer}~\cite{kimera_pgmo};
+WarpVox runs Stages~1 -- 3.
 
 \begin{table}[t]
 \centering
@@ -205,9 +201,9 @@ WarpVox Stage~1 -- 3
 At F@10, which approaches the $8\,\mathrm{cm}$ frontend-mesh resolution,
 WarpVox remains within $0.20$~pp of Kimera-PGMO. It improves F@25/F@50 by
 $0.26/0.91$~pp while reducing corrected-surface core time by $2.34\times$.
-WarpVox subsequently applies Stage~4 to reconstruct an $8\,\mathrm{cm}$
-native TSDF, adding $1.277\,\mathrm{s}$ ($4.792\,\mathrm{s}$ for
-Stages~1 -- 4) and yielding F@25/F@50 scores of $24.387\%/43.098\%$.
+Stage~4 then reconstructs an $8\,\mathrm{cm}$ native TSDF in
+$1.277\,\mathrm{s}$ ($4.792\,\mathrm{s}$ for Stages~1 -- 4), with
+F@25/F@50 of $24.387\%/43.098\%$.
 
 \subsection{Ablation Study}
 Table~\ref{tab:ablation} isolates one design choice at a time on one
@@ -245,11 +241,10 @@ and is scored on meshes re-extracted from the output TSDF.}
 
 Nearest-KF moves each control by its closest keyframe's pose correction.
 Observation-derived targets improve all three F-scores over this baseline,
-including 0.637 pp at F@25. The robust 60K QEM proxy remains within 0.032 pp
-of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to
+including 0.637 pp at F@25. The robust 60K QEM proxy stays within 0.032 pp
+of full-mesh ARAP at F@25 while cutting Stage~3 time from 3.323 to
 1.408\,s. Stage~4 keeps the re-extracted mesh within 0.122 pp of the robust
-Stage~3 surface and improves F@25 by 0.216 pp over mesh-only conversion, at
-an additional cost of 0.062\,s.
+Stage~3 surface and improves F@25 by 0.216 pp over mesh-only conversion for 0.062\,s more.
 
 Beyond the stage ablation, reintegrating only the cached keyframes on the
 same ten cases reaches $24.18/41.62$ at F@25/F@50 in $33.70$\,s and still
@@ -280,12 +275,10 @@ pruning, and rendering losses remain fixed. For comparison, we retain the origin
 and rebuild SplaTAM from scratch using the corrected trajectory.
 
 The centre-only correction approaches the corrected-pose rebuild at both
-surface thresholds and in depth error, while taking 21\,s instead of
-approximately 2\,h. With appearance parameters fixed, PSNR and MS-SSIM
-increase from 11.96 to 12.59 and from 0.512 to 0.526, while LPIPS decreases
+surface thresholds and in depth error, in 21\,s instead of about 2\,h. With appearance parameters fixed, PSNR and MS-SSIM
+increase from 11.96 to 12.59 and from 0.512 to 0.526, and LPIPS decreases
 from 0.430 to 0.411. This single-sequence case study tests target
-transferability only; WarpVox's implementation and primary evaluation remain
-focused on native TSDF correction for continued robotic mapping.
+transferability only; WarpVox's implementation and primary evaluation target native TSDF correction for continued robotic mapping.
 
 \begin{table}[t]
 \centering
