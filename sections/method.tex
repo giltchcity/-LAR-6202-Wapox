@@ -1,20 +1,25 @@
 \section{Method}
 \label{sec:method}
 
-WarpVox corrects the existing truncated signed distance field (TSDF) after
-loop closure and returns a native
-volume for continued fusion, using stored keyframe measurements and the
-externally corrected trajectory. Starting from the fused surface, Stages~1--2 establish
-geometrically consistent measurement associations and use the corrected
-poses to construct observation-derived surface targets. Stage~3 propagates these targets through
-a surface deformation. Stage~4 combines the corrected geometry with
-source-derived support, sign, weights, and free space to resume TSDF fusion.
+WarpVox corrects an existing truncated signed distance field (TSDF) after
+loop closure, using stored keyframe measurements and the externally
+corrected trajectory. TSDF fusion forms each surface point from the range
+measurements that observed it, placed by the poses of their frames; a loop
+closure revises those poses but leaves the measurements valid in their
+sensor frames. WarpVox traces the fusion backwards: Stage~1 recovers, for
+each surface vertex, the keyframe measurements that formed it; Stage~2
+places them under the corrected poses to obtain observation-derived
+targets; Stage~3 propagates these targets over the surface; and Stage~4
+combines the corrected geometry with source-derived support, sign, weights,
+and free space, returning a native TSDF for continued fusion.
 
 \subsection{Problem and Correction Inputs}
 \label{sec:problem}
 
-The correction operates on a pre-correction TSDF with locally coherent
-geometry and connectivity, as in Voxgraph~\cite{reijgwart2020voxgraph}.
+Following Voxgraph~\cite{reijgwart2020voxgraph}, the pre-correction TSDF is
+assumed locally valid: surface geometry and connectivity stay coherent in
+local neighbourhoods despite global inconsistency, and severely noisy or
+topologically corrupted source maps are outside our scope.
 
 For $x\in\mathbb R^3$, $\widetilde x=[x^\top,1]^\top$ denotes homogeneous
 coordinates. $T^-(t),T^+(t)\in SE(3)$ map the sensor frame at time $t$ to the
@@ -70,7 +75,7 @@ Quantity & RGB-D & LiDAR \\
 KF; range image $D_i$ & SLAM KF; depth image & scan; $64{\times}2048$ image \\
 Queried vertices; index radius & all; 14.3--14.7\,m & 1 per 0.5\,m cell; 80\,m \\
 Valid range & 0.1--10\,m & 0.5--80\,m \\
-Gate $g_0+g_1z^-_{rj}$, Eq.~\eqref{eq:gate} & $0.08+0.01z^-_{rj}$\,m & $0.25+0.003z^-_{rj}$\,m \\
+Gate $g_0+g_1z^-_{rj}$ & $0.08+0.01z^-_{rj}$\,m & $0.25+0.003z^-_{rj}$\,m \\
 $\sigma_g{=}0.6g_0$ / $\sigma_z$ / $z_0$, Eq.~\eqref{eq:alpha} & 0.048 / 0.08 / 8\,m & 0.15 / -- / 40\,m \\
 $\alpha_{\min}$ / $n_{\max}$ & 0.05 / 15 & -- / 15 of first 30 \\
 \multicolumn{3}{@{}l}{\textit{Stage~2 (Sec.~\ref{sec:stage2})}}\\
@@ -93,8 +98,7 @@ Source transport cell width & \multicolumn{2}{l}{$\tau$} \\
 \subsection{Stage 1: Correspondence Establishment}
 \label{sec:stage1}
 
-Fusion forms the surface from the measurements that observed it, and
-Stage~1 traces this fusion backwards: it associates source vertices with
+Stage~1 recovers the measurements that formed the surface: it associates source vertices with
 geometrically consistent keyframe measurements under $T^-$, the poses used
 to build the map. For each queried
 vertex $v_j^-$, a $k$-d tree (RGB-D) or grid (LiDAR) over the sensor centres
@@ -116,14 +120,10 @@ return closest to $\hat v_{rj}^-$ in a $3{\times}3$ pixel window (LiDAR).
 Let $z_{rj}^-$ and $z_{rj}^m$ be the depth (RGB-D) or range (LiDAR) of
 $\hat v_{rj}^-$ and $m_{rj}$, $\delta_{rj}=\|m_{rj}-\hat v_{rj}^-\|$ their
 distance, and $\phi_{rj}$ the angle between $n_j^-$ and the viewing ray to
-$v_j^-$ under $T^-$. The measurement must agree with the vertex within a
-depth-dependent tolerance,
-\begin{equation}
-\delta_{rj}\le g_0+g_1z_{rj}^-,
-\label{eq:gate}
-\end{equation}
-and, for LiDAR, $|z_{rj}^m-z_{rj}^-|$ must meet the same bound. A passing
-sample receives the reliability
+$v_j^-$ under $T^-$. The measurement must agree with the vertex within the
+depth-dependent gate $\delta_{rj}\le g_0+g_1z_{rj}^-$, and, for LiDAR,
+$|z_{rj}^m-z_{rj}^-|$ must meet the same bound. A passing sample receives the
+reliability
 \begin{equation}
 \alpha_{rj}=\frac{|\cos\phi_{rj}|}{1+z_{rj}^-/z_0}\,
 e^{-\delta_{rj}/\sigma_g}\,e^{-|z_{rj}^m-z_{rj}^-|/\sigma_z},
@@ -133,7 +133,7 @@ with range scale $z_0$ and discrepancy scales $\sigma_g,\sigma_z$; the last
 factor applies to RGB-D only.
 
 A candidate is retained if $\mathcal S_m$ returns a sample,
-Eq.~\eqref{eq:gate} holds, and, for RGB-D, $\alpha_{rj}\ge\alpha_{\min}$.
+the gate holds, and, for RGB-D, $\alpha_{rj}\ge\alpha_{\min}$.
 Each vertex keeps at most $n_{\max}$ retained candidates, those of largest
 $\alpha_{rj}$, as its \emph{observations}
 $(t_r,m_{rj},\alpha_{rj})\in\mathcal O_j$. A vertex with
@@ -158,25 +158,13 @@ Let $\mathcal J_j$ index the observations of $v_j^-$ for which this pose
 exists. Each is weighted by its reliability, damped with scale $\zeta_m$ by
 depth (RGB-D), $\omega_{rj}=\alpha_{rj}/(1+z_{rj}^m/\zeta_m)$, or by
 displacement (LiDAR), $\omega_{rj}=\alpha_{rj}/(1+\|q_{rj}^+-v_j^-\|/\zeta_m)$.
-The initial target is
-\begin{equation}
-\bar q_j=\frac{\sum_{r\in\mathcal J_j}\omega_{rj}q_{rj}^+}
-{\sum_{r\in\mathcal J_j}\omega_{rj}}.
-\label{eq:target_initial}
-\end{equation}
-Samples far from $\bar q_j$ are then dropped:
-\begin{equation}
-\begin{aligned}
-\theta_j&=\max\Bigl(\epsilon_m,\,\kappa\operatorname*{median}_{r\in\mathcal J_j}
-\|q_{rj}^+-\bar q_j\|\Bigr),\\
-I_j&=\bigl\{r\in\mathcal J_j:\|q_{rj}^+-\bar q_j\|\le\theta_j\bigr\},
-\end{aligned}
-\label{eq:target_inliers}
-\end{equation}
-where $\epsilon_m$ is a floor at the sampling resolution of the modality and
-$\kappa>1$ keeps $I_j$ nonempty for nonempty $\mathcal J_j$. With fewer than
-three samples, none is dropped. The retained
-samples give the observation-derived target
+With $\bar q_j$ the $\omega$-weighted mean of $q_{rj}^+$ over
+$\mathcal J_j$, samples farther than
+$\theta_j=\max(\epsilon_m,\kappa\operatorname{median}_{r\in\mathcal J_j}\|q_{rj}^+-\bar q_j\|)$
+from it are dropped, leaving $I_j$; $\epsilon_m$ is a floor at the sampling
+resolution of the modality, $\kappa>1$ keeps $I_j$ nonempty for nonempty
+$\mathcal J_j$, and with fewer than three samples none is dropped. The
+retained samples give the observation-derived target
 \begin{equation}
 v_j^*=\frac{\sum_{r\in I_j}\omega_{rj}q_{rj}^+}{\sum_{r\in I_j}\omega_{rj}},
 \label{eq:target}
@@ -205,20 +193,20 @@ Algorithm~\ref{alg:stage3} gives the order of steps (a)--(f).
 \footnotesize
 \begin{algorithmic}[1]
 \Require source mesh $(V^-,F)$; measured controls $d_j$
-\Ensure paired surfaces $\bar{\mathcal M}^-,\mathcal M^+$, Eq.~\eqref{eq:paired_surfaces}
+\Ensure paired surfaces $\bar{\mathcal M}^-,\mathcal M^+$
 \State label components; remove degenerate faces and fragments without controls
-\State (a) predict $\hat d_j$ by Eq.~\eqref{eq:idw}; remove outliers once by Eq.~\eqref{eq:mad_test}
+\State (a) predict $\hat d_j$ from neighbouring controls; remove outliers once by the MAD test
 \State (b) omit fragments that lost all controls; give every other component without controls three synthetic controls
 \If{$|V^-|>1.3P_{\max}$}
   \State (c) cluster per (cell, component); place QEM vertices: $\mathcal P^-$, $\pi$
-  \State (d) average controls per proxy vertex by Eq.~\eqref{eq:proxy_targets}; revise the targets by Eq.~\eqref{eq:welsch}
+  \State (d) average controls per proxy vertex; revise the targets by Eq.~\eqref{eq:welsch}
   \State (e) solve Eq.~\eqref{eq:arap} on $\mathcal P^-$
-  \State (f) transfer by Eq.~\eqref{eq:proxy_transfer}
+  \State (f) transfer the proxy motion to the source mesh
 \Else
   \State (e) solve Eq.~\eqref{eq:arap} on the source mesh with all controls
 \EndIf
 \For{at most $n_{\rm rep}$ passes} \Comment{(f)}
-  \State flag invalid faces by Eq.~\eqref{eq:distortion}; stop if none or no progress; Jacobi-relax the displacements of their vertices
+  \State flag invalid faces by the distortion bounds; stop if none or no progress; Jacobi-relax the displacements of their vertices
 \EndFor
 \State remove faces still violating $\tau_{\rm e}$ or $\tau_{\rm A}$, and omitted components, from both surfaces
 \end{algorithmic}
@@ -227,22 +215,14 @@ Algorithm~\ref{alg:stage3} gives the order of steps (a)--(f).
 \textit{(a) Outlier controls.}
 Neighbourhoods favour same-component controls to respect separate surface motions.
 Among the $k$ nearest other controls, $\mathcal N_j$ retains same-component
-neighbours if at least $n_{\min}$ exist, and all $k$ otherwise:
-\begin{equation}
-\hat d_j=\frac{\sum_{i\in\mathcal N_j}\|v_j^--v_i^-\|^{-2}d_i}
-{\sum_{i\in\mathcal N_j}\|v_j^--v_i^-\|^{-2}},\qquad
-e_j=\|d_j-\hat d_j\|.
-\label{eq:idw}
-\end{equation}
-With $\mu$ the median of the residuals $e_j$ and their median absolute
-deviation $\mathrm{MAD}=\operatorname{median}_j|e_j-\mu|$, control $j$ is an
-\emph{outlier} and is removed if
-\begin{equation}
-e_j>\mu+\gamma\max\bigl(1.4826\,\mathrm{MAD},\,\sigma_{\min}\bigr),
-\label{eq:mad_test}
-\end{equation}
-where $\gamma$ is the rejection multiplier, $\sigma_{\min}$ the scale floor,
-and $1.4826\,$MAD the robust scale estimate~\cite{rousseeuw1993mad}.
+neighbours if at least $n_{\min}$ exist, and all $k$ otherwise. The
+prediction $\hat d_j$ is their mean displacement with weights
+$\|v_j^--v_i^-\|^{-2}$, and $e_j=\|d_j-\hat d_j\|$ is the residual. With $\mu$
+the median of the residuals and $\mathrm{MAD}=\operatorname{median}_j|e_j-\mu|$,
+control $j$ is an \emph{outlier} and is removed if
+$e_j>\mu+\gamma\max(1.4826\,\mathrm{MAD},\sigma_{\min})$, where $\gamma$ is the
+rejection multiplier, $\sigma_{\min}$ the scale floor, and $1.4826\,$MAD the
+robust scale estimate~\cite{rousseeuw1993mad}.
 
 \textit{(b) Components without controls.}
 A fragment whose controls were all removed is \emph{omitted} from the output.
@@ -266,12 +246,9 @@ separate in the reduced solve.
 \textit{(d) Proxy targets.}
 The initial target of proxy vertex $a$ is its rest position plus the mean
 displacement of the controls clustered into it,
-\begin{equation}
-p_a^{(0)}=p_a^-+\frac{1}{|\mathcal K_a|}\sum_{j\in\mathcal K_a}d_j,\qquad
-\mathcal K_a=\{j\in\mathcal C:\pi(j)=a\},
-\label{eq:proxy_targets}
-\end{equation}
-where $\mathcal C$ holds the surviving measured and synthetic controls.
+$p_a^{(0)}=p_a^-+|\mathcal K_a|^{-1}\sum_{j\in\mathcal K_a}d_j$ with
+$\mathcal K_a=\{j\in\mathcal C:\pi(j)=a\}$, where $\mathcal C$ holds the
+surviving measured and synthetic controls.
 Vertex $a$ is \emph{controlled} if $\mathcal K_a\neq\emptyset$; a proxy
 component without such a vertex has three vertices controlled at
 $p_a^{(0)}=p_a^-$. $\mathcal M_P$ is the set of controlled vertices that
@@ -301,20 +278,16 @@ p_a^{(0)}, & \text{otherwise}.
 A vertex with too few neighbours for a fit keeps $p_a^{(0)}$.
 
 \textit{(e) ARAP.}
-Let $P^+=\{p_a^+\}$ be the deformed proxy positions; controlled vertices are
-fixed to $p_a^*$, and the others are the unknowns. With one rotation $R_a$
-per proxy vertex, we solve
+Let $P^+=\{p_a^+\}$ be the deformed proxy positions; controlled vertices,
+indexed by $\mathcal C_P$, are fixed to $p_a^*$, and the others are the
+unknowns. With one rotation $R_a\in SO(3)$ per proxy vertex, we solve
 \begin{equation}
-\begin{aligned}
-\min_{P^+,\{R_a\}}\;&\sum_{a}\sum_{f\in\operatorname{star}_P(a)}
-\sum_{(b,c)\in f}\frac{c^f_{bc}}{3}\\[-1mm]
-&\qquad\cdot\bigl\|(p_b^+-p_c^+)-R_a(p_b^--p_c^-)\bigr\|^2,\\
-\text{s.t.}\;&R_a\in SO(3),\qquad p_a^+=p_a^*,\ a\in\mathcal C_P,
-\end{aligned}
+\min_{P^+,\{R_a\}}\sum_{a}\!\sum_{f\in\operatorname{star}_P(a)}
+\sum_{(b,c)\in f}\!\tfrac{c^f_{bc}}{3}
+\|(p_b^+-p_c^+)-R_a(p_b^--p_c^-)\|^2,
 \label{eq:arap}
 \end{equation}
-where $\mathcal C_P$ indexes the controlled vertices,
-$\operatorname{star}_P(a)$ is the one-ring of proxy triangles incident to
+where $\operatorname{star}_P(a)$ is the one-ring of proxy triangles incident to
 $a$, and $(b,c)$ runs over their edges, so $R_a$ fits both spokes and
 rims~\cite{chao2010elastic}. The
 weight $c^f_{bc}=\tfrac12\cot\vartheta^f_{bc}$ uses the angle
@@ -328,38 +301,22 @@ meshes are solved directly on the source mesh and skip the transfer.
 \textit{(f) Transfer and repair.}
 Each source vertex takes the proxy motion \emph{topology-locally}: $f_j$ is
 the rest triangle of $\operatorname{star}_P(\pi(j))$ closest to $v_j^-$, and
-$\lambda_{jb}$ are the barycentric coordinates of the closest point,
-\begin{equation}
-v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-),\qquad
-\lambda_{jb}\geq0,\quad\sum_{b\in f_j}\lambda_{jb}=1.
-\label{eq:proxy_transfer}
-\end{equation}
-This transfer uses triangles within the vertex's own component and adds
+$\lambda_{jb}$ are the barycentric coordinates of the closest point, so
+$v_j^+=v_j^-+\sum_{b\in f_j}\lambda_{jb}(p_b^+-p_b^-)$. This transfer uses triangles within the vertex's own component and adds
 their interpolated motion to the original fine surface. Local repair
 regularizes distorted triangles. For a face
 with source and warped edge lengths $\ell_e^\pm$, longest warped edge
-$\ell^+_{\max}$, and areas $A^\pm$,
-\begin{equation}
-\xi^{\rm e}=\max_e\frac{\ell^+_e}{\ell^-_e},\qquad
-\xi^{\rm A}=\frac{A^+}{A^-},\qquad
-\xi^{\rm asp}=\frac{(\ell^+_{\max})^2}{2A^+}
-\label{eq:distortion}
-\end{equation}
-measure edge stretch, area growth, and aspect ratio. A face is
+$\ell^+_{\max}$, and areas $A^\pm$, the edge stretch
+$\xi^{\rm e}=\max_e\ell^+_e/\ell^-_e$, area growth $\xi^{\rm A}=A^+/A^-$, and
+aspect ratio $\xi^{\rm asp}=(\ell^+_{\max})^2/(2A^+)$ measure its distortion. A face is
 \emph{invalid} if $\xi^{\rm e}\ge\tau_{\rm e}$, $\xi^{\rm A}\ge\tau_{\rm A}$, or
 $\xi^{\rm asp}\ge\tau_{\rm asp}$ with $\ell^+_{\max}\ge\ell_{\min}$.
 Jacobi relaxation smooths the displacements of their vertices with all
 other vertices fixed. Faces that still violate
 $\tau_{\rm e}$ or $\tau_{\rm A}$ are then removed from both surfaces,
-together with omitted components. The retained triangles define the paired
-surfaces:
-\begin{equation}
-\bar{\mathcal M}^-=(\bar V^-,\bar F),\qquad
-\mathcal M^+=(\bar V^+,\bar F),\qquad
-\bar F\subseteq F,
-\label{eq:paired_surfaces}
-\end{equation}
-and shared face indices pair the two surfaces.
+together with omitted components. The retained triangles $\bar F\subseteq F$
+define the paired surfaces $\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
+$\mathcal M^+=(\bar V^+,\bar F)$, which the shared face indices pair.
 
 
 \subsection{Stage 4: Source-Supported TSDF Reconstruction}
@@ -386,11 +343,8 @@ define the local-rigid pullback
 \label{eq:inverse_map}
 \end{equation}
 This maps the surface-relative offset into the source triangle's frame for
-source-state queries~\cite{sumner2004deformationtransfer}. Let
-\begin{equation}
-x^-=\Psi_f(x),\;\; r(x)=\|x-q^+\|,\;\; d^+(x)=\min(\tau,r(x)).
-\label{eq:source_query}
-\end{equation}
+source-state queries~\cite{sumner2004deformationtransfer}; let $x^-=\Psi_f(x)$,
+$r(x)=\|x-q^+\|$, and $d^+(x)=\min(\tau,r(x))$.
 
 A trilinear source sample at $x^-$ is \emph{valid} if every source voxel with
 a nonzero coefficient is supported, and \emph{sign-consistent} if their
@@ -430,10 +384,7 @@ with a valid sample only if $g_f$ is available.
 \emph{Fallback} supplies a surface prior where the pullback query has no
 source support:
 $w_{\rm src}^+(x)=0$ and $r(x)\le\rho$. These voxels take the prior weight
-\begin{equation}
-w_{\rm fb}(x)=\operatorname{clamp}_{[0,1]}\bigl((\rho-r(x))/s\bigr).
-\label{eq:fallback_weight}
-\end{equation}
+$w_{\rm fb}(x)=\operatorname{clamp}_{[0,1]}((\rho-r(x))/s)$.
 The prior is withheld where $q^+$ lies on a boundary edge (incident to one
 face) or its endpoint. The voxels with $w_{\rm fb}(x)>0$ form $\Omega_{\rm fb}$.
 
@@ -450,10 +401,7 @@ same paired-frame construction. All observed source voxels $y\in\Omega^-$
 are grouped into truncation-sized cells. Each cell $c$ uses the source face
 closest to its observed-voxel centroid, unless it or its warped copy is
 degenerate, and the paired warped face to define
-\begin{equation}
-\Gamma_c(y)=q_c^++R_c^+(R_c^-)^\top(y-q_c^-).
-\label{eq:source_transport}
-\end{equation}
+$\Gamma_c(y)=q_c^++R_c^+(R_c^-)^\top(y-q_c^-)$.
 Output voxel centres are sampled at $\Gamma_c^{-1}(x)$ using trilinear
 interpolation where valid, and the containing source voxel otherwise.
 At each output voxel, repeated samples from one source-connected region
@@ -495,11 +443,8 @@ Let $V_q$ be the number of queried vertices, $Q$ that of examined
 vertex--keyframe pairs, $K_{\rm KF}$ that of stored keyframes with $|D|$
 samples each, $A$ that of Marching-Cubes cells that emit triangles of
 $\mathcal M^-$, $P$ the number of vertices in the deformation solve, and $X^-,X^+$ the source and output voxel
-slots. The costs of Stages~1--2, 3, and 4 sum to
-\begin{equation}
-C_{\rm corr}=C_{\rm assoc}+C_{\rm def}(A,P)+C_{\rm vol}(X^-,X^+).
-\label{eq:complexity}
-\end{equation}
+slots. Stages~1--2, 3, and 4 cost
+$C_{\rm corr}=C_{\rm assoc}+C_{\rm def}(A,P)+C_{\rm vol}(X^-,X^+)$.
 Reading every keyframe and rebuilding the index gives
 $C_{\rm assoc}=O(K_{\rm KF}|D|+(K_{\rm KF}+V_q)\log K_{\rm KF}+Q)$ for RGB-D
 and $O(K_{\rm KF}|D|+V_q+Q)$ for LiDAR. $C_{\rm def}$ covers proxy
