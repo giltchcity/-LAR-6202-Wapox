@@ -39,7 +39,7 @@ keyframe (RGB-D) or the spherical range image of each posed scan (LiDAR).
 Fig.~\ref{fig:pipeline} summarizes the four stages,
 Table~\ref{tab:params} lists all parameters, one setting per modality for all
 datasets and voxel sizes, and
-Figs.~\ref{fig:mech_assoc}--\ref{fig:mech_recon} illustrate association,
+Figs.~\ref{fig:mech_assoc} -- \ref{fig:mech_recon} illustrate association,
 clustering, and reconstructed support.
 
 \begin{figure}[t]
@@ -62,8 +62,8 @@ Quantity & RGB-D & LiDAR \\
 \midrule
 \multicolumn{3}{@{}l}{\textit{Stage~1 (Sec.~\ref{sec:stage1})}}\\
 KF; range image $D_i$ & SLAM KF; depth image & scan; $64{\times}2048$ image \\
-Queried vertices; index radius & all; 14.3--14.7\,m & 1 per 0.5\,m cell; 80\,m \\
-Valid range & 0.1--10\,m & 0.5--80\,m \\
+Queried vertices; index radius & all; 14.3 -- 14.7\,m & 1 per 0.5\,m cell; 80\,m \\
+Valid range & 0.1 -- 10\,m & 0.5 -- 80\,m \\
 Gate $g_0+g_1z^-_{rj}$ & $0.08+0.01z^-_{rj}$\,m & $0.25+0.003z^-_{rj}$\,m \\
 $\sigma_g{=}0.6g_0$ / $\sigma_z$ / $z_0$, Eq.~\eqref{eq:alpha} & 0.048 / 0.08 / 8\,m & 0.15 / -- / 40\,m \\
 $\alpha_{\min}$ / $n_{\max}$ & 0.05 / 15 & -- / 15 of first 30 \\
@@ -174,7 +174,7 @@ vertices give \emph{measured controls}. Large meshes are solved on a
 component-aware proxy whose motion is transferred back, so the source and
 warped meshes share their triangles. Connected components follow mesh edges
 and are relabelled at each correction; \emph{fragments} have fewer than
-$N_{\rm f}$ faces. Algorithm~\ref{alg:stage3} orders steps (a)--(f).
+$N_{\rm f}$ faces. Algorithm~\ref{alg:stage3} orders steps (a) -- (f).
 
 \begin{algorithm}[t]
 \caption{Stage~3 of one correction}
@@ -252,7 +252,7 @@ p_a^{(0)}, & \text{otherwise},
 and a vertex with too few neighbours for a fit keeps $p_a^{(0)}$.
 
 \textit{(e) ARAP.}
-The deformed proxy positions $P^+=\{p_a^+\}$ are fixed to $p_a^*$ at the
+The deformed proxy positions $P^+=\{p_a^+\}$ are fixed to $p_a^*$ at
 controlled vertices $\mathcal C_P$ and optimized elsewhere, with one rotation
 $R_a\in SO(3)$ per vertex:
 \begin{equation}
@@ -264,9 +264,9 @@ $R_a\in SO(3)$ per vertex:
 where $\operatorname{star}_P(a)$ is the one-ring of proxy triangles incident
 to $a$, $(b,c)$ runs over their edges, and
 $c^f_{bc}=\tfrac12\cot\vartheta^f_{bc}$ uses the angle opposite $(b,c)$ in
-rest triangle $f$; summed over incident faces it gives the symmetric
-cotangent weight $c_{bc}$~\cite{10.1007/978-3-662-05105-4_2}.
-Libigl~\cite{libigl} runs 20 local--global iterations.
+rest triangle $f$; summing over incident faces gives the symmetric
+cotangent weight $c_{bc}=\sum_{f\supset(b,c)}c^f_{bc}$~\cite{10.1007/978-3-662-05105-4_2}.
+Libigl~\cite{libigl} runs 20 local -- global steps.
 
 \textit{(f) Transfer and repair.}
 Each source vertex takes the proxy motion \emph{topology-locally}, from the
@@ -382,13 +382,13 @@ replaces the active map, and fusion continues on it.
 \label{sec:complexity}
 
 Let $V_q$ be the number of queried vertices, $Q$ that of examined
-vertex--keyframe pairs, $K_{\rm KF}$ that of stored keyframes with $|D|$
+vertex -- keyframe pairs, $K_{\rm KF}$ that of stored keyframes with $|D|$
 samples each, $A$ that of Marching-Cubes cells that emit triangles of
 $\mathcal M^-$, $P$ that of vertices in the deformation solve (the proxy size,
 or $|V^-|$ on the direct path), and $X^-,X^+$ the source and output voxel
 slots. A correction costs
 $C_{\rm corr}=C_{\rm assoc}+C_{\rm def}(A,P)+C_{\rm vol}(X^-,X^+)$ over
-Stages~1--2, 3, and 4. Reading every keyframe and rebuilding the index gives
+Stages~1 -- 2, 3, and 4. Reading every keyframe and rebuilding the index gives
 $C_{\rm assoc}=O(K_{\rm KF}|D|+(K_{\rm KF}+V_q)\log K_{\rm KF}+Q)$ for RGB-D
 and $O(K_{\rm KF}|D|+V_q+Q)$ for LiDAR; $C_{\rm def}$ covers proxy
 construction, target consolidation, ARAP, transfer, and repair, and
