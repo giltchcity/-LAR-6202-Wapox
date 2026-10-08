@@ -93,8 +93,8 @@ Source transport cell width & \multicolumn{2}{l}{$\tau$} \\
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/mech_assoc.pdf}
-  \caption{Stage~1: geometric verification associates a surface vertex with the measurements of several keyframes.}
+  \includegraphics[width=0.82\columnwidth]{Figures/mech_assoc.pdf}
+  \caption{Stage~1: observation association.}
   \label{fig:mech_assoc}
 \end{figure}
 
@@ -169,7 +169,7 @@ retained samples give the observation-derived target
 v_j^*=\frac{\sum_{r\in I_j}\omega_{rj}q_{rj}^+}{\sum_{r\in I_j}\omega_{rj}},
 \label{eq:target}
 \end{equation}
-with $v_j^*=v_j^-$ if $\mathcal J_j=\emptyset$. Each observed vertex supplies
+A vertex with $\mathcal J_j=\emptyset$ is treated as unobserved. Each observed vertex supplies
 the displacement $d_j=v_j^*-v_j^-$ to Stage~3.
 
 
@@ -178,8 +178,8 @@ the displacement $d_j=v_j^*-v_j^-$ to Stage~3.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/mech_cluster.pdf}
-  \caption{Stage~3: component-aware clustering keeps disconnected surfaces separate in the proxy.}
+  \includegraphics[width=0.82\columnwidth]{Figures/mech_cluster.pdf}
+  \caption{Stage~3: component-aware clustering.}
   \label{fig:mech_cluster}
 \end{figure}
 
@@ -324,8 +324,8 @@ $\mathcal M^+=(\bar V^+,\bar F)$, which the shared face indices pair.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/mech_recon.pdf}
-  \caption{Stage~4: paired surface frames transfer source TSDF state to the corrected geometry, and a geometric fallback covers near-surface voxels without source weight. Together with transport of observed volume, illustrated here by free space, they supply the state for continued fusion.}
+  \includegraphics[width=0.82\columnwidth]{Figures/mech_recon.pdf}
+  \caption{Stage~4: transferred, fallback, and free-space support.}
   \label{fig:mech_recon}
 \end{figure}
 
