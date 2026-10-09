@@ -14,6 +14,6 @@ surface deformation.
 
 \vspace{1mm}\noindent\textit{Neural and Gaussian maps.}
 Neural SLAM systems~\cite{sucar2021imap,zhu2022niceslam,cui2023ngelslam} optimize implicit scene representations; Loopy-SLAM~\cite{liso2024loopyslam} revisits that optimization after loop closure, while Neural Graph Map~\cite{bruns2024neuralgraphmap} anchors local fields to pose-graph nodes. SplaTAM~\cite{keetha2024splatam} maps with 3D Gaussians~\cite{kerbl2023gaussians}, and LoopSplat~\cite{zhu2025_loopsplat} aligns Gaussian submaps. These representations do not generally provide the explicit volumetric state
-required by TSDF pipelines. WarpVox therefore targets such pipelines; its
-Gaussian experiment evaluates only the transferability of observation-derived
+required by TSDF pipelines. WarpVox targets such pipelines; its
+Gaussian experiment evaluates the transferability of observation-derived
 targets.

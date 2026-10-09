@@ -1,9 +1,8 @@
 \section{Conclusion}
 WarpVox corrects an active TSDF after loop closure without replaying the
 complete frame history. Across RGB-D and LiDAR benchmarks, it remains close
-to full reintegration and reaches a $48\times$ mean speedup on RGB-D. The
-resulting native Voxblox volume resumes fusion after a seconds-scale update,
-supports later corrections, and retains only a keyframe range cache for
-historical measurements. The Gaussian case study suggests that
-observation-derived targets may extend beyond voxel grids; code and
-configurations will be released.
+to full reintegration with a $48\times$ mean speedup on RGB-D, and it corrects
+the surface more accurately than Kimera-PGMO in less than half the time. The
+resulting native Voxblox volume resumes fusion after a seconds-scale update
+and supports later corrections, and the same targets also correct a Gaussian
+map. Code and configurations will be released.

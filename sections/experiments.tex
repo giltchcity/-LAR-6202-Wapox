@@ -65,9 +65,7 @@ rebuild, Wavemap~\cite{reijgwart2023wavemap} a wavelet occupancy rebuild,
 and Voxblox reintegration~\cite{Oleynikova_2017} the representation-matched
 TSDF reference. These methods re-fuse every range frame using the corrected
 trajectory interpolated to each timestamp. Voxgraph~\cite{reijgwart2020voxgraph}
-optimizes rigid TSDF submaps in its independently optimized frame. WarpVox
-starts from the active uncorrected TSDF and uses keyframe measurements only
-for target construction.
+optimizes rigid TSDF submaps in its own frame.
 
 \noindent\textbf{Metrics and timing.}
 We report F@10/25/50 from bidirectional nearest-neighbour tests at
@@ -158,10 +156,8 @@ larger active surface and output volume. Voxgraph improves over uncorrected
 Voxblox at every threshold by aligning rigid SDF submaps, but stays $5.98$
 and $12.08$\,pp below WarpVox at F@25 on the two datasets, consistent with
 uncorrected intra-submap drift. Wavemap shows low F@10 but competitive KITTI
-F@50. This is consistent with a hierarchical occupancy representation whose
-0.25\,m setting is its finest level rather than a uniform map resolution;
-its grid-centred evaluation points can also sit up to 0.22\,m from the true
-surface.
+F@50, consistent with a 0.25\,m finest occupancy level whose grid-centred
+points lie up to 0.22\,m from the surface.
 
 At 0.10\,m on 11 Kimera-Multi cases, WarpVox obtains 17.13/39.77/57.83 at
 F@10/25/50 versus 17.21/39.68/57.12 for reintegration, while reducing core
