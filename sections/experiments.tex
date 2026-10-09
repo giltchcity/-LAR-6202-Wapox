@@ -181,8 +181,7 @@ ElasticFusion~\cite{whelan2016elasticfusion}, a self-contained surfel SLAM
 system, deforms its map through an embedded deformation graph derived from
 the registrations of its own tracking. Run as in its published evaluation,
 it tracks as reported on TUM~\cite{sturm2012tum}, its own room-scale
-benchmark (1.80\,cm ATE), and reaches 62.77\% F@2 and 3.69\,cm CD against a
-reconstruction at the ground-truth poses, where WarpVox reaches 72.13\% and
+benchmark (1.80\,cm ATE), with 62.77\% F@2 and 3.69\,cm CD; WarpVox reaches 72.13\% and
 2.82\,cm. On the larger Kimera-Multi sequences, its own tracking accumulates
 115.8\,m ATE, leaving its map at 1.98\% F@25. WarpVox applies trajectory
 corrections to TSDF maps for RGB-D and LiDAR alike, which suits the growing
@@ -257,9 +256,7 @@ volumetric metrics. Rebuilding the TSDF from the corrected mesh at each
 correction mainly narrows the shared support measured by IoU and weighted
 Jaccard, while free-space recall and sign accuracy remain high within it.
 Continued fusion with the same Voxblox update raises all four metrics in
-every interval, restoring agreement where later frames revisit the map.
-Across repeated corrections, WarpVox thus keeps its surface as accurate as
-reintegration and its TSDF ready for continued fusion.
+every interval, restoring agreement in revisited regions.
 
 \subsection{Ablation Study}
 Table~\ref{tab:ablation} isolates one design choice at a time on one

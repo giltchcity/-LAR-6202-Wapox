@@ -37,8 +37,7 @@ WarpVox stores one timestamped range image per keyframe (KF) in its sensor
 frame, $\mathcal C_{\rm KF}=\{(t_i,D_i)\}$: the depth image of each SLAM
 keyframe (RGB-D) or the spherical range image of each posed scan (LiDAR).
 Fig.~\ref{fig:pipeline} summarizes the four stages,
-Table~\ref{tab:params} lists all parameters, one setting per modality for all
-datasets and voxel sizes, and
+Table~\ref{tab:params} lists all parameters, and
 Figs.~\ref{fig:mech_assoc} -- \ref{fig:mech_recon} illustrate association,
 clustering, and reconstructed support.
 
@@ -51,7 +50,7 @@ clustering, and reconstructed support.
 
 \begin{table}[t]
 \centering
-\caption{WarpVox parameters ($s$: voxel size).}
+\caption{WarpVox parameters, one setting per modality for all datasets ($s$: voxel size).}
 \label{tab:params}
 \scriptsize
 \setlength{\tabcolsep}{2.5pt}
