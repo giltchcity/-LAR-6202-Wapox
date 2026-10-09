@@ -32,16 +32,14 @@ Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & CD (cm) $\downarrow$ & Time 
  & \textbf{WarpVox} & 13.00 & 43.97 & 67.07 & 68.8 & 4.87 \\
 \bottomrule
 \end{tabular}}
-\parbox{\columnwidth}{\vspace{2pt}\scriptsize A dash marks an untimed update: the uncorrected map applies no correction, and Open3D was not timed.}
+\parbox{\columnwidth}{\vspace{2pt}\scriptsize A dash: no correction (Uncorrected) or not timed (Open3D).}
 \end{table}
 
 \noindent\textbf{Data and execution.}
-Each bag is processed once end-to-end; loop-closure checkpoints are not
-replayed. ORB-SLAM3 and Voxblox run from the start, and each WarpVox
+Each bag is processed once end-to-end. ORB-SLAM3 and Voxblox run from the start, and each WarpVox
 correction replaces the active volume before fusion resumes. Keyframe range
-images are cached online, eliminating bag rewind and separate preprocessing
-at loop events. Associations, targets, and deformation state are discarded
-after each correction, while the cache and corrected TSDF persist. We
+images are cached online, eliminating bag rewind and preprocessing
+at loop events. We
 evaluate 39 RGB-D loop closures from 18 Kimera-Multi
 sequences~\cite{tian23arxiv_kimeramultiexperiments} and 12 LiDAR cases from
 six KITTI sequences~\cite{Geiger2013IJRR}. The uncompressed 16-bit RGB-D
@@ -53,8 +51,8 @@ official ground-truth point cloud cropped to a 5\,m tube around the GT
 trajectory, matching Voxblox's maximum integration range. KITTI uses the
 Velodyne cloud aggregated at ground-truth poses within the mapper's 25\,m
 ray range. Predictions outside the GT frame are aligned using only
-timestamp-matched trajectory positions; no mesh-to-GT registration is used.
-Voxgraph uses the trajectory recovered from its optimized submap-pose graph,
+timestamp-matched trajectory positions.
+Voxgraph uses the trajectory of its optimized submap-pose graph,
 while reconstructions driven by the corrected ORB-SLAM3~\cite{ORBSLAM3_TRO} trajectory share one
 alignment per case.
 
@@ -76,8 +74,8 @@ the mean nearest-neighbour distance in both directions. All methods share each c
 sample, random seed, and thresholds. Main TSDF experiments use 0.25\,m
 voxels and 1.0\,m truncation; Wavemap uses a matched 0.25\,m finest level
 and is evaluated on its official occupancy point cloud. The 11-case
-high-resolution subset and ten-bag subset were each sampled once; the latter
-is shared by the PGMO comparison and ablation.
+high-resolution subset and the ten-bag subset shared by the PGMO comparison
+and ablation were each sampled once.
 
 \noindent\textbf{Timing.}
 We report in-memory core map-update time on an AMD Ryzen 7 9700X with
@@ -177,7 +175,7 @@ resolutions.
 Stage shares follow their workloads: LiDAR association searches
 spherical-image neighbourhoods, and RGB-D target construction aggregates more
 retained observations. Figure~\ref{fig:qualitative_ral} complements the quantitative
-comparison.
+comparison at 0.25\,m.
 
 \subsection{Comparison with Deformation-Based Correction}
 \label{sec:pgmo}
@@ -185,20 +183,22 @@ comparison.
 ElasticFusion~\cite{whelan2016elasticfusion} corrects a fused map by
 deforming it through an embedded deformation graph, as a self-contained
 surfel SLAM system that derives the deformation from the registrations of
-its own tracking. We ran it as in its published evaluation. On TUM
-fr3/long\_office\_household~\cite{sturm2012tum}, the room-scale benchmark it was built for, evaluated at
+its own tracking. We ran it as in its published evaluation. On
+TUM~\cite{sturm2012tum}, its own room-scale benchmark, evaluated at
 1/2/5\,cm against a reconstruction at the ground-truth poses, it tracks as
-published (1.80\,cm ATE against the reported
-1.7\,cm) and reaches 62.77\% F@2 and 3.69\,cm CD, against 72.13\% and
+published (1.80\,cm ATE) and reaches 62.77\% F@2 and 3.69\,cm CD, against 72.13\% and
 2.82\,cm for WarpVox; on the larger Kimera-Multi sequences, its own tracking
-accumulates 115.8\,m ATE and its map reaches 1.98\% F@25, against 23.68\%
-for WarpVox and 24.29\% for reintegration. WarpVox corrects the TSDF of an existing mapping
+accumulates 115.8\,m ATE and its map reaches 1.98\% F@25. WarpVox applies the
+trajectory correction of a separate SLAM system to the TSDF of an existing mapping
 pipeline for RGB-D and LiDAR alike, which suits the growing scale and
 sensing of today's mapping data.
 
 Kimera-PGMO, like WarpVox, propagates trajectory corrections to a fused map,
 and, like ElasticFusion, deforms the surface through an embedded deformation
-graph. This experiment compares Kimera-PGMO's deformation-graph correction with
+graph. Its graph attaches each mesh vertex to the trajectory pose at the
+vertex timestamp; WarpVox associates each surface region with the keyframes
+that observe it, derives its target from their stored measurements under the
+corrected poses, and returns a native TSDF. This experiment compares Kimera-PGMO's deformation-graph correction with
 WarpVox's observation-derived targets and proxy ARAP. Both use the same
 timestamped $8\,\mathrm{cm}$ Kimera-VIO pre-mesh and the same VIO
 pre-correction and PGMO-optimized trajectories; PGMO uses the official
@@ -251,15 +251,17 @@ alone (8.231\,s) and stays above it at F@25/F@50.
 We follow the five multi-loop sequences of the ten bags, with two to six
 loop closures each and 15 corrections in total, through repeated correction
 and continued fusion, with checkpoints after each correction (A) and after
-continued fusion up to the next loop closure (B, ten intervals of
-1.44 -- 599.03\,s; Fig.~\ref{fig:cycles}). We compare WarpVox with
-corrected-pose Voxblox reintegration of the same measurement history on a
-shared voxel grid, treating unallocated voxels as zero weight. F-scores are
-referenced to the ground truth. We report positive-weight support IoU,
-weighted Jaccard similarity of voxel weights, reference-weighted free-space
-support recall for $\Phi_{\rm r}>0.5s$, and TSDF-sign accuracy on common
-support outside the $0.5s$ zero-level band; with no ground-truth TSDF,
-reintegration is their pseudo-ground-truth reference.
+continued fusion up to the next loop closure (B; Fig.~\ref{fig:cycles}).
+F-scores compare each map with the ground truth. The volumetric metrics
+compare it with corrected-pose Voxblox reintegration of the same measurement
+history, the pseudo-ground-truth reference since no ground-truth TSDF exists,
+on a shared voxel grid with unallocated voxels at zero weight: support IoU of
+positive-weight voxels; weighted Jaccard similarity
+$\sum\min(w,w_{\rm r})/\sum\max(w,w_{\rm r})$ of voxel weights; free-space
+recall, the $w_{\rm r}$-weighted share of reintegrated free space
+(${\Phi_{\rm r}>0.5s}$) that WarpVox supports; and TSDF-sign accuracy, the
+share of common-support voxels outside the $0.5s$ zero-level band with
+matching sign.
 
 At F@25, WarpVox differs from reintegration by $+0.50$\,pp after correction
 and $-0.01$\,pp after continued fusion on average, and the per-event
@@ -273,8 +275,9 @@ narrows the shared domain measured by support IoU and weighted Jaccard,
 while sign accuracy and free-space recall stay close to reintegration within
 it. Continued fusion with the same Voxblox update raises all four metrics in
 every interval and restores the agreement where later frames revisit the
-map, so the corrected TSDF remains a native state for continued fusion
-across repeated corrections.
+map. Over repeated correction and continued fusion, WarpVox thus returns a
+surface whose accuracy stays close to reintegration and a TSDF that supports
+continued fusion.
 
 \subsection{Ablation Study}
 Table~\ref{tab:ablation} isolates one design choice at a time on one
@@ -328,8 +331,8 @@ an additional cost of 0.062\,s. Varying the association, trimming, and Stage-3
 thresholds one at a time changes mean F@25 by $-0.19$ to $+0.05$\,pp.
 
 Beyond the stage ablation, reintegrating only the cached keyframes on the
-same ten cases reaches $24.18/41.62$ at F@25/F@50 in $33.70$\,s and still
-takes over an order of magnitude longer than WarpVox, while remaining
+same ten cases reaches $24.18/41.62$ at F@25/F@50 in $33.70$\,s, over an order
+of magnitude longer than WarpVox, while remaining
 $2.44/3.78$\,pp below it.
 
 \noindent\textbf{Cross-representation 3DGS case study.}
@@ -338,17 +341,14 @@ correction transfers beyond TSDFs. We apply the same observation-derived
 targets to a SplaTAM~\cite{keetha2024splatam} reconstruction based on 3D
 Gaussian Splatting~\cite{kerbl2023gaussians}. This is a geometry-only
 diagnostic: each Gaussian centre is displaced by the resulting ARAP
-deformation, while colours, opacities, scales, covariances, densification,
-pruning, and rendering losses remain fixed. For comparison, we retain the original pre-correction SplaTAM reconstruction
-and rebuild SplaTAM from scratch using the corrected trajectory.
+deformation, while all appearance and optimization parameters remain fixed.
 
 The centre-only correction approaches the corrected-pose rebuild at both
 surface thresholds and in depth error, while taking 21\,s instead of
-approximately 2\,h. With appearance parameters fixed, PSNR and MS-SSIM
+approximately 2\,h. PSNR and MS-SSIM
 increase from 11.96 to 12.59 and from 0.512 to 0.526, while LPIPS decreases
 from 0.430 to 0.411. The same targets thus also correct a
-Gaussian map, while WarpVox's implementation and primary evaluation target
-native TSDF correction for continued robotic mapping.
+Gaussian map.
 
 \begin{table}[t]
 \centering
