@@ -49,7 +49,7 @@ cache occupies 0.9 -- 3.6\,GiB (mean 2.1\,GiB; 1349 -- 5707 keyframes).
 
 \noindent\textbf{Reference and alignment.}
 All methods reconstruct the same temporal interval. Kimera-Multi uses the
-official ground-truth point cloud cropped to a 5\,m tube around the GT
+official ground-truth point cloud cropped to a 5\,m tube around the ground-truth (GT)
 trajectory, matching Voxblox's maximum integration range. KITTI uses the
 Velodyne cloud aggregated at ground-truth poses within the mapper's 25\,m
 ray range. Predictions outside the GT frame are aligned using only
@@ -176,8 +176,8 @@ comparison at 0.25\,m.
 ElasticFusion~\cite{whelan2016elasticfusion} deforms its surfel map through
 an embedded deformation graph driven by its own tracking. Run as published, it tracks as
 reported on TUM~\cite{sturm2012tum}, its own room-scale
-benchmark (1.80\,cm ATE), with 62.77\% F@2 and 3.69\,cm CD; WarpVox reaches 72.13\% and
-2.82\,cm. On the larger Kimera-Multi sequences, its own tracking accumulates
+benchmark (1.80\,cm absolute trajectory error, ATE), with 62.77\% F@2 and 3.69\,cm CD; WarpVox reaches 72.13\% and
+2.82\,cm. On the larger Kimera-Multi sequences, its tracking accumulates
 a mean ATE of 115.8\,m, leaving its map at 1.98\% F@25. WarpVox applies trajectory
 corrections to TSDF maps for RGB-D and LiDAR alike, which suits the growing
 scale and sensing of today's mapping data.

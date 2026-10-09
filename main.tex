@@ -30,7 +30,7 @@
 \pagestyle{empty}
 
 \begin{abstract}
-Loop closure retroactively changes sensor poses after their range observations have been fused, leaving a TSDF inconsistent with the corrected trajectory. Full reintegration restores consistency by replaying the complete measurement history, at a prohibitive runtime cost that grows with the session length and is paid again at every correction. 
+Loop closure retroactively changes sensor poses after their range observations have been fused, leaving a truncated signed distance field (TSDF) inconsistent with the corrected trajectory. Full reintegration restores consistency by replaying the complete measurement history, at a prohibitive runtime cost that grows with the session length and is paid again at every correction. 
 % WarpVox reconstructs a native Voxblox TSDF whose zero set follows the corrected surface while its volumetric support, sign, and weights primarily follow the source volume. 
 WarpVox instead corrects the active map without volumetric replay: projecting the current surface into keyframes re-establishes measurement -- surface correspondences; corrected poses re-express the matched samples as surface targets, a single deformation propagates the targets, and the TSDF is rebuilt around the deformed surface.
 The result is a native Voxblox TSDF whose zero set follows the corrected surface while its volumetric support, sign, and weights primarily follow the source volume; it replaces the active map, allowing fusion and subsequent loop-closure corrections to continue from the updated state. 
