@@ -278,10 +278,11 @@ including 0.637 pp at F@25. The gain comes from Stages~1 -- 2 as a whole, which
 recover, screen, weight, and combine the measurements of several keyframes:
 a matched multi-keyframe pose transport that keeps both stages and replaces
 only the measured samples of Eq.~\eqref{eq:corrected_target} performs on par
-($+0.042$\,pp, positive in 8 of 10 cases), as the two candidates differ by
+($+0.042$\,pp, positive in 8 of 10 cases,
+$-0.04$ to $+0.09$\,pp), as the two candidates differ by
 the association residual that the Stage-1 gate bounds within one voxel,
-whereas removing the gate and reliability screening drops F@25 to 25.49\%,
-below nearest-keyframe transport. The robust 60K QEM proxy remains within 0.032 pp
+whereas removing the gate and reliability screening drops
+F@10/25/50 to 8.93/25.49/45.29\%, below nearest-keyframe transport at F@25. The robust 60K QEM proxy remains within 0.032 pp
 of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to
 1.408\,s. Stage~4 keeps the re-extracted mesh within 0.122 pp of the robust
 Stage~3 surface and improves F@25 by 0.216 pp over mesh-only conversion, at
@@ -291,8 +292,46 @@ thresholds one at a time changes mean F@25 by $-0.19$ to $+0.05$\,pp.
 Beyond the stage ablation, reintegrating only the cached keyframes on the
 same ten cases reaches $24.18/41.62$ at F@25/F@50 in $33.70$\,s and still
 takes over an order of magnitude longer than WarpVox, while remaining
-$2.44/3.78$ pp below it. The cache therefore supports target construction
-but not a complete volumetric rebuild.
+$2.44/3.78$ pp below it.
+
+\noindent\textbf{Cross-representation 3DGS case study.}
+Table~\ref{tab:gaussian_case} evaluates whether the observation-derived
+correction transfers beyond TSDFs. We apply the same observation-derived
+targets to a SplaTAM~\cite{keetha2024splatam} reconstruction based on 3D
+Gaussian Splatting~\cite{kerbl2023gaussians}. This is a geometry-only
+diagnostic: each Gaussian centre is displaced by the resulting ARAP
+deformation, while colours, opacities, scales, covariances, densification,
+pruning, and rendering losses remain fixed. For comparison, we retain the original pre-correction SplaTAM reconstruction
+and rebuild SplaTAM from scratch using the corrected trajectory.
+
+The centre-only correction approaches the corrected-pose rebuild at both
+surface thresholds and in depth error, while taking 21\,s instead of
+approximately 2\,h. With appearance parameters fixed, PSNR and MS-SSIM
+increase from 11.96 to 12.59 and from 0.512 to 0.526, while LPIPS decreases
+from 0.430 to 0.411. The same targets thus also correct a
+Gaussian map, while WarpVox's implementation and primary evaluation target
+native TSDF correction for continued robotic mapping.
+
+\begin{table}[t]
+\centering
+\caption{\textbf{Gaussian case study on one Kimera-Multi sequence.}}
+\label{tab:gaussian_case}
+\scriptsize
+\setlength{\tabcolsep}{2.3pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Method & F@25 (\%) & F@50 (\%) & Depth L1 (cm) $\downarrow$ & Time \\
+\midrule
+SplaTAM pre-correction & 17.23 & 35.25 & 173.93 & -- \\
+WarpVox & 23.12 & 40.59 & 142.54 & 21 s \\
+SplaTAM corrected-rebuild & 23.25 & 41.01 & 141.37 & $\approx 2$ h \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{TSDF Consistency over Repeated Correction}
+\label{sec:consistency}
 
 \noindent\textbf{TSDF consistency.}
 We compare WarpVox with corrected-pose Voxblox reintegration on a shared
@@ -327,41 +366,3 @@ while sign accuracy and free-space recall stay close to reintegration within
 it (92.2\% and 97.3\% on average after correction). Continued fusion with
 the same Voxblox update raises all four metrics in every interval and
 restores the agreement where later frames revisit the map.
-
-
-
-\noindent\textbf{Cross-representation 3DGS case study.}
-Table~\ref{tab:gaussian_case} evaluates whether the observation-derived
-correction transfers beyond TSDFs. We apply the same observation-derived
-targets to a SplaTAM~\cite{keetha2024splatam} reconstruction based on 3D
-Gaussian Splatting~\cite{kerbl2023gaussians}. This is a geometry-only
-diagnostic: each Gaussian centre is displaced by the resulting ARAP
-deformation, while colours, opacities, scales, covariances, densification,
-pruning, and rendering losses remain fixed. For comparison, we retain the original pre-correction SplaTAM reconstruction
-and rebuild SplaTAM from scratch using the corrected trajectory.
-
-The centre-only correction approaches the corrected-pose rebuild at both
-surface thresholds and in depth error, while taking 21\,s instead of
-approximately 2\,h. With appearance parameters fixed, PSNR and MS-SSIM
-increase from 11.96 to 12.59 and from 0.512 to 0.526, while LPIPS decreases
-from 0.430 to 0.411. This single-sequence case study tests target
-transferability only; WarpVox's implementation and primary evaluation remain
-focused on native TSDF correction for continued robotic mapping.
-
-\begin{table}[t]
-\centering
-\caption{\textbf{Gaussian case study on one Kimera-Multi sequence.}}
-\label{tab:gaussian_case}
-\scriptsize
-\setlength{\tabcolsep}{2.3pt}
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{lrrrr}
-\toprule
-Method & F@25 (\%) & F@50 (\%) & Depth L1 (cm) $\downarrow$ & Time \\
-\midrule
-SplaTAM pre-correction & 17.23 & 35.25 & 173.93 & -- \\
-WarpVox & 23.12 & 40.59 & 142.54 & 21 s \\
-SplaTAM corrected-rebuild & 23.25 & 41.01 & 141.37 & $\approx 2$ h \\
-\bottomrule
-\end{tabular}}
-\end{table}
