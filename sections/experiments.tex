@@ -159,11 +159,7 @@ F@25 in dataset mean. Its CD stays within 1.5\,cm of reintegration on both
 datasets, below every other correction baseline. Per-event F@25 differences fall on both sides of zero, from
 $-2.91$ to $+2.59$\,pp and from $-3.03$ to $+1.80$\,pp. WarpVox is $48.43\times$ faster
 than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The KITTI speedup reflects lower-cost sparse-LiDAR replay and WarpVox's
-larger active surface and output volume.
-Stage shares follow the same workloads
-(Table~\ref{tab:runtime_breakdown}): LiDAR association searches
-spherical-image neighbourhoods, and RGB-D target construction aggregates more
-retained observations. Voxgraph improves over uncorrected
+larger active surface and output volume. Voxgraph improves over uncorrected
 Voxblox at every threshold by aligning rigid SDF submaps, but stays $5.98$
 and $12.08$ pp below WarpVox at F@25 on the two datasets, consistent with
 uncorrected intra-submap drift. Wavemap shows low F@10 but competitive KITTI
@@ -177,7 +173,10 @@ F@10/25/50 versus 17.21/39.68/57.12 for reintegration, while reducing core
 time from 192.548 to 9.207\,s ($20.91\times$).
 Table~\ref{tab:runtime_breakdown} separates association, target estimation,
 deformation, topology processing, and TSDF reconstruction at both
-resolutions. Figure~\ref{fig:qualitative_ral} complements the quantitative
+resolutions.
+Stage shares follow their workloads: LiDAR association searches
+spherical-image neighbourhoods, and RGB-D target construction aggregates more
+retained observations. Figure~\ref{fig:qualitative_ral} complements the quantitative
 comparison.
 
 \subsection{Comparison with Kimera-PGMO}
