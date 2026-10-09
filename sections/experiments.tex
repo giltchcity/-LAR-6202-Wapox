@@ -13,7 +13,7 @@
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{llrrrrr}
 \toprule
-Data & Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & CD (cm) $\downarrow$ & Time (s) $\downarrow$ \\
+Data & Method & F@10 (\%) $\uparrow$ & F@25 (\%) $\uparrow$ & F@50 (\%) $\uparrow$ & CD (cm) $\downarrow$ & Time (s) $\downarrow$ \\
 \midrule
 \multirow{6}{*}{Kimera (39)}
  & Uncorrected & 7.00 & 19.29 & 34.91 & 247.7 & -- \\
@@ -91,7 +91,7 @@ threshold (Table~\ref{tab:broad_main}).
 \setlength{\tabcolsep}{1.25pt}
 \begin{tabular}{lrrrrrr}
 \toprule
-Setting & Assoc. & Target & ARAP & Topol. & TSDF & Total \\
+Setting & Assoc. & Target & ARAP & Topol. & TSDF & Total $\downarrow$ \\
 \midrule
 Kimera, 25 cm (39) & 0.199 & 0.399 & 1.419 & 0.008 & 0.231 & 2.256 \\
 KITTI, 25 cm (12)   & 0.310 & 0.069 & 2.457 & 0.147 & 1.888 & 4.872 \\
@@ -200,7 +200,7 @@ through Stages~1 -- 3, isolating the correction method.
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrrrrr}
 \toprule
-Method & F@10 (\%) & F@25 (\%) & F@50 (\%) & CD (cm) $\downarrow$ & Time (s) $\downarrow$ \\
+Method & F@10 (\%) $\uparrow$ & F@25 (\%) $\uparrow$ & F@50 (\%) $\uparrow$ & CD (cm) $\downarrow$ & Time (s) $\downarrow$ \\
 \midrule
 Kimera-VIO pre-mesh
 & 4.680 & 14.094 & 26.277 & 309.6 & -- \\
@@ -266,7 +266,7 @@ loop-closure case from each of the ten sequences, at 0.25\,m.
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-Variant & F@10 (\%) & F@25 (\%) & F@50 (\%) & S1 -- 2 (s) & S3 (s) & S4 (s) \\
+Variant & F@10 (\%) $\uparrow$ & F@25 (\%) $\uparrow$ & F@50 (\%) $\uparrow$ & S1 -- 2 (s) $\downarrow$ & S3 (s) $\downarrow$ & S4 (s) $\downarrow$ \\
 \midrule
 Full-mesh ARAP
   & 10.278 & 26.749 & 45.490 & -- & 3.323 & -- \\
@@ -332,7 +332,7 @@ Gaussian map.
 \resizebox{\columnwidth}{!}{%
 \begin{tabular}{lrrrr}
 \toprule
-Method & F@25 (\%) & F@50 (\%) & Depth L1 (cm) $\downarrow$ & Time \\
+Method & F@25 (\%) $\uparrow$ & F@50 (\%) $\uparrow$ & Depth L1 (cm) $\downarrow$ & Time $\downarrow$ \\
 \midrule
 SplaTAM pre-correction & 17.23 & 35.25 & 173.93 & -- \\
 WarpVox & 23.12 & 40.59 & 142.54 & 21 s \\

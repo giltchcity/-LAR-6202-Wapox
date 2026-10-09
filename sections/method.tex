@@ -116,9 +116,8 @@ m_{rj}=\mathcal S_m\bigl(D_r,\Pi_m(\hat v_{rj}^-)\bigr).
 For modality $m$, $\Pi_m$ is the pinhole (RGB-D) or spherical (LiDAR)
 projection, and $\mathcal S_m$ returns one sensor-frame point
 $m_{rj}\in\mathbb R^3$, or none: the depth bilinearly interpolated from at
-least two valid pixels and back-projected along the pixel ray (RGB-D), or the
-stored return closest to $\hat v_{rj}^-$ in a $3{\times}3$ pixel window
-(LiDAR).
+least two valid pixels and back-projected \mbox{(RGB-D)}, or the
+return closest to $\hat v_{rj}^-$ in a $3{\times}3$ window (LiDAR).
 
 Let $z_{rj}^-$ and $z_{rj}^m$ be the depth (RGB-D) or range (LiDAR) of
 $\hat v_{rj}^-$ and $m_{rj}$, $\delta_{rj}=\|m_{rj}-\hat v_{rj}^-\|$, and
@@ -361,8 +360,8 @@ observed-voxel centroid, unless it or its warped copy is degenerate, and the
 paired warped face to define $\Gamma_c(y)=q_c^++R_c^+(R_c^-)^\top(y-q_c^-)$,
 and output voxels are sampled at $\Gamma_c^{-1}(x)$. On the reconstructed
 band, transported contributions not represented by its pullback add the
-weight $w_{\rm add}^+(x)$; elsewhere they fill empty voxels without creating
-new zero crossings, forming $\Omega_{\rm vol}$ with $\Phi_{\rm vol}^+$ and
+weight $w_{\rm add}^+(x)$; elsewhere they fill empty voxels without new zero
+crossings, forming $\Omega_{\rm vol}$ with $\Phi_{\rm vol}^+$ and
 $w_{\rm vol}^+$.
 
 The three sets are disjoint, and
