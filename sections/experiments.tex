@@ -42,7 +42,9 @@ images are cached online, eliminating bag rewind and preprocessing
 at loop events. We
 evaluate 39 RGB-D loop closures from 18 Kimera-Multi
 sequences~\cite{tian23arxiv_kimeramultiexperiments} and 12 LiDAR cases from
-six KITTI sequences~\cite{Geiger2013IJRR}. The uncompressed 16-bit RGB-D
+six KITTI sequences~\cite{Geiger2013IJRR}. The PGMO comparison, repeated
+correction, and ablation share ten Kimera-Multi sequences, and the 0.10\,m
+evaluation uses 11 of the 39 cases; both subsets were sampled once. The uncompressed 16-bit RGB-D
 cache occupies 0.9 -- 3.6\,GiB (mean 2.1\,GiB; 1349 -- 5707 keyframes).
 
 \noindent\textbf{Reference and alignment.}
@@ -73,9 +75,7 @@ We report F@10/25/50 from bidirectional nearest-neighbour tests at
 nearest-neighbour distance in both directions. All methods share each case's
 crop, two-million-point sample, and random seed. Main TSDF experiments use
 0.25\,m voxels and 1.0\,m truncation; Wavemap uses a matched 0.25\,m finest
-level and is evaluated on its official occupancy point cloud. The 11-case
-high-resolution subset and the ten-bag subset shared by the PGMO comparison
-and ablation were each sampled once. Core map-update time is measured in
+level and is evaluated on its official occupancy point cloud. Core map-update time is measured in
 memory on an AMD Ryzen 7 9700X with 64\,GB RAM and covers integration,
 optimization, or the applicable WarpVox stages, excluding disk I/O and PGMO
 MeshFrontend construction.
@@ -199,7 +199,7 @@ through Stages~1 -- 3, isolating the correction method.
 
 \begin{table}[t]
 \centering
-\caption{\textbf{PGMO corrected-surface comparison on ten bags.}}
+\caption{\textbf{PGMO corrected-surface comparison on ten sequences.}}
 \label{tab:pgmo_full10}
 \scriptsize
 \setlength{\tabcolsep}{2.2pt}
@@ -237,7 +237,7 @@ surface correction alone (8.231\,s) and stays above it at F@25/F@50.
 \label{fig:cycles}
 \end{figure}
 
-We follow the five multi-loop sequences of the ten bags through repeated
+We follow the five multi-loop sequences of the ten through repeated
 correction and continued fusion, with checkpoints after each correction (A) and after
 continued fusion up to the next loop closure (B; Fig.~\ref{fig:cycles}).
 F-scores compare each map with the ground truth. The volumetric metrics
@@ -245,7 +245,7 @@ compare it with Voxblox reintegration of the same measurement history, as the
 reference since no ground-truth TSDF exists. On a shared grid with
 unallocated voxels at zero weight, they are support IoU over positive-weight
 voxels, weighted Jaccard similarity $\sum\min(w,w_{\rm r})/\sum\max(w,w_{\rm r})$,
-$w_{\rm r}$-weighted free-space recall over reintegrated voxels with
+$w_{\rm r}$-weighted free-space recall over voxels with
 ${\Phi_{\rm r}>0.5s}$, and sign accuracy on common support outside the
 $0.5s$ zero-level band.
 
@@ -263,7 +263,7 @@ reintegration and its TSDF ready for continued fusion.
 
 \subsection{Ablation Study}
 Table~\ref{tab:ablation} isolates one design choice at a time on one
-loop-closure case from each of the ten bags, at 0.25\,m.
+loop-closure case from each of the ten sequences, at 0.25\,m.
 
 \begin{table}[t]
 \centering

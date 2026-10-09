@@ -88,9 +88,18 @@ Source transport cell width & \multicolumn{2}{l}{$\tau$} \\
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/mech_assoc.pdf}
-  \caption{Stage~1: observation association.}
-  \label{fig:mech_assoc}
+  \begin{minipage}[t]{0.486\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Figures/mech_assoc.pdf}
+    \caption{Stage~1: association of keyframe observations.}
+    \label{fig:mech_assoc}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.486\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{Figures/mech_cluster.pdf}
+    \caption{Stage~3: one proxy vertex per (cell, component) pair.}
+    \label{fig:mech_cluster}
+  \end{minipage}
 \end{figure}
 
 Stage~1 recovers the measurements that formed the surface, associating
@@ -159,13 +168,6 @@ and each observed vertex has displacement $d_j=v_j^*-v_j^-$.
 
 \subsection{Stage 3: Surface Deformation}
 \label{sec:stage3}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\columnwidth]{Figures/mech_cluster.pdf}
-  \caption{Stage~3: one proxy vertex per (cell, component) pair.}
-  \label{fig:mech_cluster}
-\end{figure}
 
 Stage~3 propagates the targets over the surface by as-rigid-as-possible
 (ARAP) deformation~\cite{ARAP_modeling:2007}, which penalizes local shape
@@ -288,7 +290,7 @@ $\mathcal M^+=(\bar V^+,\bar F)$.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{Figures/mech_recon.pdf}
+  \includegraphics[width=0.845\columnwidth]{Figures/mech_recon.pdf}
   \caption{Stage~4: transferred, fallback, and free-space support.}
   \label{fig:mech_recon}
 \end{figure}
