@@ -333,16 +333,6 @@ SplaTAM corrected-rebuild & 23.25 & 41.01 & 141.37 & $\approx 2$ h \\
 \subsection{TSDF Consistency over Repeated Correction}
 \label{sec:consistency}
 
-\noindent\textbf{TSDF consistency.}
-We compare WarpVox with corrected-pose Voxblox reintegration on a shared
-voxel grid, treating unallocated voxels as zero weight. We report
-positive-weight support IoU, weighted Jaccard similarity of voxel weights,
-reference-weighted free-space support recall for $\Phi_{\rm r}>0.5s$, and
-TSDF-sign accuracy on common support outside the $0.5s$ zero-level band.
-Averaged over ten $0.25$-m checkpoints, WarpVox achieves 86.19\%, 80.06\%,
-98.50\%, and 96.29\%, respectively, showing substantial agreement in
-support, accumulated weight, and TSDF sign structure.
-
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{Figures/cycles.pdf}
@@ -350,19 +340,30 @@ support, accumulated weight, and TSDF sign structure.
 \label{fig:cycles}
 \end{figure}
 
-\noindent\textbf{Repeated correction and continued fusion.}
-The five multi-loop sequences of the ten bags, with two to six loop closures
-each and 15 corrections in total, give checkpoints after each correction (A)
-and after continued fusion up to the next loop closure (B, ten intervals of
-1.44 -- 599.03\,s; Fig.~\ref{fig:cycles}). With no ground-truth TSDF,
-reintegration of the same measurement history under the corrected poses is
-the pseudo-ground-truth reference for the four metrics, while F-scores stay
-referenced to the ground truth. At F@25, WarpVox differs from reintegration
-by $+0.50$\,pp after correction and $-0.01$\,pp after continued fusion on
-average, with no common trend over successive corrections. Each correction
+We follow the five multi-loop sequences of the ten bags, with two to six
+loop closures each and 15 corrections in total, through repeated correction
+and continued fusion, with checkpoints after each correction (A) and after
+continued fusion up to the next loop closure (B, ten intervals of
+1.44 -- 599.03\,s; Fig.~\ref{fig:cycles}). We compare WarpVox with
+corrected-pose Voxblox reintegration of the same measurement history on a
+shared voxel grid, treating unallocated voxels as zero weight. F-scores are
+referenced to the ground truth. We report positive-weight support IoU,
+weighted Jaccard similarity of voxel weights, reference-weighted free-space
+support recall for $\Phi_{\rm r}>0.5s$, and TSDF-sign accuracy on common
+support outside the $0.5s$ zero-level band; with no ground-truth TSDF,
+reintegration is their pseudo-ground-truth reference.
+
+At F@25, WarpVox differs from reintegration by $+0.50$\,pp after correction
+and $-0.01$\,pp after continued fusion on average, and the per-event
+differences after correction, from $-1.48$ to $+2.55$\,pp, rise in some
+sequences and fall in others with no common trend. Averaged over the 15
+post-correction checkpoints, WarpVox achieves 83.4\%, 80.1\%, 97.3\%, and
+92.2\% on the four volumetric metrics, showing substantial agreement in
+support, accumulated weight, and TSDF sign structure. Each correction
 reconstructs the TSDF from its mesh again, an approximation that mainly
 narrows the shared domain measured by support IoU and weighted Jaccard,
 while sign accuracy and free-space recall stay close to reintegration within
-it (92.2\% and 97.3\% on average after correction). Continued fusion with
-the same Voxblox update raises all four metrics in every interval and
-restores the agreement where later frames revisit the map.
+it. Continued fusion with the same Voxblox update raises all four metrics in
+every interval and restores the agreement where later frames revisit the
+map, so the corrected TSDF remains a native state for continued fusion
+across repeated corrections.
