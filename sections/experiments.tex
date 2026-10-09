@@ -188,17 +188,13 @@ TUM~\cite{sturm2012tum}, its own room-scale benchmark, evaluated at
 1/2/5\,cm against a reconstruction at the ground-truth poses, it tracks as
 published (1.80\,cm ATE) and reaches 62.77\% F@2 and 3.69\,cm CD, against 72.13\% and
 2.82\,cm for WarpVox; on the larger Kimera-Multi sequences, its own tracking
-accumulates 115.8\,m ATE and its map reaches 1.98\% F@25. WarpVox applies the
-trajectory correction of a separate SLAM system to the TSDF of an existing mapping
-pipeline for RGB-D and LiDAR alike, which suits the growing scale and
+accumulates 115.8\,m ATE, leaving its map at 1.98\% F@25. WarpVox applies trajectory corrections to TSDF maps for RGB-D and LiDAR alike, which suits the growing scale and
 sensing of today's mapping data.
 
 Kimera-PGMO, like WarpVox, propagates trajectory corrections to a fused map,
 and, like ElasticFusion, deforms the surface through an embedded deformation
-graph. Its graph attaches each mesh vertex to the trajectory pose at the
-vertex timestamp; WarpVox associates each surface region with the keyframes
-that observe it, derives its target from their stored measurements under the
-corrected poses, and returns a native TSDF. This experiment compares Kimera-PGMO's deformation-graph correction with
+graph. Its graph ties each mesh vertex to the pose at its timestamp; WarpVox ties
+each surface region to the keyframes that observe it. This experiment compares Kimera-PGMO's deformation-graph correction with
 WarpVox's observation-derived targets and proxy ARAP. Both use the same
 timestamped $8\,\mathrm{cm}$ Kimera-VIO pre-mesh and the same VIO
 pre-correction and PGMO-optimized trajectories; PGMO uses the official
