@@ -239,6 +239,7 @@ Procrustes alignment~\cite{schoenemann1966procrustes} reweighted with the
 Welsch weights $\nu(r)=e^{-r^2/2\sigma_a^2}$~\cite{yao2020welsch} of its
 residuals $r_b$ at robust scale
 $\sigma_a=\operatorname{median}_br_b+1.4826\,\mathrm{MAD}_b(r_b)$ per round,
+floored at $10^{-6}\max(1\,\mathrm{m},R_a)$ for $k$-th-neighbour distance $R_a$,
 predicts
 $\hat p_a=\hat R_ap_a^-+\hat t_a$. A measured target is \emph{gross} if
 $r_a=\|p_a^{(0)}-\hat p_a\|\ge c_{\rm g}\sigma_a$, and $2G_K>N_K$ denotes a
@@ -364,7 +365,7 @@ observed-voxel centroid, unless it or its warped copy is degenerate, and the
 paired warped face to define $\Gamma_c(y)=q_c^++R_c^+(R_c^-)^\top(y-q_c^-)$,
 and output voxels are sampled at $\Gamma_c^{-1}(x)$. Samples that reach one
 output voxel from connected equal or 26-neighbouring source voxels form one
-sheet, which contributes the distance and weight of its most interior sample;
+sheet, which contributes the distance and weight of its most interior ($L_\infty$) sample;
 distinct sheets are fused as in Voxblox, by weighted mean distance and summed
 weight. On the reconstructed band, the sheet touching the source voxel of the
 pullback of $x$ is already represented, and the others add their weight
