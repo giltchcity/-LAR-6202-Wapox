@@ -67,21 +67,18 @@ optimizes rigid TSDF submaps in its independently optimized frame. WarpVox
 starts from the active uncorrected TSDF and uses keyframe measurements only
 for target construction.
 
-\noindent\textbf{Metrics.}
+\noindent\textbf{Metrics and timing.}
 We report F@10/25/50 from bidirectional nearest-neighbour tests at
-0.10/0.25/0.50\,m. We also report the symmetric Chamfer distance (CD),
-the mean nearest-neighbour distance in both directions. All methods share each case's crop, two-million-point
-sample, random seed, and thresholds. Main TSDF experiments use 0.25\,m
-voxels and 1.0\,m truncation; Wavemap uses a matched 0.25\,m finest level
-and is evaluated on its official occupancy point cloud. The 11-case
+0.10/0.25/0.50\,m and the symmetric Chamfer distance (CD), the mean
+nearest-neighbour distance in both directions. All methods share each case's
+crop, two-million-point sample, and random seed. Main TSDF experiments use
+0.25\,m voxels and 1.0\,m truncation; Wavemap uses a matched 0.25\,m finest
+level and is evaluated on its official occupancy point cloud. The 11-case
 high-resolution subset and the ten-bag subset shared by the PGMO comparison
-and ablation were each sampled once.
-
-\noindent\textbf{Timing.}
-We report in-memory core map-update time on an AMD Ryzen 7 9700X with
-64\,GB RAM, including TSDF or occupancy integration, submap or mesh
-optimization, or the applicable WarpVox stages; disk I/O and PGMO
-MeshFrontend construction are excluded.
+and ablation were each sampled once. Core map-update time is measured in
+memory on an AMD Ryzen 7 9700X with 64\,GB RAM and covers integration,
+optimization, or the applicable WarpVox stages, excluding disk I/O and PGMO
+MeshFrontend construction.
 
 \subsection{Reconstruction Fidelity and Update Cost}
 
@@ -145,8 +142,8 @@ Kimera, 10 cm (11) & 2.623 & 0.244 & 5.298 & 0.004 & 1.038 & 9.207 \\
 \small Voxblox reintegration
 \end{tabular}
 \caption{\textbf{Qualitative reconstruction comparison at 0.25 m.} One
-Kimera-Multi loop-closure cases are shown in the top four rows and one KITTI
-cases in the bottom two rows; each row uses the same view across methods.
+Kimera-Multi loop-closure case (top) and one KITTI case (bottom), each row
+in the same view across methods.
 Colors encode vertex height.}
 \label{fig:qualitative_ral}
 \end{figure*}
@@ -180,27 +177,25 @@ comparison at 0.25\,m.
 \subsection{Comparison with Deformation-Based Correction}
 \label{sec:pgmo}
 
-ElasticFusion~\cite{whelan2016elasticfusion} corrects a fused map by
-deforming it through an embedded deformation graph, as a self-contained
-surfel SLAM system that derives the deformation from the registrations of
-its own tracking. We ran it as in its published evaluation. On
-TUM~\cite{sturm2012tum}, its own room-scale benchmark, evaluated at
-1/2/5\,cm against a reconstruction at the ground-truth poses, it tracks as
-published (1.80\,cm ATE) and reaches 62.77\% F@2 and 3.69\,cm CD, against 72.13\% and
-2.82\,cm for WarpVox; on the larger Kimera-Multi sequences, its own tracking
-accumulates 115.8\,m ATE, leaving its map at 1.98\% F@25. WarpVox applies trajectory corrections to TSDF maps for RGB-D and LiDAR alike, which suits the growing scale and
-sensing of today's mapping data.
+ElasticFusion~\cite{whelan2016elasticfusion}, a self-contained surfel SLAM
+system, deforms its map through an embedded deformation graph derived from
+the registrations of its own tracking. Run as in its published evaluation,
+it tracks as reported on TUM~\cite{sturm2012tum}, its own room-scale
+benchmark (1.80\,cm ATE), and reaches 62.77\% F@2 and 3.69\,cm CD against a
+reconstruction at the ground-truth poses, where WarpVox reaches 72.13\% and
+2.82\,cm. On the larger Kimera-Multi sequences, its own tracking accumulates
+115.8\,m ATE, leaving its map at 1.98\% F@25. WarpVox applies trajectory
+corrections to TSDF maps for RGB-D and LiDAR alike, which suits the growing
+scale and sensing of today's mapping data.
 
 Kimera-PGMO, like WarpVox, propagates trajectory corrections to a fused map,
 and, like ElasticFusion, deforms the surface through an embedded deformation
-graph. Its graph ties each mesh vertex to the pose at its timestamp; WarpVox ties
-each surface region to the keyframes that observe it. This experiment compares Kimera-PGMO's deformation-graph correction with
-WarpVox's observation-derived targets and proxy ARAP. Both use the same
-timestamped $8\,\mathrm{cm}$ Kimera-VIO pre-mesh and the same VIO
-pre-correction and PGMO-optimized trajectories; PGMO uses the official
-\texttt{mesh\_trajectory\_deformer} tool~\cite{kimera_pgmo}, whereas
-WarpVox applies Stages~1 -- 3, so the comparison isolates the
-correction method.
+graph, which ties each mesh vertex to the pose at its timestamp; WarpVox ties
+each surface region to the keyframes that observe it. Both correct the same
+timestamped $8\,\mathrm{cm}$ Kimera-VIO pre-mesh with the same VIO
+pre-correction and PGMO-optimized trajectories, PGMO through its official
+\texttt{mesh\_trajectory\_deformer} tool~\cite{kimera_pgmo} and WarpVox
+through Stages~1 -- 3, isolating the correction method.
 
 \begin{table}[t]
 \centering
@@ -223,16 +218,14 @@ WarpVox Stage~1 -- 3
 \end{tabular}}
 \end{table}
 
-WarpVox improves F@25/F@50 by $0.26/0.91$\,pp while reducing
-corrected-surface core time by $2.34\times$. It also lowers CD from 179.0\,cm
+WarpVox improves F@25/F@50 by $0.26/0.91$\,pp and lowers CD from 179.0\,cm
 for one-shot PGMO, the stronger of its two modes (183.8\,cm online), to
-152.9\,cm. At F@10, which approaches the $8\,\mathrm{cm}$ frontend-mesh
-resolution, WarpVox remains within $0.20$\,pp of Kimera-PGMO.
-WarpVox subsequently applies Stage~4 to reconstruct an $8\,\mathrm{cm}$
-native TSDF, adding $1.277\,\mathrm{s}$ ($4.792\,\mathrm{s}$ for
-Stages~1 -- 4) and yielding F@25/F@50 scores of $24.387\%/43.098\%$. This
-complete update with a native TSDF is faster than PGMO's surface correction
-alone (8.231\,s) and stays above it at F@25/F@50.
+152.9\,cm, while reducing corrected-surface core time by $2.34\times$. At
+F@10, which approaches the $8\,\mathrm{cm}$ frontend-mesh resolution, it
+remains within $0.20$\,pp of Kimera-PGMO. Stage~4 then reconstructs an
+$8\,\mathrm{cm}$ native TSDF in $1.277$\,s, with F@25/F@50 of
+$24.387/43.098\%$; this complete update ($4.792$\,s) is faster than PGMO's
+surface correction alone (8.231\,s) and stays above it at F@25/F@50.
 
 \subsection{TSDF Consistency over Repeated Correction}
 \label{sec:consistency}
@@ -249,30 +242,24 @@ correction and continued fusion, with checkpoints after each correction (A) and 
 continued fusion up to the next loop closure (B; Fig.~\ref{fig:cycles}).
 F-scores compare each map with the ground truth. The volumetric metrics
 compare it with Voxblox reintegration of the same measurement history, as the
-reference since no ground-truth TSDF exists. On a shared voxel grid with
-unallocated voxels at zero weight, they are support IoU of positive-weight
-voxels; weighted Jaccard similarity
-$\sum\min(w,w_{\rm r})/\sum\max(w,w_{\rm r})$ of voxel weights; free-space
-recall, the $w_{\rm r}$-weighted share of reintegrated free space
-(${\Phi_{\rm r}>0.5s}$) that WarpVox supports; and TSDF-sign accuracy, the
-share of common-support voxels outside the $0.5s$ zero-level band with
-matching sign.
+reference since no ground-truth TSDF exists. On a shared grid with
+unallocated voxels at zero weight, they are support IoU over positive-weight
+voxels, weighted Jaccard similarity $\sum\min(w,w_{\rm r})/\sum\max(w,w_{\rm r})$,
+$w_{\rm r}$-weighted free-space recall over reintegrated voxels with
+${\Phi_{\rm r}>0.5s}$, and sign accuracy on common support outside the
+$0.5s$ zero-level band.
 
 At F@25, WarpVox differs from reintegration by $+0.50$\,pp after correction
-and $-0.01$\,pp after continued fusion on average, and the per-event
-differences after correction, from $-1.48$ to $+2.55$\,pp, rise in some
-sequences and fall in others with no common trend. Averaged over the 15
-post-correction checkpoints, WarpVox achieves 83.4\%, 80.1\%, 97.3\%, and
-92.2\% on the four volumetric metrics, showing substantial agreement in
-support, accumulated weight, and TSDF sign structure. Each correction
-reconstructs the TSDF from its mesh again, an approximation that mainly
-narrows the shared domain measured by support IoU and weighted Jaccard,
-while sign accuracy and free-space recall stay close to reintegration within
-it. Continued fusion with the same Voxblox update raises all four metrics in
-every interval and restores the agreement where later frames revisit the
-map. Over repeated correction and continued fusion, WarpVox thus returns a
-surface whose accuracy stays close to reintegration and a TSDF that supports
-continued fusion.
+and $-0.01$\,pp after continued fusion on average, with per-event differences
+from $-1.48$ to $+2.55$\,pp after correction. Over the 15 post-correction
+checkpoints, it averages 83.4\%, 80.1\%, 97.3\%, and 92.2\% on the four
+volumetric metrics. Rebuilding the TSDF from the corrected mesh at each
+correction mainly narrows the shared support measured by IoU and weighted
+Jaccard, while free-space recall and sign accuracy remain high within it.
+Continued fusion with the same Voxblox update raises all four metrics in
+every interval, restoring agreement where later frames revisit the map.
+Across repeated corrections, WarpVox thus keeps its surface as accurate as
+reintegration and its TSDF ready for continued fusion.
 
 \subsection{Ablation Study}
 Table~\ref{tab:ablation} isolates one design choice at a time on one
