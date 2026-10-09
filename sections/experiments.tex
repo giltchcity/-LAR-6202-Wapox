@@ -303,7 +303,8 @@ of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to
 1.408\,s. Stage~4 keeps the re-extracted mesh within 0.122\,pp of the robust
 Stage~3 surface and improves F@25 by 0.216\,pp over mesh-only conversion, at
 an additional cost of 0.062\,s. Varying the association, trimming, and Stage-3
-thresholds one at a time changes mean F@25 by $-0.19$ to $+0.05$\,pp.
+thresholds one at a time changes mean F@25 by $-0.19$ to $+0.05$\,pp, and
+the observation cap $n_{\max}\in\{1,4,8,15\}$ by at most 0.019\,pp.
 
 Beyond the stage ablation, reintegrating only the cached keyframes on the
 same ten cases reaches $24.18/41.62$ at F@25/F@50 in $33.70$\,s, over an order
