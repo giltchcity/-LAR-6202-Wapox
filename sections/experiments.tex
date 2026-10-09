@@ -179,15 +179,30 @@ spherical-image neighbourhoods, and RGB-D target construction aggregates more
 retained observations. Figure~\ref{fig:qualitative_ral} complements the quantitative
 comparison.
 
-\subsection{Comparison with Kimera-PGMO}
+\subsection{Comparison with Deformation-Based Correction}
 \label{sec:pgmo}
 
-This experiment compares Kimera-PGMO's deformation-graph correction with
+ElasticFusion~\cite{whelan2016elasticfusion} corrects a fused map by
+deforming it through an embedded deformation graph, as a self-contained
+surfel SLAM system that derives the deformation from the registrations of
+its own tracking. We ran it as in its published evaluation. On TUM
+fr3/long\_office\_household~\cite{sturm2012tum}, the room-scale benchmark it
+was built for, it tracks as published (1.80\,cm ATE against the reported
+1.7\,cm) and reaches 62.77\% F@2 and 3.69\,cm CD, against 72.13\% and
+2.82\,cm for WarpVox; on the larger Kimera-Multi sequences, its own tracking
+accumulates 115.8\,m ATE. WarpVox corrects the TSDF of an existing mapping
+pipeline for RGB-D and LiDAR alike, which suits the growing scale and
+sensing of today's mapping data.
+
+Kimera-PGMO, like WarpVox, propagates trajectory corrections to a fused map,
+and, like ElasticFusion, deforms the surface through an embedded deformation
+graph. This experiment compares Kimera-PGMO's deformation-graph correction with
 WarpVox's observation-derived targets and proxy ARAP. Both use the same
 timestamped $8\,\mathrm{cm}$ Kimera-VIO pre-mesh and the same VIO
 pre-correction and PGMO-optimized trajectories; PGMO uses the official
 \texttt{mesh\_trajectory\_deformer} tool~\cite{kimera_pgmo}, whereas
-WarpVox applies Stages~1 -- 3.
+WarpVox applies Stages~1 -- 3, so the comparison isolates the
+correction method.
 
 \begin{table}[t]
 \centering
@@ -218,18 +233,10 @@ modes (183.8\,cm online), to 152.9\,cm.
 WarpVox subsequently applies Stage~4 to reconstruct an $8\,\mathrm{cm}$
 native TSDF, adding $1.277\,\mathrm{s}$ ($4.792\,\mathrm{s}$ for
 Stages~1 -- 4) and yielding F@25/F@50 scores of $24.387\%/43.098\%$. This
-complete update with a native TSDF stays faster than PGMO's surface
-correction alone (8.231\,s).
+complete update with a native TSDF is faster than PGMO's surface correction
+alone (8.231\,s) and stays above it at F@25/F@50.
 
-\noindent\textbf{ElasticFusion.}
-ElasticFusion~\cite{whelan2016elasticfusion}, which also deforms its map
-through an embedded deformation graph, derives the correction from its own
-tracking and loop closure. On TUM
-fr3/long\_office\_household~\cite{sturm2012tum}, its own benchmark, where it
-tracks as published (1.80\,cm ATE), WarpVox leads it at every F-score
-threshold and in CD (2.82 vs.\ 3.69\,cm); on the ten Kimera-Multi sequences
-its tracking drifts by 115.8\,m ATE, while WarpVox, applying the system's
-back-end correction, stays within 0.61\,pp of reintegration at F@25.
+
 
 \subsection{Ablation Study}
 Table~\ref{tab:ablation} isolates one design choice at a time on one
