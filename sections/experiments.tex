@@ -310,16 +310,15 @@ and is scored on meshes re-extracted from the output TSDF.}
 \end{table}
 
 Nearest-KF moves each control by its closest keyframe's pose correction.
-Observation-derived targets improve all three F-scores over this baseline,
-including 0.637\,pp at F@25. The gain comes from Stages~1 -- 2 as a whole, which
-recover, screen, weight, and combine the measurements of several keyframes:
-a matched multi-keyframe pose transport that keeps both stages and replaces
-only the measured samples of Eq.~\eqref{eq:corrected_target} performs on par
-($+0.042$\,pp, positive in 8 of 10 cases,
-$-0.04$ to $+0.09$\,pp), as the two candidates differ by the association residual that the Stage-1
-gate bounds within one voxel. Removing the gate and reliability screening
-drops
-F@10/25/50 to 8.93/25.49/45.29\%, below nearest-keyframe transport at F@25. The robust 60K QEM proxy remains within 0.032\,pp
+Observation-derived targets aim to reverse fusion: they recover the keyframe
+measurements that formed the source TSDF at each vertex, then screen, weight,
+and combine them (Eq.~\eqref{eq:target}). They improve all three F-scores over
+this baseline, including 0.637\,pp at F@25. Replacing only
+their measured samples of Eq.~\eqref{eq:corrected_target} with each keyframe's
+pose transport performs on par, with WarpVox $0.042$\,pp ahead at F@25 on
+average and in 8 of 10 cases ($-0.04$ to $+0.09$\,pp), while removing the gate
+and reliability screening drops F@10/25/50 to 8.93/25.49/45.29\%, below
+nearest-keyframe transport at F@25. The robust 60K QEM proxy remains within 0.032\,pp
 of full-mesh ARAP at F@25 while reducing Stage~3 time from 3.323 to
 1.408\,s. Stage~4 keeps the re-extracted mesh within 0.122\,pp of the robust
 Stage~3 surface and improves F@25 by 0.216\,pp over mesh-only conversion, at
