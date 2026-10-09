@@ -173,15 +173,6 @@ comparison at 0.25\,m.
 \subsection{Comparison with Deformation-Based Correction}
 \label{sec:pgmo}
 
-ElasticFusion~\cite{whelan2016elasticfusion} deforms its surfel map through
-an embedded deformation graph driven by its own tracking. On TUM~\cite{sturm2012tum}
-fr3/long\_office\_household, its own room-scale benchmark, it tracks at
-1.80\,cm absolute trajectory error (ATE), with 62.77\% F@2 and 3.69\,cm CD; WarpVox reaches 72.13\% and
-2.82\,cm. On the larger Kimera-Multi sequences, its tracking accumulates
-a mean ATE of 115.8\,m, leaving its map at 1.98\% F@25. WarpVox applies trajectory
-corrections to TSDF maps for RGB-D and LiDAR alike, which suits the growing
-scale and sensing of today's mapping data.
-
 Kimera-PGMO, like WarpVox, propagates trajectory corrections to a fused map,
 and, like ElasticFusion, deforms the surface through an embedded deformation
 graph, which ties each mesh vertex to the pose at its timestamp; WarpVox ties
@@ -220,6 +211,15 @@ remains within $0.20$\,pp of Kimera-PGMO. Stage~4 then reconstructs an
 $8\,\mathrm{cm}$ native TSDF in $1.277$\,s, with F@25/F@50 of
 $24.387/43.098\%$; this complete update ($4.792$\,s) is faster than PGMO's
 surface correction alone (8.231\,s) and stays above it at F@25/F@50.
+
+ElasticFusion~\cite{whelan2016elasticfusion} deforms its surfel map through
+an embedded deformation graph driven by its own tracking. On TUM~\cite{sturm2012tum}
+fr3/long\_office\_household, its own room-scale benchmark, it tracks at
+1.80\,cm absolute trajectory error (ATE), with 62.77\% F@2 and 3.69\,cm CD; WarpVox reaches 72.13\% and
+2.82\,cm. On the larger Kimera-Multi sequences, its tracking accumulates
+a mean ATE of 115.8\,m, leaving its map at 1.98\% F@25. WarpVox applies trajectory
+corrections to TSDF maps for RGB-D and LiDAR alike, which suits the growing
+scale and sensing of today's mapping data.
 
 \subsection{TSDF Consistency over Repeated Correction}
 \label{sec:consistency}
