@@ -101,9 +101,10 @@ Source transport cell width & \multicolumn{2}{l}{$\tau$} \\
   \end{minipage}
 \end{figure}
 
-Stage~1 recovers the measurements that formed the surface, associating
+Stage~1 recovers the measurements that formed the surface by reversing the
+projective fusion rule, associating
 source vertices with geometrically consistent keyframe measurements under
-$T^-$, the poses used to build the map. For each queried vertex $v_j^-$, a
+the pre-correction poses $T^-$. For each queried vertex $v_j^-$, a
 $k$-d tree (RGB-D) or grid (LiDAR) over the sensor centres retrieves
 candidate keyframes within the index radius. For candidate $r$, with
 timestamp $t_r$ and range image $D_r$, the vertex is mapped into its sensor
