@@ -281,8 +281,9 @@ stretch $\xi^{\rm e}=\max_e\ell^+_e/\ell^-_e\ge\tau_{\rm e}$, area growth
 $\xi^{\rm A}=A^+/A^-\ge\tau_{\rm A}$, or aspect ratio
 $\xi^{\rm asp}=(\ell^+_{\max})^2/(2A^+)\ge\tau_{\rm asp}$ with
 $\ell^+_{\max}\ge\ell_{\min}$, for source and warped edge lengths $\ell^\pm$
-and areas $A^\pm$; Jacobi relaxation smooths the displacements of its
-vertices with all others fixed. The retained triangles $\bar F\subseteq F$
+and areas $A^\pm$; Jacobi relaxation moves the displacement of each of its
+vertices halfway to the mean of its edge neighbours, all others fixed, until
+the largest update falls below $10^{-5}$\,m. The retained triangles $\bar F\subseteq F$
 define the paired surfaces $\bar{\mathcal M}^-=(\bar V^-,\bar F)$ and
 $\mathcal M^+=(\bar V^+,\bar F)$.
 
@@ -362,10 +363,12 @@ truncation-sized cells; each cell $c$ uses the source face closest to its
 observed-voxel centroid, unless it or its warped copy is degenerate, and the
 paired warped face to define $\Gamma_c(y)=q_c^++R_c^+(R_c^-)^\top(y-q_c^-)$,
 and output voxels are sampled at $\Gamma_c^{-1}(x)$. Samples that reach one
-output voxel from adjacent source voxels form one sheet and count once;
+output voxel from equal or 26-neighbouring source voxels form one sheet, which
+contributes the distance and weight of its sample nearest its cell centre;
 distinct sheets are fused as in Voxblox, by weighted mean distance and summed
-weight. On the reconstructed band, the sheet containing the pullback of $x$ is
-already represented, and the others add the weight $w_{\rm add}^+(x)$.
+weight. On the reconstructed band, the sheet touching the source voxel of the
+pullback of $x$ is already represented, and the others add their weight
+$w_{\rm add}^+(x)$.
 Elsewhere, sheets fill empty voxels: fills of opposite sign to a reconstructed
 26-neighbour are dropped, and a minimum $s$--$t$ cut keeps the
 maximum-weight fills without opposite-sign neighbours, so no zero crossing is
