@@ -240,19 +240,18 @@ alone (8.231\,s) and stays above it at F@25/F@50.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{Figures/cycles.pdf}
-\caption{\textbf{Repeated correction (A) and continued fusion (B).}}
+\caption{\textbf{Repeated correction (A, 15) and continued fusion (B, 10).}}
 \label{fig:cycles}
 \end{figure}
 
-We follow the five multi-loop sequences of the ten bags, with two to six
-loop closures each and 15 corrections in total, through repeated correction
-and continued fusion, with checkpoints after each correction (A) and after
+We follow the five multi-loop sequences of the ten bags through repeated
+correction and continued fusion, with checkpoints after each correction (A) and after
 continued fusion up to the next loop closure (B; Fig.~\ref{fig:cycles}).
 F-scores compare each map with the ground truth. The volumetric metrics
-compare it with corrected-pose Voxblox reintegration of the same measurement
-history, the pseudo-ground-truth reference since no ground-truth TSDF exists,
-on a shared voxel grid with unallocated voxels at zero weight: support IoU of
-positive-weight voxels; weighted Jaccard similarity
+compare it with Voxblox reintegration of the same measurement history, as the
+reference since no ground-truth TSDF exists. On a shared voxel grid with
+unallocated voxels at zero weight, they are support IoU of positive-weight
+voxels; weighted Jaccard similarity
 $\sum\min(w,w_{\rm r})/\sum\max(w,w_{\rm r})$ of voxel weights; free-space
 recall, the $w_{\rm r}$-weighted share of reintegrated free space
 (${\Phi_{\rm r}>0.5s}$) that WarpVox supports; and TSDF-sign accuracy, the
