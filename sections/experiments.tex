@@ -154,20 +154,16 @@ Colors encode vertex height.}
 \end{figure*}
 
 On Kimera-Multi, WarpVox differs from reintegration by
-$+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50. Its CD stays within 1.5\,cm of reintegration on both
-datasets, below every other correction baseline. Its dataset-mean F@25 differences are $+0.05$\,pp on
-Kimera-Multi and $-0.32$\,pp on KITTI; across individual loop events, they
-range from $-2.91$ to $+2.59$\,pp and from $-3.03$ to $+1.80$\,pp. WarpVox is $48.43\times$ faster
-than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The smaller
-KITTI gain is consistent with lower-cost sparse-LiDAR replay and WarpVox's
+$+0.20/+0.05/-0.28$ pp at F@10/F@25/F@50, and on KITTI by $-0.32$\,pp at
+F@25 in dataset mean. Its CD stays within 1.5\,cm of reintegration on both
+datasets, below every other correction baseline. Per-event F@25 differences fall on both sides of zero, from
+$-2.91$ to $+2.59$\,pp and from $-3.03$ to $+1.80$\,pp. WarpVox is $48.43\times$ faster
+than reintegration on Kimera-Multi and $3.23\times$ on KITTI. The KITTI speedup reflects lower-cost sparse-LiDAR replay and WarpVox's
 larger active surface and output volume.
-Stage times follow their workloads (Table~\ref{tab:runtime_breakdown}):
-association grows with the candidate vertex -- keyframe pairs, as RGB-D
-queries every source vertex and LiDAR one vertex per occupied 0.5\,m cell
-with a search over spherical-image neighbourhoods; target construction grows
-with the retained observations; and deformation and reconstruction grow with
-surface and volume size, so association takes the larger share on KITTI and
-target construction on Kimera-Multi. Voxgraph improves over uncorrected
+Stage shares follow the same workloads
+(Table~\ref{tab:runtime_breakdown}): LiDAR association searches
+spherical-image neighbourhoods, and RGB-D target construction aggregates more
+retained observations. Voxgraph improves over uncorrected
 Voxblox at every threshold by aligning rigid SDF submaps, but stays $5.98$
 and $12.08$ pp below WarpVox at F@25 on the two datasets, consistent with
 uncorrected intra-submap drift. Wavemap shows low F@10 but competitive KITTI
