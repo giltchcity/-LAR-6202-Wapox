@@ -248,8 +248,9 @@ and $-0.01$\,pp after continued fusion on average, with per-event differences
 from $-1.48$ to $+2.55$\,pp after correction. Over the 15 post-correction
 checkpoints, it averages 83.4\%, 80.1\%, 97.3\%, and 92.2\% on the four
 volumetric metrics. Rebuilding the TSDF from the corrected mesh at each
-correction mainly narrows the shared support measured by IoU and weighted
-Jaccard, while free-space recall and sign accuracy remain high within it.
+correction differs from reintegration mainly in the extent of the shared
+support measured by IoU and weighted Jaccard, while free-space recall and sign
+accuracy remain high within it.
 Continued fusion with the same Voxblox update raises all four metrics in
 every interval, restoring agreement in revisited regions.
 
@@ -293,7 +294,7 @@ measurements that formed the source TSDF at each vertex, then screen, weight,
 and combine them (Eq.~\eqref{eq:target}). They improve all three F-scores over
 this baseline, including 0.637\,pp at F@25. Replacing only
 their measured samples of Eq.~\eqref{eq:corrected_target} with each keyframe's
-pose transport performs on par, with WarpVox $0.042$\,pp ahead at F@25 on
+pose transport leaves WarpVox $0.042$\,pp ahead at F@25 on
 average and in 8 of 10 cases (paired: $+0.07$, $-0.04$, $+0.08$, $+0.05$, $+0.05$, $+0.02$, $+0.07$, $-0.01$, $+0.04$, $+0.09$\,pp), while removing the gate
 and reliability screening drops F@10/25/50 to 8.93/25.49/45.29\%, below
 nearest-keyframe transport at F@25. The robust 60K QEM proxy remains within 0.032\,pp
