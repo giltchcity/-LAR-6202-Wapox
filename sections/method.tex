@@ -237,7 +237,9 @@ the controlled vertices with a measured control; the others have
 $(p_b^-,p_b^{(0)})$ of the $k$ nearest $b\in\mathcal M_P\setminus\{a\}$, by
 Procrustes alignment~\cite{schoenemann1966procrustes} reweighted with the
 Welsch weights $\nu(r)=e^{-r^2/2\sigma_a^2}$~\cite{yao2020welsch} of its
-residuals at robust scale $\sigma_a$, predicts
+residuals $r_b$ at robust scale
+$\sigma_a=\operatorname{median}_br_b+1.4826\,\mathrm{MAD}_b(r_b)$ per round,
+predicts
 $\hat p_a=\hat R_ap_a^-+\hat t_a$. A measured target is \emph{gross} if
 $r_a=\|p_a^{(0)}-\hat p_a\|\ge c_{\rm g}\sigma_a$, and $2G_K>N_K$ denotes a
 strict majority of gross targets among the $N_K$ fitted measured targets of
@@ -359,11 +361,15 @@ paired frames. Observed source voxels $y\in\Omega^-$ are grouped into
 truncation-sized cells; each cell $c$ uses the source face closest to its
 observed-voxel centroid, unless it or its warped copy is degenerate, and the
 paired warped face to define $\Gamma_c(y)=q_c^++R_c^+(R_c^-)^\top(y-q_c^-)$,
-and output voxels are sampled at $\Gamma_c^{-1}(x)$. On the reconstructed
-band, transported contributions not represented by its pullback add the
-weight $w_{\rm add}^+(x)$; elsewhere they fill empty voxels without new zero
-crossings, forming $\Omega_{\rm vol}$ with $\Phi_{\rm vol}^+$ and
-$w_{\rm vol}^+$.
+and output voxels are sampled at $\Gamma_c^{-1}(x)$. Samples that reach one
+output voxel from adjacent source voxels form one sheet and count once;
+distinct sheets are fused as in Voxblox, by weighted mean distance and summed
+weight. On the reconstructed band, the sheet containing the pullback of $x$ is
+already represented, and the others add the weight $w_{\rm add}^+(x)$.
+Elsewhere, sheets fill empty voxels: fills of opposite sign to a reconstructed
+26-neighbour are dropped, and a minimum $s$--$t$ cut keeps the
+maximum-weight fills without opposite-sign neighbours, so no zero crossing is
+added, forming $\Omega_{\rm vol}$ with $\Phi_{\rm vol}^+$ and $w_{\rm vol}^+$.
 
 The three sets are disjoint, and
 $\Omega^+=\Omega_{\rm tr}\cup\Omega_{\rm fb}\cup\Omega_{\rm vol}$ is the set of
